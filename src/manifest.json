@@ -1,9 +1,9 @@
 {
-    "ShortDescription": "This mashup does something, I suppose.",
+    "ShortDescription": "This mashup allows a custom field to be required when an entity is moved to a specific state or a specific value is selected in another custom field.",
     "CompatibleTpVersion": {
-        "Minimum": "3.6.0"
+            "Minimum": "3.6.6"
     },
     "Placeholders": [
-        "restui_board"
+        "footerplaceholder"
     ]
 }
