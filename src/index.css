@@ -38,6 +38,7 @@
 
 .cf-constraints-save {
     margin-left: 8px;
+    margin-top: 10px;
 }
 
 .cf-constraints-customFields .ui_custom_field_value_container {
@@ -59,4 +60,24 @@
 
 .cf-constraints-richText .ui_custom_field_value_container {
     padding: 0;
+}
+
+.cf-constraints__formrow {
+    display: flex;
+    margin-bottom: 5px;
+    margin-left: 10px;
+    align-items: baseline;
+}
+
+.cf-constraints__label {
+    width: 100px;
+    color: #999;
+    /*vertical-align: middle;*/
+    /*padding: 6px 10px;*/
+    /*text-decoration: none;*/
+}
+
+.cf-constraints__formrow > input,
+.cf-constraints__formrow > select {
+    flex: 1 1 auto;
 }

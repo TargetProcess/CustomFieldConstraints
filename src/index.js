@@ -1,34 +1,96 @@
-var _ = require("Underscore");
-var DataProvider = require("./lib/CFConstraints.data.provider");
-var Requirements = require("./lib/CFConstraints.requirements");
-var StateInterrupterStore = require("./lib/CFConstraints.state.interrupter.store");
-var CFInterrupterStore = require("./lib/CFConstraints.cf.interrupter.store");
-var StateInterrupterSlice = require("./lib/CFConstraints.state.interrupter.slice");
-var CFInterrupterSlice = require("./lib/CFConstraints.cf.interrupter.slice");
-var QuickAddAdapter = require("./lib/CFConstraints.quick.add");
+/* globals mashup, tau */
+/* eslint global-require: 0 */
+var {invoke} = require('Underscore');
+var DataProvider = require('./lib/CFConstraints.data.provider');
+var Requirements = require('./lib/CFConstraints.requirements');
+var StateInterrupterStore = require('./lib/CFConstraints.state.interrupter.store');
+var CFInterrupterStore = require('./lib/CFConstraints.cf.interrupter.store');
+var StateInterrupterSlice = require('./lib/CFConstraints.state.interrupter.slice');
+var CFInterrupterSlice = require('./lib/CFConstraints.cf.interrupter.slice');
+var QuickAddAdapter = require('./lib/CFConstraints.quick.add');
 
-var ApplicationCFConstraints = require("./application.cf.constraints");
+var {placeholderId} = mashup.variables;
+var mashupConfig = mashup.config;
 
-var mashupConfig = mashup.variables;
-var config = mashup.config;
+var showPopupOld = ({entity, customFields}, next) => {
 
-require('./index.css');
+    const addTargetprocessModule = tau.mashups.addModule.bind(tau.mashups);
 
-var showPopup = function({entity, customFields}, next) {
+    require.ensure(['./components_old/application', './index.css'], () => {
 
-    return new ApplicationCFConstraints({
-        placeholder: '#' + mashupConfig.placeholderId,
-        customFields,
-        entity,
-        entityDeferred: next
-    });
+        const Application = require('./components_old/application');
 
+        require('./index.css');
+
+        return new Application({
+            placeholder: `#${placeholderId}`,
+            customFields,
+            entity,
+            addTargetprocessModule,
+            entityDeferred: next
+        });
+
+    }, 'ApplicationOld');
+
+};
+
+var showPopupNew = ({entity, processId, requirementsData}, next) => {
+
+    require.ensure(['react', './screens/Form'], () => {
+
+        const React = require('react');
+        const Form = require('./screens/Form');
+
+        const holder = document.getElementById(placeholderId).appendChild(document.createElement('div'));
+
+        const handleCancel = () => {
+
+            React.unmountComponentAtNode(holder);
+            next.reject({
+                response: {
+                    Message: 'The changes were not saved as you didn\'t fill out the required custom fields'
+                },
+                status: 400
+            });
+
+        };
+
+        const handleAfterSave = () => {
+
+            React.unmountComponentAtNode(holder);
+            next.resolve();
+
+        };
+
+        React.render((
+            <Form
+                entity={entity}
+                mashupConfig={mashupConfig}
+                onAfterSave={handleAfterSave}
+                onCancel={handleCancel}
+                processId={processId}
+                requirementsData={requirementsData}
+            />
+        ), holder);
+
+    }, 'FormContainer');
+
+};
+
+var showPopup = (...args) => {
+
+    // const {entity} = args[0];
+
+    // if (parseInt(entity.name, 10) % 2) showPopupOld(...args);
+    // else showPopupNew(...args);
+
+    showPopupNew(...args);
 };
 
 var init = () => {
 
     var dataProvider = new DataProvider();
-    var requirements = new Requirements(config);
+    var requirements = new Requirements(mashupConfig);
     var subscribers = [
         new StateInterrupterStore(dataProvider, requirements, showPopup),
         new CFInterrupterStore(dataProvider, requirements, showPopup),
@@ -37,7 +99,7 @@ var init = () => {
         new QuickAddAdapter(dataProvider, requirements)
     ];
 
-    _.invoke(subscribers, 'subscribe');
+    invoke(subscribers, 'subscribe');
 
 };
 

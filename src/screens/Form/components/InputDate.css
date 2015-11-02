@@ -1,0 +1,15 @@
+:local(.block) {
+    display: flex;
+    align-items: center;
+}
+
+:local(.block) > input {
+    flex: 1 1 auto;
+    margin-left: 2px;
+    border: 1px solid #acb6bf;
+    box-shadow: none;
+}
+
+:local(.block) > button {
+    flex: 0 0 auto;
+}

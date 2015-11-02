@@ -1,0 +1,22 @@
+:local(.block) {
+    display: flex;
+    flex-grow: 1;
+}
+
+:local(.inputwrapper) {
+    display: flex;
+    align-items: center;
+    cursor: pointer;
+    flex-grow: 1;
+}
+
+:local(.inputwrapper) > .tau-in-text {
+    flex-grow: 1;
+    display: flex;
+    align-items: center;
+}
+
+:local(.placeholder) {
+    font-size: 11px;
+    color: #acb6bf;
+}

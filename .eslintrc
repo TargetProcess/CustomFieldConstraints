@@ -1,8 +1,13 @@
 {
     "parser": "babel-eslint",
 
-    "plugins": [
+     "ecmaFeatures": {
+        "jsx": true,
+        "experimentalObjectRestSpread": true
+    },
 
+    "plugins": [
+        "react"
     ],
 
      "env": {
@@ -134,7 +139,7 @@
         "consistent-return": 2,
         "consistent-this": [2, "self"],
         "constructor-super": 2,
-        "curly": [2, "all"],
+        "curly": [2, "multi-line"],
         "default-case": 2,
         "dot-location": [2, "property"],
         "dot-notation": [2, {"allowKeywords": true}],
@@ -153,7 +158,7 @@
         "key-spacing": [2, {"beforeColon": false, "afterColon": true}],
         "lines-around-comment": 0,
         "max-depth": [0, 3],
-        "max-len": [2, 120, 4],
+        "max-len": [0, 120, 4],
         "max-nested-callbacks": [2, 3],
         "max-params": [0, 3],
         "max-statements": [0, 10],
@@ -196,6 +201,33 @@
         "vars-on-top": 0,
         "wrap-iife": 2,
         "wrap-regex": 0,
-        "yoda": [2, "never"]
+        "yoda": [2, "never"],
+
+        "react/display-name": 0,
+        "react/jsx-boolean-value": [2, "always"],
+        "react/jsx-closing-bracket-location": 2,
+        "react/jsx-curly-spacing": [2, "never"],
+        "react/jsx-indent-props": [2, 4],
+        "react/jsx-max-props-per-line": [0, {"maximum": 3}],
+        "react/jsx-no-duplicate-props": 2,
+        "react/jsx-no-literals": 2,
+        "react/jsx-no-undef": 2,
+        "react/jsx-quotes": [2, "double"],
+        "react/jsx-sort-props": 2,
+        "react/jsx-sort-prop-types": 2,
+        "react/jsx-uses-react": 2,
+        "react/jsx-uses-vars": 2,
+        "react/no-danger": 0,
+        "react/no-did-mount-set-state": 0,
+        "react/no-did-update-set-state": 2,
+        "react/no-multi-comp": 2,
+        "react/no-set-state": 0,
+        "react/no-unknown-property": 2,
+        "react/prop-types": 2,
+        "react/react-in-jsx-scope": 2,
+        "react/require-extension": 0,
+        "react/self-closing-comp": 2,
+        "react/sort-comp": [2, {"order": ["lifecycle", "rendering", "everything-else"]}],
+        "react/wrap-multilines": 2
     }
 }

@@ -1,0 +1,60 @@
+import React, {findDOMNode} from 'react';
+import cx from 'classnames';
+
+import {block, row, label, labeltext} from './InputUrl.css';
+
+export default class InputUrl extends React.Component {
+
+    static defaultProps = {
+        value: {
+            url: void 0,
+            label: void 0
+        }
+    }
+
+    render() {
+
+        const {field, value} = this.props;
+
+        return (
+            <div className={block}>
+                <div className={row}>
+                    <label className={label}>
+                        <span className={labeltext}>{'Url'}</span>
+                        <input
+                            {...this.props}
+                            className={cx('tau-in-text', {'tau-error': this.props.isInvalid})}
+                            ref="url"
+                            type="text"
+                            value={value.url}
+                        />
+                    </label>
+                </div>
+
+                <div className={row}>
+                    <label className={label}>
+                        <span className={labeltext}>{'Description'}</span>
+                        <input
+                            {...this.props}
+                            className={cx('tau-in-text', {'tau-error': this.props.isInvalid})}
+                            ref="label"
+                            type="text"
+                            value={value.label}
+                        />
+                    </label>
+                </div>
+            </div>
+        );
+
+    }
+
+    get value() {
+
+        return {
+            url: findDOMNode(this.refs.url).value,
+            label: findDOMNode(this.refs.label).value
+        };
+
+    }
+
+}

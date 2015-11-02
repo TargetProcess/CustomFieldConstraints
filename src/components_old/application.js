@@ -1,20 +1,19 @@
-var $ = require("jQuery");
 var _ = require("Underscore");
 var ServiceContainer = require("tau/service.container");
 var ServiceNavigator = require("tau/services/service.navigator");
 var ServiceApplicationContext = require("tau/services/service.applicationContext");
 var ApplicationGeneric = require("tau/components/component.application.generic");
 
-var Component = require('./components/component.cf.constraints');
+var Component = require('./component.cf.constraints');
 
-tau.mashups.addModule('tau/cf.constraints/components/component.cf.constraints', Component);
+// tau.mashups.addModule('tau/cf.constraints/components/component.cf.constraints', Component);
 
 var ExtensionPlaceholder = require(
     "tau/ui/extensions/application.generic/ui.extension.application.generic.placeholder"
 );
 
 var ExtensionApplicationCfConstraints = require(
-    "./components/extensions/application.generic/ui.extension.application.generic.cf.constraints"
+    "./extensions/application.generic/ui.extension.application.generic.cf.constraints"
 );
 
 var routes = [
@@ -42,8 +41,12 @@ var getProcessCustomFields = function(entityConfig, applicationContext) {
 };
 
 module.exports = function(config) {
+
+    config.addTargetprocessModule('tau/cf.constraints/components/component.cf.constraints', Component);
+
     var configurator = new ServiceContainer();
     var contextService = new ServiceApplicationContext(configurator);
+
     contextService.getApplicationContext({ids: [config.entity.id]}, {success: function(context) {
         config.customFields = getProcessCustomFields(config, context);
         var placeholder = config.placeholder;

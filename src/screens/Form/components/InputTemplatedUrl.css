@@ -1,0 +1,15 @@
+:local(.block) {
+    flex: 1 1 auto;
+    display: flex;
+    align-items: baseline;
+}
+
+:local(.block) > input {
+    flex: 1 1 auto;
+}
+
+:local(.template) {
+    font-style: italic;
+    flex: 0 0 auto;
+}
+

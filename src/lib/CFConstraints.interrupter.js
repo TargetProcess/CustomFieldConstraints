@@ -78,6 +78,7 @@ var CFConstraintsInterrupter = Class.extend({
 
     _handleEntitiesRequirements: function(entitiesWithRequirements, interruptedActionDeferred) {
         var iterateEntitiesToRequire = _.bind(function(entitiesToRequire, index) {
+
             var entityIndex = index || 0;
             var entityToRequire = entitiesToRequire[entityIndex];
             if (!entityToRequire) {
@@ -106,8 +107,8 @@ var CFConstraintsInterrupter = Class.extend({
         var requireEntityCFsDeferred = new $.Deferred();
 
         this.requireEntityCFsCallback({
-            entity: entityToRequire.entity,
-            customFields: customFields
+            ...entityToRequire,
+            customFields
         }, requireEntityCFsDeferred);
 
         return requireEntityCFsDeferred.promise();

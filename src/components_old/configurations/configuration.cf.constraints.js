@@ -5,12 +5,13 @@ var Template = require("./../templates/ui.template.cf.constraints");
 var ComponentHeader = require('./../component.cf.constraints.header');
 var ComponentSave = require('./../component.cf.constraints.save');
 
-tau.mashups.addModule('tau/cf.constraints/components/component.cf.constraints.header', ComponentHeader);
-tau.mashups.addModule('tau/cf.constraints/components/component.cf.constraints.save', ComponentSave);
-
 var ConfigurationCFConstraints = Class.extend({
 
     getConfig: function(config) {
+
+        config.addTargetprocessModule('tau/cf.constraints/components/component.cf.constraints.header', ComponentHeader);
+        config.addTargetprocessModule('tau/cf.constraints/components/component.cf.constraints.save', ComponentSave);
+
         var childControls = _.map(config.customFields, function(customField) {
 
             var cfTypeLowered = customField.type.toLowerCase();

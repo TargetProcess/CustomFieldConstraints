@@ -32,7 +32,30 @@ var makeWebpackConfig = function(opts) {
         configData: ['targetprocess-mashup-config?libraryTarget=' + mashupName
             + '&outputFile=' + outputConfigFileName + '!./src/config.json'],
         // main entry point
-        index: ['./src/index.js']
+        index: [
+            './src/index.js',
+
+            'react',
+            'tau/configurator',
+            'tau/utils/utils.date',
+            'tau/components/component.container',
+
+            'tau/components/component.creator',
+            'tau/service.container',
+            'tau/services/service.navigator',
+            'tau/services/service.applicationContext',
+            'tau/components/component.application.generic',
+            'tau/ui/extensions/application.generic/ui.extension.application.generic.placeholder',
+            'tau/components/component.page.base',
+            'tau/core/class',
+            'tau/core/extension.base',
+            'tau/core/bus.reg',
+            'tp3/mashups/storage',
+            'tau/core/templates-factory',
+            'tau/core/view-base',
+            'tau/services/service.customFields.cached',
+            'tau/libs/store2/store2'
+        ]
     };
 
     if (!opts.mashupManager) {
@@ -54,7 +77,7 @@ var makeWebpackConfig = function(opts) {
     config.module = {
         loaders: [{
             test: /\.js$/,
-            loader: 'babel-loader',
+            loader: 'babel-loader?stage=0',
             exclude: /node_modules/
         }, {
             test: /\.css$/,
@@ -66,6 +89,10 @@ var makeWebpackConfig = function(opts) {
         config.debug = true;
         config.devtool = 'eval-source-map';
     }
+
+    config.resolve = {
+        modulesDirectories: ['node_modules', 'shared']
+    };
 
     config.plugins = [
         new TargetprocessMashupPlugin(mashupName, {
@@ -115,7 +142,7 @@ var makeWebpackConfig = function(opts) {
     config.externals = [{
         jquery: 'jQuery',
         underscore: 'Underscore'
-    }, 'jQuery', 'Underscore', /^tp3\//, /^tau\//, /^tp\//];
+    }, 'jQuery', 'Underscore', 'react', /^tp3\//, /^tau\//, /^tp\//];
 
     return config;
 };

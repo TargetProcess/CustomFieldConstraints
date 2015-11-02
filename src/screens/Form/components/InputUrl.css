@@ -1,0 +1,23 @@
+:local(.block) {
+    flex: 1 1 0;
+}
+
+:local(.row) + :local(.row) {
+    margin-top: 5px;
+}
+
+:local(.label) {
+    display: flex;
+    align-items: baseline;
+}
+
+:local(.label) > input,
+:local(.label) > select {
+    flex: 1 1 auto;
+}
+
+
+:local(.labeltext) {
+    flex: 0 0 100px;
+    color: #999;
+};

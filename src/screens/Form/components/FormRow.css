@@ -1,0 +1,29 @@
+:local(.block) {
+    margin-bottom: 5px;
+    margin-left: 10px;
+}
+
+:local(.label) {
+    display: flex;
+    align-items: baseline;
+}
+
+:local(.label) > input,
+:local(.label) > select,
+:local(.label) > textarea,
+:local(.label) > .tau-in-text,
+:local(.label) > .ui-dateeditor {
+    flex: 1 1 auto;
+    min-width: 10px;
+}
+
+
+:local(.labeltext) {
+    flex: 0 0 100px;
+    color: #999;
+}
+
+:local(.sublabeltext) {
+    margin-top: 3px;
+    font-size: 11px;
+}

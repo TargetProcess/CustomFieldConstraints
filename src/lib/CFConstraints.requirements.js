@@ -1,39 +1,41 @@
-var _ = require("Underscore");
-var Class = require("tau/core/class");
-var CFConstraintsRequirements = Class.extend({
-    init: function(cfConstraintsConfig) {
+var _ = require("underscore");
+
+
+export default class CFConstraintsRequirements {
+
+    constructor(cfConstraintsConfig) {
         this.config = cfConstraintsConfig;
-    },
+    }
 
-    getConfig: function() {
+    getConfig() {
         return this.config;
-    },
+    }
 
-    getEntityTypesToInterrupt: function() {
+    getEntityTypesToInterrupt() {
         var types = _.reduce(this.config, function(entityTypesMemo, rule) {
             return entityTypesMemo.concat(_.keys(rule.constraints));
         }, []);
 
         return _.uniq(types);
-    },
+    }
 
-    getRequiredCFsForState: function(entityWithRequirements) {
+    getRequiredCFsForState(entityWithRequirements) {
         var entityTypeCFConstraintsRule = this.getEntityTypeCFConstraintsRule(entityWithRequirements);
 
         if (!entityTypeCFConstraintsRule) {
             return [];
         }
 
-        var stateCFConstraints = entityTypeCFConstraintsRule['entityStates'];
+        var stateCFConstraints = entityTypeCFConstraintsRule.entityStates;
 
         var requiredCFConstraints = _.filter(stateCFConstraints, function(stateCFConstraint) {
             return stateCFConstraint.name.toLowerCase() === entityWithRequirements.requirementsData.newState.name.toLowerCase();
         });
 
         return this._getRequiredCFs(entityWithRequirements, requiredCFConstraints);
-    },
+    }
 
-    getRequiredCFsForCFs: function(entityWithRequirements) {
+    getRequiredCFsForCFs(entityWithRequirements) {
         var entityCFConstraints = this.getEntityCFConstraints(entityWithRequirements);
 
         if (!entityCFConstraints) {
@@ -55,9 +57,9 @@ var CFConstraintsRequirements = Class.extend({
         }, []);
 
         return this._getRequiredCFs(entityWithRequirements, requiredCFConstraints);
-    },
+    }
 
-    getEntityTypeCFConstraintsRule: function(entityWithRequirements) {
+    getEntityTypeCFConstraintsRule(entityWithRequirements) {
         var processCFConstraintsRule = this.getProcessCFConstraintsRule(entityWithRequirements);
 
         if (!processCFConstraintsRule) {
@@ -65,21 +67,21 @@ var CFConstraintsRequirements = Class.extend({
         }
 
         return processCFConstraintsRule.constraints[entityWithRequirements.entity.entityType.name.toLowerCase()];
-    },
+    }
 
-    getEntityCFConstraints: function(entityWithRequirements) {
+    getEntityCFConstraints(entityWithRequirements) {
         var entityTypeCFConstraintsRule = this.getEntityTypeCFConstraintsRule(entityWithRequirements);
-        return entityTypeCFConstraintsRule ? entityTypeCFConstraintsRule['customFields'] : null;
-    },
+        return entityTypeCFConstraintsRule ? entityTypeCFConstraintsRule.customFields : null;
+    }
 
-    getProcessCFConstraintsRule: function(entityWithRequirements) {
+    getProcessCFConstraintsRule(entityWithRequirements) {
         return _.find(this.config,
             function(constraint) {
-                return constraint.processId == entityWithRequirements.processId;
+                return Number(constraint.processId) === Number(entityWithRequirements.processId);
             });
-    },
+    }
 
-    _getRequiredCFs: function(entityWithRequirements, requiredCFConstraints) {
+    _getRequiredCFs(entityWithRequirements, requiredCFConstraints) {
         var requiredCFs = _.reduce(requiredCFConstraints, function(requiredCFsMemo, cfConstraint) {
             var requiredCFsByConstraint = _.filter(entityWithRequirements.entity.customFields, function(cf) {
                 return _.find(cfConstraint.requiredCustomFields, function(requiredCF) {
@@ -91,6 +93,4 @@ var CFConstraintsRequirements = Class.extend({
 
         return _.uniq(requiredCFs);
     }
-});
-
-module.exports = CFConstraintsRequirements;
+}
