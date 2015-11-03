@@ -3,7 +3,7 @@
     position: absolute;
     width: 100%;
     height: 100vh;
-    text-align: initial;
+    text-align: left;
 
     display: flex;
     flex-direction: column;
@@ -14,15 +14,15 @@
 
 :local(.outerpopup) {
     position: relative;
-    top: initial;
-    left: initial;
-    right: initial;
-    bottom: initial;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
     background: none;
     padding: 0;
     box-shadow: none;
     border-radius: 0;
-    z-index: initial;
+    z-index: 0;
 
     display: flex;
     flex-direction: column;
