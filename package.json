@@ -11,8 +11,9 @@
   "scripts": {
     "start": "rm -rf $TARGETPROCESS_MASHUPS_PATH/CustomFieldConstraints && NODE_ENV=development webpack --watch --output-path $TARGETPROCESS_MASHUPS_PATH/CustomFieldConstraints",
     "build": "webpack",
-    "build-production": "webpack --config webpack-production.config.js",
-    "text": "eslint ./c2 && karma start --single-run"
+    "build-production": "webpack --output-path build --config webpack-production.config.js && mv build/index.js build/release.is",
+    "build-library": "rm -rf build/library && webpack --output-path build/library --config webpack-library.config.js && cp docs/README.mkd build/library && cp docs/*.png build/library",
+    "test": "eslint ./src && karma start --single-run"
   },
   "licenses": [
     {

@@ -8,7 +8,7 @@ import store2 from 'services/store2';
 import Form from './Form';
 import TargetprocessLinkentity from './TargetprocessLinkentity';
 
-import {header, note, error} from './FormContainer.css';
+import {header, note, error as errorStyle} from './FormContainer.css';
 
 import {
     getCustomFieldsNamesForNewState,
@@ -222,7 +222,7 @@ export default class FormContainer extends React.Component {
 
                 <div className={note}>{'Please specify the following custom fields'}</div>
                 {globalError ? (
-                    <div className={error}>{globalError}</div>
+                    <div className={errorStyle}>{globalError}</div>
                 ) : null}
                 <Form
                     entity={entity}

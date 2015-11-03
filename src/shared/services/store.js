@@ -1,3 +1,4 @@
+/* eslint-disable */
 var $ = require('jquery');
 
 var configurator = require('tau/configurator');

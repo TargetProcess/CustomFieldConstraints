@@ -7,6 +7,8 @@ export default class Form extends React.Component {
 
     static propTypes = {
         fields: T.arrayOf(FormRow.propTypes.item),
+        onChange: T.func,
+        onSubmit: T.func,
         showProgress: T.bool,
         values: T.object
     }

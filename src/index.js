@@ -16,11 +16,11 @@ var showPopupOld = ({entity, customFields}, next) => {
 
     const addTargetprocessModule = tau.mashups.addModule.bind(tau.mashups);
 
-    require.ensure(['./components_old/application', './index.css'], () => {
+    require.ensure(['./components_old/application', './components_old/index.css'], () => {
 
         const Application = require('./components_old/application');
 
-        require('./index.css');
+        require('./components_old/index.css');
 
         return new Application({
             placeholder: `#${placeholderId}`,
