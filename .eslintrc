@@ -8,7 +8,8 @@
 
     "plugins": [
         "react",
-        "babel"
+        "babel",
+        "mocha"
     ],
 
      "env": {
@@ -230,6 +231,8 @@
         "react/sort-comp": [2, {"order": ["lifecycle", "rendering", "everything-else"]}],
         "react/wrap-multilines": 2,
 
-        "babel/object-curly-spacing": [2, "never"]
+        "babel/object-curly-spacing": [2, "never"],
+
+        "mocha/no-exclusive-tests": 2
     }
 }

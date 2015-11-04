@@ -7,12 +7,10 @@ module.exports = function(config) {
         browsers: ['PhantomJS'],
         // browsers: ['Chrome'],
 
-        frameworks: ['chai', 'mocha'
-            // , 'sinon', 'sinon-chai'
-            ],
+        frameworks: ['chai', 'mocha', 'sinon', 'sinon-chai'],
 
         files: [
-            // './node_modules/phantomjs-polyfill/bind-polyfill.js',
+            './node_modules/phantomjs-polyfill/bind-polyfill.js',
             'tests.bundle.js'
         ],
 
@@ -28,16 +26,13 @@ module.exports = function(config) {
             module: {
                 loaders: [{
                     test: /\.js$/,
-                    loader: 'babel-loader?{"ignore":["node_modules/"]}'
+                    loader: 'babel-loader?{"stage":0,"ignore":["node_modules/"]}'
                 }, {
                     test: /\.json$/,
                     loader: 'json'
                 }, {
                     test: /\.css$/,
-                    loader: 'null'
-                }, {
-                    test: /\.scss$/,
-                    loader: 'null'
+                    loader: 'style!css?localIdentName=[name]-[local]'
                 }]
             },
             resolve: {

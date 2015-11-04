@@ -1,5 +1,5 @@
 import React, {PropTypes as T} from 'react';
-import {find, object, has, partial, pluck} from 'underscore';
+import {find, object, has, partial, pluck, noop} from 'underscore';
 
 import Overlay from 'components/Overlay';
 import store from 'services/store';
@@ -85,17 +85,19 @@ export default class FormContainer extends React.Component {
                 name: T.string.isRequired
             }).isRequired
         }).isRequired,
-        mashupConfig: T.array.isRequired,
-        onAfterSave: T.func.isRequired,
-        onCancel: T.func.isRequired,
+        mashupConfig: T.array,
+        onAfterSave: T.func,
+        onCancel: T.func,
         processId: T.number.isRequired,
         requirementsData: T.object.isRequired
     }
 
     state = {
+        defaultValues: {},
         isLoading: true,
-        values: {},
-        defaultValues: {}
+        onAfterSave: noop,
+        onCancel: noop,
+        values: {}
     }
 
     componentDidMount() {
@@ -153,9 +155,13 @@ export default class FormContainer extends React.Component {
 
         const {entity} = this.props;
 
+        const isAllFieldsValid = savedFields
+            .every(({field, value}) => !validateFieldValue(field, sanitizeFieldValue(field, value)).length);
+
+        if (!isAllFieldsValid) return;
+
         const dataToSave = {
             customFields: savedFields
-                .filter(({field, value}) => !validateFieldValue(field, value).length)
                 .map(({field, value, name}) => ({
                     name,
                     value: transformToServerFieldValue(field, sanitizeFieldValue(field, value))
