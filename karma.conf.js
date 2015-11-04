@@ -4,7 +4,7 @@ module.exports = function(config) {
 
     config.set({
 
-        browsers: ['PhantomJS2'],
+        browsers: ['PhantomJS'],
         // browsers: ['Chrome'],
 
         frameworks: ['chai', 'mocha'
