@@ -13,10 +13,12 @@ import {block, placeholder, inputwrapper} from './InputEntity.css';
 export default class InputEntity extends React.Component {
 
     static propTypes = {
+        onBlur: T.func,
         onChange: T.func
     }
 
     static defaultProps = {
+        onBlur: noop,
         onChange: noop
     }
 
@@ -118,7 +120,7 @@ export default class InputEntity extends React.Component {
                     >
                         {innerOutput}
                     </div>
-                    {entity ? <button type="button" onClick={this.handleClickReset} /> : null}
+                    {entity ? <button onClick={this.handleClickReset} type="button" /> : null}
                 </div>
                 {finderBubble}
             </div>

@@ -42,7 +42,7 @@ export default class TargetprocessFinder extends React.Component {
 
             if (filterDsl) {
 
-                finderConfig.filter.init_dsl = filterDsl;
+                finderConfig.filter.init_dsl = filterDsl; // eslint-disable-line camelcase
 
             }
 

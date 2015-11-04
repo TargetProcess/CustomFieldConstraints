@@ -136,7 +136,9 @@ const getConnectedCustomFieldsByField = (field, customFieldsConfig, customFields
 
     if (connected.length) {
 
+        /* eslint-disable no-use-before-define */
         return getConnectedCustomFields(connected, customFieldsConfigWithoutSource, customFieldsValues, initialCustomFieldsValues);
+        /* eslint-enable no-use-before-define */
 
     }
 

@@ -7,9 +7,7 @@ import {
     validateFieldValue
 } from '../form';
 
-import log from 'utils/log';
-
-describe.only('form', () => {
+describe('form', () => {
 
     describe('transformFieldFromServer', () => {
 

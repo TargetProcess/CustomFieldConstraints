@@ -1,5 +1,4 @@
 import React, {findDOMNode} from 'react';
-import {compact, invoke} from 'underscore';
 import cx from 'classnames';
 
 export default class InputDropdown extends React.Component {

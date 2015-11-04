@@ -12,6 +12,7 @@ var QuickAddAdapter = require('./lib/CFConstraints.quick.add');
 var {placeholderId} = mashup.variables;
 var mashupConfig = mashup.config;
 
+/* eslint-disable no-unused-vars */
 var showPopupOld = ({entity, customFields}, next) => {
 
     const addTargetprocessModule = tau.mashups.addModule.bind(tau.mashups);
@@ -33,6 +34,7 @@ var showPopupOld = ({entity, customFields}, next) => {
     }, 'ApplicationOld');
 
 };
+/* eslint-enable no-unused-vars */
 
 var showPopupNew = ({entity, processId, requirementsData}, next) => {
 
@@ -85,6 +87,7 @@ var showPopup = (...args) => {
     // else showPopupNew(...args);
 
     showPopupNew(...args);
+
 };
 
 var init = () => {

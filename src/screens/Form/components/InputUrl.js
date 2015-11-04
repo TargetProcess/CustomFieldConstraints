@@ -14,7 +14,7 @@ export default class InputUrl extends React.Component {
 
     render() {
 
-        const {field, value} = this.props;
+        const {value} = this.props;
 
         return (
             <div className={block}>
