@@ -1,12 +1,7 @@
 {
-  "name": "targetprocess-mashup-webpack-boilerplate",
+  "name": "CustomFieldConstraints",
   "version": "0.1.0",
-  "description": "Webpack boilerplate to create Targetprocess mashup.",
-  "keywords": [
-    "webpack",
-    "targetprocess",
-    "mashup"
-  ],
+  "description": "This mashup allows a custom field to be required when an entity is moved to a specific state or a specific value is selected in another custom field.",
   "author": "Aliaksei Shytkin <shitkin@targetprocess.com>",
   "scripts": {
     "start": "rm -rf $TARGETPROCESS_MASHUPS_PATH/CustomFieldConstraints && NODE_ENV=development webpack --watch --output-path $TARGETPROCESS_MASHUPS_PATH/CustomFieldConstraints",
@@ -14,6 +9,10 @@
     "build-production": "webpack --output-path build --config webpack-production.config.js && mv build/index.js build/release.is",
     "build-library": "rm -rf build/library && webpack --output-path build/library --config webpack-library.config.js && cp docs/README.md build/library/README.mkd && cp docs/*.png build/library",
     "test": "eslint --quiet ./src && karma start --single-run"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+ssh://git@github.com/TargetProcess/CustomFieldConstraints.git"
   },
   "licenses": [
     {
