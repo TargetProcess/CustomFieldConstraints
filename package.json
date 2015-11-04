@@ -33,6 +33,7 @@
     "eslint-plugin-mocha": "^1.0.0",
     "eslint-plugin-react": "^3.6.3",
     "file-loader": "^0.8.4",
+    "jquery": "^2.1.4",
     "karma": "^0.13.14",
     "karma-chai": "^0.1.0",
     "karma-chai-plugins": "^0.6.0",
