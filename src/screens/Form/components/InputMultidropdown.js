@@ -1,5 +1,4 @@
 import React, {findDOMNode} from 'react';
-import {compact, invoke} from 'underscore';
 import $ from 'jquery';
 import cx from 'classnames';
 
@@ -12,7 +11,7 @@ export default class InputMultidropdown extends React.Component {
     render() {
 
         const {field, value} = this.props;
-        const options = compact(invoke(field.value.split(/\r?\n/), 'trim'));
+        const options = field.value;
 
         return (
             <select

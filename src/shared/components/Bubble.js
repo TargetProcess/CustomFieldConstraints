@@ -1,6 +1,6 @@
 import React, {PropTypes, findDOMNode} from 'react';
 import $ from 'jquery';
-import noop from 'utils/noop';
+import {noop} from 'underscore';
 
 export default class Bubble extends React.Component {
 

@@ -1,6 +1,5 @@
 import React, {findDOMNode, PropTypes as T} from 'react';
-import {wrap} from 'underscore';
-import noop from 'utils/noop';
+import {wrap, noop} from 'underscore';
 
 import ComponentContainerBusCreator from 'tau/components/component.container';
 

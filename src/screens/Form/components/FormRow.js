@@ -1,5 +1,5 @@
 import React, {PropTypes as T} from 'react';
-import noop from 'utils/noop';
+import {noop, pluck} from 'underscore';
 
 import Input from './Input';
 import styles from './FormRow.css';
@@ -22,7 +22,7 @@ export default class FormRow extends React.Component {
     render() {
 
         const {item, onChange} = this.props;
-        const {name, field, validationErrors, hasDirtyValue, value} = item;
+        const {name, field, hasDirtyValue, value, hasErrors, validationErrors} = item;
         const fieldType = field.type;
         let label = name;
         let sublabel;
@@ -45,8 +45,10 @@ export default class FormRow extends React.Component {
 
         }
 
+        const title = hasErrors ? pluck(validationErrors, 'message').join('\n') : null;
+
         return (
-            <div className={styles.block}>
+            <div className={styles.block} title={title}>
                 <label className={styles.label}>
                     <div className={styles.labeltext}>
                         <span>{label}</span>
@@ -56,7 +58,7 @@ export default class FormRow extends React.Component {
                     </div>
                     <Input
                         field={field}
-                        isInvalid={validationErrors.length && hasDirtyValue}
+                        isInvalid={hasErrors && hasDirtyValue}
                         onChange={onChange} ref="input"
                         validationErrors={validationErrors}
                         value={value}

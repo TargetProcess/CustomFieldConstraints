@@ -1,5 +1,5 @@
 import React, {PropTypes as T} from 'react';
-import noop from 'utils/noop';
+import {noop} from 'underscore';
 
 import InputCheckbox from './InputCheckbox';
 import InputDate from './InputDate';

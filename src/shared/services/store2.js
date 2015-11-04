@@ -1,47 +1,14 @@
 /* eslint-disable */
 var $ = require('jquery');
+var _ = require('underscore');
 
 var configurator = require('tau/configurator');
 
 var types = configurator.getStore().getTypes().getDictionary();
 var appPath = configurator.getApplicationPath();
 
-var stringify = function(obj) {
-
-    var res = "";
-
-    if (obj) {
-        if (Array.isArray(obj)) {
-
-            res = obj.map(stringify).join(",");
-        } else if (typeof obj === "object") {
-
-            res = Object.keys(obj).map(function(key) {
-                return key + "[" + stringify(obj[key]) + "]";
-            }).join(",");
-        } else if (typeof obj !== "function") {
-
-            res = String(obj);
-        }
-    }
-
-    return res;
-};
-
 var getResource = function(typeName) {
     return types[typeName.toLowerCase()].resource;
-};
-
-var requestPost = function(type, path, params) {
-
-    return $.ajax({
-        type: type,
-        url: appPath + '/api/v2/' + path,
-        contentType: 'application/json; charset=utf-8',
-        dataType: 'json',
-        data: JSON.stringify(params)
-    });
-
 };
 
 var request = function(type, path, params) {
@@ -63,11 +30,7 @@ var load = function(resource, params) {
         return request('get', url, params)
             .then(function(res) {
                 var items = res.items;
-                // if (res.Next) {
-                //     return loadPages(res.Next).then(items.concat.bind(items));
-                // } else {
-                    return items;
-                // }
+                return items;
             });
     };
 
@@ -94,19 +57,7 @@ var processResult = function(result) {
     }
 };
 
-var processOpts = function(options, defaultOpts) {
-
-    // var opts = {};
-
-    // if (!options) return opts;
-
-    // if (options.include && typeof options.include !== 'string') {
-    //     opts.include = '[' + stringify(options.include) + ']'
-    // }
-
-    // if (!options.take && defaultOpts && defaultOpts.take) {
-    //     opts.take = defaultOpts.take
-    // }
+var processOpts = function(options) {
 
     return options;
 }
@@ -120,23 +71,9 @@ module.exports = {
         if (args.length === 3) {
             return request('GET', getResource(args[0]) + '/' + args[1], processOpts(args[2])).then(processResult);
         } else {
-            return load(args[0], processOpts(args[1], {
-                take: 1000
-            })).then(processResult);
+            return load(args[0], processOpts(args[1])).then(processResult);
         }
 
-    },
-
-    remove: function(collection, id) {
-        return request('DELETE', getResource(collection) + '/' + id);
-    },
-
-    create: function(collection, data) {
-        return requestPost('POST', getResource(collection), data);
-    },
-
-    save: function(collection, id, data) {
-        return requestPost('POST', getResource(collection) + '/' + id, data);
     }
 
 };

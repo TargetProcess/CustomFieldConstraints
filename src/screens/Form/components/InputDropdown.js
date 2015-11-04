@@ -7,7 +7,7 @@ export default class InputDropdown extends React.Component {
     render() {
 
         const {field, value} = this.props;
-        const options = [''].concat(compact(invoke(field.value.split(/\r?\n/), 'trim')));
+        const options = [''].concat(field.value);
 
         return (
             <select

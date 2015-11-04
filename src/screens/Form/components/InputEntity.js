@@ -1,8 +1,7 @@
 import React, {findDOMNode, PropTypes as T} from 'react';
 import cx from 'classnames';
 import $ from 'jquery';
-
-import noop from 'utils/noop';
+import {noop} from 'underscore';
 
 import Bubble from 'components/Bubble';
 

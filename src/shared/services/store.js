@@ -1,5 +1,6 @@
 /* eslint-disable */
 var $ = require('jquery');
+var _ = require('underscore');
 
 var configurator = require('tau/configurator');
 

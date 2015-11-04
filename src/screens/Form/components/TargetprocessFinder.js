@@ -1,7 +1,7 @@
 import React, {PropTypes as T} from 'react';
+import {noop} from 'underscore';
 
 import TargetprocessComponent from 'components/TargetprocessComponent';
-import noop from 'utils/noop';
 
 export default class TargetprocessFinder extends React.Component {
 

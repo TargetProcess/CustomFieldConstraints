@@ -4,6 +4,13 @@ import {find, object, has, partial, pluck} from 'underscore';
 import Overlay from 'components/Overlay';
 import store from 'services/store';
 import store2 from 'services/store2';
+import {
+    transformFromServerFieldValue,
+    transformFieldFromServer,
+    transformToServerFieldValue,
+    sanitizeFieldValue,
+    validateFieldValue
+} from 'services/form';
 
 import Form from './Form';
 import TargetprocessLinkentity from './TargetprocessLinkentity';
@@ -15,53 +22,13 @@ import {
     getCustomFieldsNamesForChangedCustomFields
 } from 'services/customFieldsRequirements';
 
+const pluckObject = (list, keyProp, valueProp) => object(list.map((v) => [v[keyProp], v[valueProp]]));
+
 const getCustomFieldsByEntity = (processId, entity) => store2.get('CustomField', {
     take: 1000,
     where: `process.id == ${processId} and entityType.id == ${entity.entityType.id}`,
     select: 'new(required, name, id, config, fieldType, value, entityType, process)'
 });
-
-const transformFromServerFieldValue = (field, value) => {
-
-    if (value) {
-
-        if (field.type === 'multipleselectionlist') {
-
-            return value.split(',');
-
-        }
-
-    }
-
-    return value;
-
-};
-
-const transformToServerFieldValue = (field, value) => {
-
-    if (field.type === 'multipleselectionlist' && value) {
-
-        return value.join(',');
-
-    }
-
-    if (field.type === 'entity' && value) {
-
-        const {id, entityType: {name: kind}, name} = value;
-
-        return {id, kind, name};
-
-    }
-
-    if (field.type === 'richtext' && typeof value === 'string') {
-
-        return `<!--markdown-->${value}`;
-
-    }
-
-    return value;
-
-};
 
 const getEntityCustomFieldValue = ({customFields: entityCustomFields}, field) => {
 
@@ -71,58 +38,6 @@ const getEntityCustomFieldValue = ({customFields: entityCustomFields}, field) =>
     return entityCustomField ? transformFromServerFieldValue(field, entityCustomField.value) : void 0;
 
 };
-
-const sanitizeFieldValue = (field, value) => {
-
-    if (field.type === 'url' && value) {
-
-        return ({
-            url: value.url.trim(),
-            label: value.label.trim()
-        });
-
-    }
-
-    return typeof value === 'string' ? value.trim() : value;
-
-};
-
-const isEmptyValidator = (field, value) => {
-
-    const validators = {
-        text: (val) => !val,
-        url: ({url, label} = {}) => !url || !label,
-        checkbox: (val) => val !== false && val !== true
-    };
-
-    if ((validators[field.type] || validators.text)(value)) {
-
-        return new Error('Field is empty');
-
-    }
-
-};
-
-const validateFieldValue = (field, value) => {
-
-    const sanitizedValue = sanitizeFieldValue(field, value);
-
-    let validationErrors = [];
-
-    [isEmptyValidator].forEach((validator) => {
-
-        const error = validator(field, sanitizedValue);
-
-        if (error) validationErrors = validationErrors.concat(error);
-
-    });
-
-    return validationErrors;
-
-};
-
-const getInitialCustomFieldValue = (entity, field) =>
-    getEntityCustomFieldValue(entity, field) || field.config.defaultValue;
 
 const getCustomFieldsFromAllByNames = (customFields, fieldsNames) => {
 
@@ -136,6 +51,9 @@ const getCustomFieldsFromAllByNames = (customFields, fieldsNames) => {
 
 };
 
+const getInitialCustomFieldValue = (entity, field) =>
+    getEntityCustomFieldValue(entity, field) || field.config.defaultValue;
+
 const prepareFieldForForm = (entity, values, field) => {
 
     const {name} = field;
@@ -144,11 +62,15 @@ const prepareFieldForForm = (entity, values, field) => {
     const dirtyValue = values[field.name];
     const currentValue = hasDirtyValue ? dirtyValue : initialValue;
 
+    const validationErrors = validateFieldValue(field, currentValue);
+    const hasErrors = Boolean(validationErrors.length);
+
     return {
         name,
         field,
         hasDirtyValue,
-        validationErrors: validateFieldValue(field, currentValue),
+        hasErrors,
+        validationErrors,
         value: currentValue
     };
 
@@ -181,17 +103,8 @@ export default class FormContainer extends React.Component {
         getCustomFieldsByEntity(this.props.processId, this.props.entity)
             .then((allEntityCustomFields) => {
 
-                const defaultValues = object(allEntityCustomFields.map((v) =>
-                    [v.name, transformFromServerFieldValue(v, v.config.defaultValue)]));
-
-                const processedFields = allEntityCustomFields.map((v) => ({
-                    ...v,
-                    type: v.fieldType.toLowerCase(),
-                    config: {
-                        ...v.config,
-                        defaultValue: defaultValues[v.name]
-                    }
-                }));
+                const processedFields = allEntityCustomFields.map(transformFieldFromServer);
+                const defaultValues = pluckObject(processedFields, 'name', 'defaultValue');
 
                 this.setState({
                     isLoading: false,
@@ -302,7 +215,7 @@ export default class FormContainer extends React.Component {
         const {values, defaultValues, allEntityCustomFields} = this.state;
 
         const existingValues = object(allEntityCustomFields.map((field) =>
-            [field.name, getEntityCustomFieldValue(entity, field)]));
+            [field.name, transformFromServerFieldValue(field, getEntityCustomFieldValue(entity, field))]));
 
         let fieldsNames = [];
 
@@ -313,9 +226,11 @@ export default class FormContainer extends React.Component {
                 ...values
             };
 
-            const allValuesSanitized = object(allEntityCustomFields.map((v) => [v.name, sanitizeFieldValue(v, allValues[v.name])]));
+            const allValuesSanitized = object(allEntityCustomFields.map((v) =>
+                [v.name, sanitizeFieldValue(v, allValues[v.name])]));
 
-            fieldsNames = getCustomFieldsNamesForNewState(newState.name, mashupConfig, processId, entity.entityType.name,
+            fieldsNames = getCustomFieldsNamesForNewState(newState,
+                mashupConfig, processId, entity.entityType.name,
                 allValuesSanitized, existingValues);
 
         } else if (changedCFs.length) {
@@ -328,9 +243,11 @@ export default class FormContainer extends React.Component {
                 ...object(changedCFs.map((v) => [v.name, v.value]))
             };
 
-            const allValuesSanitized = object(allEntityCustomFields.map((v) => [v.name, sanitizeFieldValue(v, allValues[v.name])]));
+            const allValuesSanitized = object(allEntityCustomFields.map((v) =>
+                [v.name, sanitizeFieldValue(v, allValues[v.name])]));
 
-            fieldsNames = getCustomFieldsNamesForChangedCustomFields(changedFieldsNames, mashupConfig, processId, entity.entityType.name,
+            fieldsNames = getCustomFieldsNamesForChangedCustomFields(changedFieldsNames,
+                mashupConfig, processId, entity.entityType.name,
                 allValuesSanitized, existingValues);
 
         }
