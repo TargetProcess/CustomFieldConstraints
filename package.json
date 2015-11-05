@@ -8,7 +8,8 @@
     "build": "webpack",
     "build-production": "webpack --output-path build --config webpack-production.config.js && mv build/index.js build/release.is",
     "build-library": "rm -rf build/library && webpack --output-path build/library --config webpack-library.config.js && cp docs/README.md build/library/README.mkd && cp docs/*.png build/library",
-    "test": "eslint --quiet ./src && karma start --single-run"
+    "test": "eslint --quiet ./src ./*.js && karma start --single-run --reporters spec,coverage --browsers PhantomJS",
+    "test-dev": "karma start --reporters spec,notify --browsers PhantomJS"
   },
   "repository": {
     "type": "git",
@@ -33,14 +34,17 @@
     "eslint-plugin-mocha": "^1.0.0",
     "eslint-plugin-react": "^3.6.3",
     "file-loader": "^0.8.4",
+    "isparta-loader": "^1.0.0",
     "jquery": "^2.1.4",
     "karma": "^0.13.14",
     "karma-chai": "^0.1.0",
     "karma-chai-plugins": "^0.6.0",
     "karma-chrome-launcher": "^0.2.1",
     "karma-cli": "^0.1.1",
+    "karma-coverage": "^0.5.3",
     "karma-mocha": "^0.2.0",
     "karma-mocha-reporter": "^1.1.1",
+    "karma-notify-reporter": "^0.1.1",
     "karma-phantomjs-launcher": "^0.2.1",
     "karma-sinon": "^1.0.4",
     "karma-sourcemap-loader": "^0.3.6",
