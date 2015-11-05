@@ -13,6 +13,7 @@ var CFConstraintsQuickAdd = Class.extend({
         this.stateProcessor = new StateProcessor(this.requirements);
         this.cascadeTracker = new CascadeTracker(this.requirements);
         this.quickAddComponents = [
+            {componentName: 'board.cell.quick.add'},
             {componentName: 'board cell quick add'},
             {componentName: 'board axis quick add'},
             {componentName: 'board plus quick add general'},
@@ -55,10 +56,16 @@ var CFConstraintsQuickAdd = Class.extend({
                     this.dataProvider.getCustomFieldsForTypesAndProcessesPromise(configurator, entityTypes, processIds)
                 ).done(_.bind(function(entityStates, customFields) {
 
-                    var requiredCFsToModify = this._buildRequiredCFsToModify(
-                        {afterInitEvtArg: afterInitEvtArg, dataBindEvtArg: dataBindEvtArg, settingsReadyEvtArg: settingsReadyEvtArg},
-                        {entityTypes: entityTypes, processes: processes, customFields: customFields, entityStates: entityStates}
-                    );
+                    var requiredCFsToModify = this._buildRequiredCFsToModify({
+                        afterInitEvtArg: afterInitEvtArg,
+                        dataBindEvtArg: dataBindEvtArg,
+                        settingsReadyEvtArg: settingsReadyEvtArg
+                    }, {
+                        entityTypes: entityTypes,
+                        processes: processes,
+                        customFields: customFields,
+                        entityStates: entityStates
+                    });
 
                     this._modifyBindData(dataBindEvtArg, requiredCFsToModify);
 

@@ -60,17 +60,37 @@ var CFConstraintsQuickAdd = Class.extend({
     },
 
     _getAxisName: function(afterInitEvtArg, sliceDefinition, settingsReadyEvtArg, axisName) {
-        var propertyName = this._getAxisValueName();
 
-        if (sliceDefinition[axisName] && afterInitEvtArg.config.options.action[axisName] && !this._compareArrays(sliceDefinition[axisName].types, settingsReadyEvtArg.types)) {
-            var axisValue = _.find(sliceDefinition[axisName].types, function(type) {
-                return type.toLowerCase().indexOf(propertyName) == 0;
-            });
-            if (axisValue) {
-                return this._getNewAxisValue(axisValue, afterInitEvtArg.config.options.action[axisName]);
+        const propertyName = this._getAxisValueName();
+
+        if (sliceDefinition[axisName]
+            && !this._compareArrays(sliceDefinition[axisName].types, settingsReadyEvtArg.types)
+        ) {
+
+            const isNewlist = !Boolean(afterInitEvtArg.config.options.action);
+            let axisAction;
+            let axisValue;
+
+            if (isNewlist) {
+
+                axisValue = axisName;
+                axisAction = _.last(afterInitEvtArg.config.options.path);
+
+            } else if (afterInitEvtArg.config.options.action[axisName]) {
+
+                axisValue = _.find(sliceDefinition[axisName].types, function(type) {
+                    return type.toLowerCase().indexOf(propertyName) == 0;
+                });
+                axisAction = afterInitEvtArg.config.options.action[axisName];
+
             }
+
+            if (axisValue) return this._getNewAxisValue(axisValue, axisAction);
+
         }
+
         return null;
+
     },
 
     _getSliceDefinition: function(afterInitEvtArg) {
