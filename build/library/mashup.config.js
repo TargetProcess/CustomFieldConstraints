@@ -7,7 +7,7 @@ tau.mashups.addModule("CustomFieldConstraints/config", [
                     {
                         "name": "Open",
                         "requiredCustomFields": [
-                            "Cf1"
+                            "xText"
                         ]
                     }
                 ],
