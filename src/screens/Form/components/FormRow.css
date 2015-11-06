@@ -23,6 +23,12 @@
     color: #999;
 }
 
+:local(.labeltextrichtext) {
+    align-self: flex-start;
+    position: relative;
+    top: 0.5em;
+}
+
 :local(.sublabeltext) {
     margin-top: 3px;
     font-size: 11px;

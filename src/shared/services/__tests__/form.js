@@ -90,7 +90,17 @@ describe('form', () => {
             check('text', ' preved ', ' preved ');
             check('number', '4', '4');
             check('number', 4, 4);
-            check('richtext', 'preved', '<!--markdown-->preved');
+
+            check('richtext', 'preved', 'preved');
+            expect(transformToServerFieldValue({
+                type: 'richtext',
+                format: 'html'
+            }, 'preved')).to.be.eql('preved');
+            expect(transformToServerFieldValue({
+                type: 'richtext',
+                format: 'markdown'
+            }, 'preved')).to.be.eql('<!--markdown-->preved');
+
             check('multipleselectionlist', ['a', 'b'], 'a,b');
             check('entity', {
                 id: 112,

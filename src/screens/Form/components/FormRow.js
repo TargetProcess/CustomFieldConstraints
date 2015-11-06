@@ -1,8 +1,10 @@
 import React, {PropTypes as T} from 'react';
 import {noop, pluck} from 'underscore';
+import cx from 'classnames';
 
 import Input from './Input';
-import styles from './FormRow.css';
+
+import {block, label as labelStyle, labeltextrichtext, labeltext, sublabeltext} from './FormRow.css';
 
 export default class FormRow extends React.Component {
 
@@ -39,27 +41,23 @@ export default class FormRow extends React.Component {
 
         }
 
-        if (fieldType === 'richtext') {
-
-            sublabel = 'You can use markdow here';
-
-        }
-
-        const title = hasErrors ? pluck(validationErrors, 'message').join('\n') : null;
+        const isInvalid = hasErrors && hasDirtyValue;
+        const title = isInvalid ? pluck(validationErrors, 'message').join('\n') : null;
 
         return (
-            <div className={styles.block} title={title}>
-                <label className={styles.label}>
-                    <div className={styles.labeltext}>
+            <div className={block} title={title}>
+                <label className={labelStyle}>
+                    <div className={cx(labeltext, {[labeltextrichtext]: fieldType === 'richtext'})}>
                         <span>{label}</span>
                         {sublabel ? (
-                            <div className={styles.sublabeltext}>{sublabel}</div>
+                            <div className={sublabeltext}>{sublabel}</div>
                         ) : null}
                     </div>
                     <Input
                         field={field}
-                        isInvalid={hasErrors && hasDirtyValue}
-                        onChange={onChange} ref="input"
+                        isInvalid={isInvalid}
+                        onChange={onChange}
+                        ref="input"
                         validationErrors={validationErrors}
                         value={value}
                     />

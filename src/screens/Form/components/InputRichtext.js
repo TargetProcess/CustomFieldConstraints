@@ -1,24 +1,37 @@
-import React, {findDOMNode} from 'react';
-import cx from 'classnames';
+import React, {PropTypes as T} from 'react';
+
+import TargetprocessCKEditor from './TargetprocessCKEditor';
+import TargetprocessMarkdownEditor from './TargetprocessMarkdownEditor';
 
 export default class InputRichtext extends React.Component {
 
+    static propTypes = {
+        format: T.oneOf(['html', 'markdown'])
+    }
+
+    static defaultProps = {
+        format: 'html'
+    }
+
     render() {
 
-        return (
-            <textarea
-                {...this.props}
-                className={cx('tau-in-text', {'tau-error': this.props.isInvalid})}
-                placeholder=" "
-                ref="input"
-            />
-        );
+        const {format} = this.props;
+
+        if (format === 'markdown') {
+
+            return (<TargetprocessMarkdownEditor {...this.props} ref="input" />);
+
+        } else {
+
+            return (<TargetprocessCKEditor {...this.props} ref="input" />);
+
+        }
 
     }
 
     get value() {
 
-        return findDOMNode(this.refs.input).value;
+        return this.refs.input.value;
 
     }
 

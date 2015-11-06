@@ -1,19 +1,22 @@
 /* globals mashup, tau */
 /* eslint global-require: 0 */
-var {invoke} = require('Underscore');
-var DataProvider = require('./lib/CFConstraints.data.provider');
-var Requirements = require('./lib/CFConstraints.requirements');
-var StateInterrupterStore = require('./lib/CFConstraints.state.interrupter.store');
-var CFInterrupterStore = require('./lib/CFConstraints.cf.interrupter.store');
-var StateInterrupterSlice = require('./lib/CFConstraints.state.interrupter.slice');
-var CFInterrupterSlice = require('./lib/CFConstraints.cf.interrupter.slice');
-var QuickAddAdapter = require('./lib/CFConstraints.quick.add');
+import {invoke} from 'Underscore';
 
-var {placeholderId} = mashup.variables;
-var mashupConfig = mashup.config;
+import configurator from 'tau/configurator';
+
+import DataProvider from './lib/CFConstraints.data.provider';
+import Requirements from './lib/CFConstraints.requirements';
+import StateInterrupterStore from './lib/CFConstraints.state.interrupter.store';
+import CFInterrupterStore from './lib/CFConstraints.cf.interrupter.store';
+import StateInterrupterSlice from './lib/CFConstraints.state.interrupter.slice';
+import CFInterrupterSlice from './lib/CFConstraints.cf.interrupter.slice';
+import QuickAddAdapter from './lib/CFConstraints.quick.add';
+
+const {placeholderId} = mashup.variables;
+const mashupConfig = mashup.config;
 
 /* eslint-disable no-unused-vars */
-var showPopupOld = ({entity, customFields}, next) => {
+const showPopupOld = ({entity, customFields}, next) => {
 
     const addTargetprocessModule = tau.mashups.addModule.bind(tau.mashups);
 
@@ -36,7 +39,16 @@ var showPopupOld = ({entity, customFields}, next) => {
 };
 /* eslint-enable no-unused-vars */
 
-var showPopupNew = ({entity, processId, requirementsData}, next) => {
+let globalRicheditorType;
+
+configurator.getGlobalSettingsService().getGlobalSettings()
+    .then(({DefaultRichEditor}) => {
+
+        globalRicheditorType = (DefaultRichEditor || 'html').toLowerCase();
+
+    });
+
+const showPopupNew = ({entity, processId, requirementsData}, next) => {
 
     require.ensure(['react', './screens/Form'], () => {
 
@@ -67,6 +79,7 @@ var showPopupNew = ({entity, processId, requirementsData}, next) => {
         React.render((
             <Form
                 entity={entity}
+                globalSettings={{richeditorType: globalRicheditorType}}
                 mashupConfig={mashupConfig}
                 onAfterSave={handleAfterSave}
                 onCancel={handleCancel}
@@ -79,7 +92,7 @@ var showPopupNew = ({entity, processId, requirementsData}, next) => {
 
 };
 
-var showPopup = (...args) => {
+const showPopup = (...args) => {
 
     // const {entity} = args[0];
 
@@ -90,11 +103,11 @@ var showPopup = (...args) => {
 
 };
 
-var init = () => {
+const init = () => {
 
-    var dataProvider = new DataProvider();
-    var requirements = new Requirements(mashupConfig);
-    var subscribers = [
+    const dataProvider = new DataProvider();
+    const requirements = new Requirements(mashupConfig);
+    const subscribers = [
         new StateInterrupterStore(dataProvider, requirements, showPopup),
         new CFInterrupterStore(dataProvider, requirements, showPopup),
         new StateInterrupterSlice(dataProvider, requirements, showPopup),

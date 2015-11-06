@@ -12,7 +12,6 @@ export default class InputText extends React.Component {
                 type="text"
                 {...this.props}
                 className={cx('tau-in-text', {'tau-error': this.props.isInvalid})}
-                value={this.props.value}
             />
         );
 

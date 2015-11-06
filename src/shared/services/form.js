@@ -17,7 +17,7 @@ export const transformFromServerFieldValue = (field, value) => {
 
 };
 
-export const transformFieldFromServer = (field) => {
+export const transformFieldFromServer = (field, globalSettings = {}) => {
 
     const processedField = {
         ...field,
@@ -30,6 +30,12 @@ export const transformFieldFromServer = (field) => {
     if (processedField.type === 'multipleselectionlist' || processedField.type === 'dropdown') {
 
         processedField.value = processServerSelectOptions(processedField.value);
+
+    }
+
+    if (processedField.type === 'richtext') {
+
+        processedField.format = globalSettings.richeditorType;
 
     }
 
@@ -53,7 +59,7 @@ export const transformToServerFieldValue = (field, value) => {
 
     }
 
-    if (field.type === 'richtext' && typeof value === 'string') {
+    if (field.type === 'richtext' && typeof value === 'string' && field.format === 'markdown') {
 
         return `<!--markdown-->${value}`;
 

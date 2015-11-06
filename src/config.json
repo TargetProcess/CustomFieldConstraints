@@ -5,7 +5,7 @@
             "entityStates": [
                 {
                     "name": "Open",
-                    "requiredCustomFields": ["xText"]
+                    "requiredCustomFields": ["Cf1"]
                 }
             ],
             "customFields": [
