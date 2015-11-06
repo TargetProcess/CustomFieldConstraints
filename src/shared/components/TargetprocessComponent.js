@@ -61,6 +61,12 @@ export default class TargetprocessComponent extends React.Component {
 
     }
 
+    componentWillUnmount() {
+
+        this.bus.fire('destroy');
+
+    }
+
     render() {
 
         return (

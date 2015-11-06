@@ -55,6 +55,16 @@ export default class TargetprocessCKEditor extends React.Component {
 
     }
 
+    componentWillUnmount() {
+
+        if (!this.state.canApplyRicheditor) return null;
+
+        const $editor = $(findDOMNode(this.refs.input.textarea));
+
+        $editor.richeditor('destroy');
+
+    }
+
     render() {
 
         return (
