@@ -36,7 +36,22 @@ export default class TargetprocessCKEditor extends React.Component {
         });
         $editor.richeditor('show');
         $editor.on('richeditorchange', this.props.onChange);
-        $editor.richeditor('instance').editor.on('blur', this.props.onChange);
+
+        const setBlur = () => {
+
+            if ($editor.richeditor('instance').editor) {
+
+                $editor.richeditor('instance').editor.on('blur', this.props.onChange);
+
+            } else {
+
+                setTimeout(setBlur, 100);
+
+            }
+
+        };
+
+        setBlur();
 
     }
 
