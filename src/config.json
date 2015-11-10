@@ -1,11 +1,11 @@
 [{
-    "processId": 14,
+    "processId": 2,
     "constraints": {
         "userstory": {
             "entityStates": [
                 {
                     "name": "Open",
-                    "requiredCustomFields": ["xText", "xRich", "xRelated"]
+                    "requiredCustomFields": ["Cf1"]
                 }
             ],
             "customFields": [

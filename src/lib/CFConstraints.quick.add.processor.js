@@ -74,7 +74,7 @@ var CFConstraintsQuickAdd = Class.extend({
             if (isNewlist) {
 
                 axisValue = axisName;
-                axisAction = _.last(afterInitEvtArg.config.options.path);
+                axisAction = _.last(afterInitEvtArg.config.options.path) || '';
 
             } else if (afterInitEvtArg.config.options.action[axisName]) {
 
