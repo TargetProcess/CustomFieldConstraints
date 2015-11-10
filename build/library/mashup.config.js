@@ -1,15 +1,13 @@
 tau.mashups.addModule("CustomFieldConstraints/config", [
     {
-        "processId": 14,
+        "processId": 2,
         "constraints": {
             "userstory": {
                 "entityStates": [
                     {
                         "name": "Open",
                         "requiredCustomFields": [
-                            "xText",
-                            "xRich",
-                            "xRelated"
+                            "Cf1"
                         ]
                     }
                 ],
