@@ -150,15 +150,11 @@ const getConnectedCustomFields = (fields, customFieldsConfig, currentCustomField
 
     return fields.reduce((res, field) => {
 
-        if (initialCustomFieldsValues[field.name]) return res;
+        if (includeTop && initialCustomFieldsValues[field.name]) return res;
 
         let ret = res;
 
-        if (includeTop) {
-
-            ret = ret.concat(field);
-
-        }
+        if (includeTop) ret = ret.concat(field);
 
         ret = ret.concat(getConnectedCustomFieldsByField(field, customFieldsConfig, currentCustomFieldsValues, initialCustomFieldsValues));
 

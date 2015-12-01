@@ -573,6 +573,78 @@ describe('customFieldsRequirements', () => {
 
         });
 
+        it('returns list of nested custom fields names for existing values', () => {
+
+            const config = [{
+                processId: 13,
+                constraints: {
+                    userstory: {
+                        customFields: [{
+                            name: 'xxx',
+                            valueNotIn: [42],
+                            requiredCustomFields: ['yyy']
+                        }, {
+                            name: 'yyy'
+                        }]
+                    },
+                    feature: {}
+                }
+            }];
+
+            const processId = 13;
+            const changedFieldsNames = ['xxx'];
+
+            const cfValues = {
+                xxx: 442,
+                yyy: void 0
+            };
+
+            const existingValues = {
+                xxx: 1442,
+                y: null
+            };
+
+            expect(getCustomFieldsNamesForChangedCustomFields(changedFieldsNames, config, processId, 'userstory', cfValues, existingValues))
+                .to.be.eql(['yyy']);
+
+        });
+
+        it('returns empty nested custom fields names for existing values if check value', () => {
+
+            const config = [{
+                processId: 13,
+                constraints: {
+                    userstory: {
+                        customFields: [{
+                            name: 'xxx',
+                            valueNotIn: [42],
+                            requiredCustomFields: ['yyy']
+                        }, {
+                            name: 'yyy'
+                        }]
+                    },
+                    feature: {}
+                }
+            }];
+
+            const processId = 13;
+            const changedFieldsNames = ['xxx'];
+
+            const cfValues = {
+                xxx: 42,
+                yyy: void 0
+            };
+
+            const existingValues = {
+                xxx: 1442,
+                y: null
+            };
+
+            expect(getCustomFieldsNamesForChangedCustomFields(changedFieldsNames, config, processId, 'userstory', cfValues, existingValues))
+                .to.be.eql([]);
+
+        });
+
     });
 
 });
