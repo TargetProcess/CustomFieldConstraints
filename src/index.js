@@ -2,8 +2,6 @@
 /* eslint global-require: 0 */
 import {invoke} from 'Underscore';
 
-import configurator from 'tau/configurator';
-
 import DataProvider from './lib/CFConstraints.data.provider';
 import Requirements from './lib/CFConstraints.requirements';
 import StateInterrupterStore from './lib/CFConstraints.state.interrupter.store';
@@ -39,15 +37,6 @@ const showPopupOld = ({entity, customFields}, next) => {
 };
 /* eslint-enable no-unused-vars */
 
-let globalRicheditorType;
-
-configurator.getGlobalSettingsService().getGlobalSettings()
-    .then(({DefaultRichEditor}) => {
-
-        globalRicheditorType = (DefaultRichEditor || 'html').toLowerCase();
-
-    });
-
 const showPopupNew = ({entity, processId, requirementsData}, next) => {
 
     require.ensure(['react', './screens/Form'], () => {
@@ -79,7 +68,6 @@ const showPopupNew = ({entity, processId, requirementsData}, next) => {
         React.render((
             <Form
                 entity={entity}
-                globalSettings={{richeditorType: globalRicheditorType}}
                 mashupConfig={mashupConfig}
                 onAfterSave={handleAfterSave}
                 onCancel={handleCancel}

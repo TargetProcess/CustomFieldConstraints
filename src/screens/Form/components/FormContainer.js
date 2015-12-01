@@ -85,7 +85,6 @@ export default class FormContainer extends React.Component {
                 name: T.string.isRequired
             }).isRequired
         }).isRequired,
-        globalSettings: T.object,
         mashupConfig: T.array,
         onAfterSave: T.func,
         onCancel: T.func,
@@ -95,7 +94,6 @@ export default class FormContainer extends React.Component {
 
     state = {
         defaultValues: {},
-        globalSettings: {},
         isLoading: true,
         onAfterSave: noop,
         onCancel: noop,
@@ -104,13 +102,13 @@ export default class FormContainer extends React.Component {
 
     componentDidMount() {
 
-        const {processId, entity, globalSettings} = this.props;
+        const {processId, entity} = this.props;
 
         getCustomFieldsByEntity(processId, entity)
             .then((allEntityCustomFields) => {
 
                 const processedFields = allEntityCustomFields.map((field) =>
-                    transformFieldFromServer(field, globalSettings));
+                    transformFieldFromServer(field));
 
                 const defaultValues = pluckObject(processedFields, 'name', 'defaultValue');
 

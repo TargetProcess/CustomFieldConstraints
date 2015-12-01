@@ -10,7 +10,7 @@ import {block} from './TargetprocessCKEditor.css';
 export default class TargetprocessCKEditor extends React.Component {
 
     state = {
-        canApplyRicheditor: Boolean($.ui.richeditorMarkdown)
+        canApplyRicheditor: Boolean($.ui.richeditor)
     }
 
     componentDidMount() {

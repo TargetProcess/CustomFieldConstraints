@@ -69,7 +69,7 @@ var makeWebpackConfig = function(opts_) {
     config.output = {
         filename: '[name].js',
         path: 'dist',
-        chunkFilename: 'chunks/[id].[name].js',
+        chunkFilename: 'chunks/[id].[name].[hash].js',
         pathinfo: !opts.production,
         // should be unique to prevent collision with main webpack instance
         jsonpFunction: `webpackJsonp_mashup_${mashupName}`

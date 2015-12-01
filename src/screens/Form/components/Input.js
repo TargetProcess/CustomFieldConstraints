@@ -45,20 +45,9 @@ export default class Input extends React.Component {
             url: InputUrl
         }[fieldType] || InputText;
 
-        let additionalProps = {};
-
-        if (fieldType === 'richtext') {
-
-            additionalProps = {
-                format: field.format
-            };
-
-        }
-
         return (
             <Widget
                 {...this.props}
-                {...additionalProps}
                 onBlur={this.handleBlur}
                 onChange={this.handleChange}
                 ref="widget"
