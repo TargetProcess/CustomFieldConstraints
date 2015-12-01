@@ -8,6 +8,7 @@
     "build": "webpack",
     "build-production": "webpack --output-path build --config webpack-production.config.js && mv build/index.js build/release.is",
     "build-library": "rm -rf build/library && webpack --output-path build/library --config webpack-library.config.js && cp docs/README.md build/library/README.mkd && cp docs/*.png build/library",
+    "build-all": "npm run build-production && npm run build-library",
     "test": "eslint --quiet . && karma start --single-run --reporters spec,coverage --browsers PhantomJS",
     "test-dev": "karma start --reporters spec,notify --browsers PhantomJS"
   },
