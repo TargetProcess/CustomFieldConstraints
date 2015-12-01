@@ -33,7 +33,7 @@ export default class TargetprocessMarkdownEditor extends React.Component {
 
         const $editor = $(findDOMNode(this.refs.input.textarea));
 
-        $editor.richeditor('destroy');
+        $editor.richeditorMarkdown('destroy');
 
     }
 
