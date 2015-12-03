@@ -9,6 +9,7 @@ import {block, label as labelStyle, labeltextrichtext, labeltext, sublabeltext} 
 export default class FormRow extends React.Component {
 
     static propTypes = {
+        autoFocus: T.boolean,
         item: T.shape({
             name: T.string,
             field: Input.propTypes.field.isRequired,
@@ -23,7 +24,7 @@ export default class FormRow extends React.Component {
 
     render() {
 
-        const {item, onChange} = this.props;
+        const {item, onChange, autoFocus} = this.props;
         const {name, field, hasDirtyValue, value, hasErrors, validationErrors} = item;
         const fieldType = field.type;
         let label = name;
@@ -54,6 +55,7 @@ export default class FormRow extends React.Component {
                         ) : null}
                     </div>
                     <Input
+                        autoFocus={autoFocus}
                         field={field}
                         isInvalid={isInvalid}
                         onChange={onChange}

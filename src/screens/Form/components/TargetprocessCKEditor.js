@@ -25,7 +25,7 @@ export default class TargetprocessCKEditor extends React.Component {
                 toolbar: 'Basic',
                 toolbarStartupExpanded: true,
                 toolbarCanCollapse: false,
-                startupFocus: true,
+                startupFocus: this.props.autoFocus,
                 uploaderConfig: {
                     uploadFiles: null
                 },

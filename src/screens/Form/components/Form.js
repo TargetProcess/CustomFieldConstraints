@@ -25,8 +25,9 @@ export default class Form extends React.Component {
 
         return (
             <form onSubmit={this.handleSubmit}>
-                {fields.map((field) => (
+                {fields.map((field, k) => (
                     <FormRow
+                        autoFocus={!k}
                         item={field}
                         key={field.name}
                         onChange={this.handleChange}
