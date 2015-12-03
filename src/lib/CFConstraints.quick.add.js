@@ -16,7 +16,7 @@ var CFConstraintsQuickAdd = Class.extend({
             {componentName: 'board.cell.quick.add'},
             {componentName: 'board cell quick add'},
             {componentName: 'board axis quick add'},
-            {componentName: 'board plus quick add general'},
+            {componentName: 'board plus quick add general', doNotWaitSettingsReady: true},
             {componentName: 'board plus quick add cells'},
             {componentName: 'board general quick add'},
             {componentName: 'entity quick add', doNotWaitSettingsReady: true}
