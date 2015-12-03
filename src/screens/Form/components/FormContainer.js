@@ -9,7 +9,8 @@ import {
     transformFieldFromServer,
     transformToServerFieldValue,
     sanitizeFieldValue,
-    validateFieldValue
+    validateFieldValue,
+    isEmptyInitialValue
 } from 'services/form';
 
 import Form from './Form';
@@ -35,7 +36,7 @@ const getEntityCustomFieldValue = ({customFields: entityCustomFields}, field) =>
     const entityCustomField = find(entityCustomFields, (entityField) =>
         entityField.name.toLowerCase() === field.name.toLowerCase());
 
-    return entityCustomField ? transformFromServerFieldValue(field, entityCustomField.value) : void 0;
+    return entityCustomField ? transformFromServerFieldValue(field, entityCustomField.value) : null;
 
 };
 
@@ -224,8 +225,13 @@ export default class FormContainer extends React.Component {
 
         const {values, defaultValues, allEntityCustomFields} = this.state;
 
-        const existingValues = object(allEntityCustomFields.map((field) =>
-            [field.name, transformFromServerFieldValue(field, getEntityCustomFieldValue(entity, field))]));
+        const existingValues = object(allEntityCustomFields
+            .map((field) => [
+                field,
+                transformFromServerFieldValue(field, getEntityCustomFieldValue(entity, field))
+            ])
+            .filter(([field, value]) => !isEmptyInitialValue(field, value))
+            .map(([field, value]) => [field.name, value]));
 
         let fieldsNames = [];
 

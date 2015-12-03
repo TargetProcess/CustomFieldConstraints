@@ -1,4 +1,4 @@
-import {find, pluck, isArray} from 'underscore';
+import {find, pluck, isArray, uniq} from 'underscore';
 
 const equalIgnoreCase = (a, b) => String(a).toLowerCase() === String(b).toLowerCase();
 const getProp = (obj, key) => find(obj, (v, k) => equalIgnoreCase(k, key));
@@ -150,7 +150,7 @@ const getConnectedCustomFields = (fields, customFieldsConfig, currentCustomField
 
     return fields.reduce((res, field) => {
 
-        if (includeTop && initialCustomFieldsValues[field.name]) return res;
+        if (includeTop && initialCustomFieldsValues.hasOwnProperty(field.name)) return res;
 
         let ret = res;
 
@@ -174,7 +174,7 @@ export const getCustomFieldsNamesForNewState = (entityState, config, processId, 
 
     const allFields = getConnectedCustomFields(rootFields, customFieldsConfig, currentCustomFieldsValues, initialCustomFieldsValues);
 
-    return pluck(allFields, 'name');
+    return uniq(pluck(allFields, 'name'));
 
 };
 
@@ -188,6 +188,6 @@ export const getCustomFieldsNamesForChangedCustomFields = (changedFieldsNames, c
 
     const allFields = getConnectedCustomFields(rootFields, customFieldsConfig, currentCustomFieldsValues, initialCustomFieldsValues, false);
 
-    return pluck(allFields, 'name');
+    return uniq(pluck(allFields, 'name'));
 
 };

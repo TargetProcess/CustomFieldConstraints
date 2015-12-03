@@ -168,11 +168,11 @@ describe('customFieldsRequirements', () => {
             const cfValues = {};
 
             expect(getCustomFieldsNamesForNewState(entityStateName, config, processId, 'userstory', cfValues))
-                .to.be.eql(['xxx', 'xxx']);
+                .to.be.eql(['xxx']);
 
         });
 
-        it('solves circular dependencies', () => {
+        it('solves circular dependencies without duplicates', () => {
 
             const config = [{
                 processId: 13,
@@ -200,7 +200,36 @@ describe('customFieldsRequirements', () => {
             const cfValues = {};
 
             expect(getCustomFieldsNamesForNewState(entityStateName, config, processId, 'userstory', cfValues))
-                .to.be.eql(['xxx', 'yyy', 'xxx']);
+                .to.be.eql(['xxx', 'yyy']);
+
+        });
+
+        it('solves duplicates', () => {
+
+            const config = [{
+                processId: 13,
+                constraints: {
+                    userstory: {
+                        entityStates: [{
+                            name: 'Open',
+                            requiredCustomFields: ['xxx', 'yyy']
+                        }],
+                        customFields: [{
+                            name: 'xxx',
+                            requiredCustomFields: ['yyy']
+                        }]
+                    },
+                    feature: {}
+                }
+            }];
+
+            const processId = 13;
+            const entityStateName = 'open';
+
+            const cfValues = {};
+
+            expect(getCustomFieldsNamesForNewState(entityStateName, config, processId, 'userstory', cfValues))
+                .to.be.eql(['xxx', 'yyy']);
 
         });
 

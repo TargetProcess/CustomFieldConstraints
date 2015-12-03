@@ -81,11 +81,18 @@ const isEmptyValidator = (field, value) => {
         multipleselectionlist: (val) => !val.length
     };
 
-    if ((validators[field.type] || validators.text)(value)) {
+    if ((validators[field.type] || validators.text)(value)) return new Error('Field is empty');
 
-        return new Error('Field is empty');
+};
 
-    }
+export const isEmptyInitialValue = (field, value) => {
+
+    const checks = {
+        multipleselectionlist: (val) => !val.length,
+        defaults: (val) => val === null
+    };
+
+    return ((checks[field.type] || checks.defaults)(value));
 
 };
 
