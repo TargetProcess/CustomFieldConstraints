@@ -1,4 +1,4 @@
-/* globals mashup, tau */
+/* globals mashup */
 /* eslint global-require: 0 */
 import {invoke} from 'Underscore';
 
@@ -12,30 +12,6 @@ import QuickAddAdapter from './lib/CFConstraints.quick.add';
 
 const {placeholderId} = mashup.variables;
 const mashupConfig = mashup.config;
-
-/* eslint-disable no-unused-vars */
-const showPopupOld = ({entity, customFields}, next) => {
-
-    const addTargetprocessModule = tau.mashups.addModule.bind(tau.mashups);
-
-    require.ensure(['./components_old/application', './components_old/index.css'], () => {
-
-        const Application = require('./components_old/application');
-
-        require('./components_old/index.css');
-
-        return new Application({
-            placeholder: `#${placeholderId}`,
-            customFields,
-            entity,
-            addTargetprocessModule,
-            entityDeferred: next
-        });
-
-    }, 'ApplicationOld');
-
-};
-/* eslint-enable no-unused-vars */
 
 const showPopupNew = ({entity, processId, requirementsData}, next) => {
 
@@ -81,11 +57,6 @@ const showPopupNew = ({entity, processId, requirementsData}, next) => {
 };
 
 const showPopup = (...args) => {
-
-    // const {entity} = args[0];
-
-    // if (parseInt(entity.name, 10) % 2) showPopupOld(...args);
-    // else showPopupNew(...args);
 
     showPopupNew(...args);
 
