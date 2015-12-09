@@ -9,7 +9,7 @@ import {block, label as labelStyle, labeltextrichtext, labeltext, sublabeltext} 
 export default class FormRow extends React.Component {
 
     static propTypes = {
-        autoFocus: T.boolean,
+        autoFocus: T.bool,
         item: T.shape({
             name: T.string,
             field: Input.propTypes.field.isRequired,
