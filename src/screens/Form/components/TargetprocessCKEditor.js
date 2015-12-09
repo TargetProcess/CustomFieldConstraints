@@ -1,5 +1,6 @@
 import React, {findDOMNode} from 'react';
 import $ from 'jquery';
+import {omit} from 'underscore';
 
 import configurator from 'tau/configurator';
 
@@ -68,7 +69,7 @@ export default class TargetprocessCKEditor extends React.Component {
     render() {
 
         return (
-            <InputTextarea {...this.props} className={block} ref="input" />
+            <InputTextarea {...omit(this.props, 'onBlur')} className={block} ref="input" />
         );
 
     }
