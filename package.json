@@ -4,7 +4,7 @@
   "description": "This mashup allows a custom field to be required when an entity is moved to a specific state or a specific value is selected in another custom field.",
   "author": "Aliaksei Shytkin <shitkin@targetprocess.com>",
   "scripts": {
-    "start": "rm -rf $TARGETPROCESS_MASHUPS_PATH/CustomFieldConstraints && NODE_ENV=development webpack --watch --output-path $TARGETPROCESS_MASHUPS_PATH/CustomFieldConstraints",
+    "start": "outputPath=$TARGETPROCESS_MASHUPS_PATH/$npm_package_name; rm -rf $outputPath && NODE_ENV=development webpack --watch --output-path $outputPath",
     "build": "webpack",
     "build-production": "webpack --output-path build --config webpack-production.config.js && mv build/index.js build/release.is",
     "build-library": "rm -rf build/library && webpack --output-path build/library --config webpack-library.config.js && cp docs/README.md build/library/README.mkd && cp docs/*.png build/library",
