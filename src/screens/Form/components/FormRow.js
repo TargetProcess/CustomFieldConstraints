@@ -30,17 +30,9 @@ export default class FormRow extends React.Component {
         let label = name;
         let sublabel;
 
-        if (fieldType === 'checkbox') {
+        if (fieldType === 'checkbox') label = '';
 
-            label = '';
-
-        }
-
-        if (fieldType === 'money') {
-
-            label = `${label}, ${field.config.units}`;
-
-        }
+        if (fieldType === 'money') label = `${label}, ${field.config.units}`;
 
         const isInvalid = hasErrors && hasDirtyValue;
         const title = isInvalid ? pluck(validationErrors, 'message').join('\n') : null;
