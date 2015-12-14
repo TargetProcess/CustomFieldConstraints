@@ -42,7 +42,7 @@ export default class TargetprocessCKEditor extends React.Component {
 
             if ($editor.richeditor('instance').editor) {
 
-                $editor.richeditor('instance').editor.on('blur', this.props.onChange);
+                $editor.richeditor('instance').editor.on('blur', this.props.onBlur);
 
             } else {
 
@@ -69,7 +69,7 @@ export default class TargetprocessCKEditor extends React.Component {
     render() {
 
         return (
-            <InputTextarea {...omit(this.props, 'onBlur')} className={block} ref="input" />
+            <InputTextarea {...omit(this.props, 'onBlur', 'onChange')} className={block} ref="input" />
         );
 
     }

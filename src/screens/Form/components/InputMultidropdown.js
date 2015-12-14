@@ -18,6 +18,7 @@ export default class InputMultidropdown extends React.Component {
                 {...this.props}
                 className={cx('tau-select', {'tau-error': this.props.isInvalid})}
                 multiple={true}
+                onFocus={this.handleFocus}
                 ref="input"
                 type="text"
                 value={value}
@@ -30,9 +31,17 @@ export default class InputMultidropdown extends React.Component {
 
     }
 
+    handleFocus = (e) => {
+
+        // prevent when async blur from another input calls re-render and this
+        // input has no value even some option was selected on focus before
+        setTimeout(() => this.props.onChange(e), 0);
+
+    }
+
     get value() {
 
-        return $(findDOMNode(this.refs.input)).val();
+        return $(findDOMNode(this.refs.input)).val() || [];
 
     }
 
