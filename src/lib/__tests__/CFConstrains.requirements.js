@@ -255,6 +255,44 @@ describe('CFConstrains.requirements', () => {
 
         })).to.be.eql([{name: 'yyy'}, {name: 'zzz'}]);
 
+        req = new Requirements([{
+            processId: 1,
+            constraints: {
+                userstory: {
+                    customFields: [{
+                        name: 'xxx',
+                        valueIn: [1],
+                        requiredCustomFields: ['yyy', 'zzz']
+                    }]
+                },
+                feature: {}
+            }
+        }]);
+
+        expect(req.getRequiredCFsForCFs({
+            processId: 1,
+            entity: {
+                entityType: {
+                    name: 'UserStory'
+                },
+                customFields: [{
+                    name: 'xxx'
+                }, {
+                    name: 'yyy'
+                }, {
+                    name: 'zzz'
+                }]
+            },
+            requirementsData: {
+                changedCFs: [{
+                    name: 'xxx',
+                    value: ['1', '2']
+                }]
+            }
+
+        })).to.be.eql([{name: 'yyy'}, {name: 'zzz'}]);
+
+
     });
 
 });

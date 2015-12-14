@@ -23,8 +23,6 @@ import {
     getCustomFieldsNamesForChangedCustomFields
 } from 'services/customFieldsRequirements';
 
-const pluckObject = (list, keyProp, valueProp) => object(list.map((v) => [v[keyProp], v[valueProp]]));
-
 const getCustomFieldsByEntity = (processId, entity) => store2.get('CustomField', {
     take: 1000,
     where: `process.id == ${processId} and entityType.id == ${entity.entityType.id}`,
@@ -52,8 +50,13 @@ const getCustomFieldsFromAllByNames = (customFields, fieldsNames) => {
 
 };
 
-const getInitialCustomFieldValue = (entity, field) =>
-    getEntityCustomFieldValue(entity, field) || field.config.defaultValue;
+const getInitialCustomFieldValue = (entity, field) => {
+
+    const value = getEntityCustomFieldValue(entity, field);
+
+    return isEmptyInitialValue(field, value) ? field.config.defaultValue : value;
+
+};
 
 const prepareFieldForForm = (entity, values, field) => {
 
@@ -111,7 +114,7 @@ export default class FormContainer extends React.Component {
                 const processedFields = allEntityCustomFields.map((field) =>
                     transformFieldFromServer(field));
 
-                const defaultValues = pluckObject(processedFields, 'name', 'defaultValue');
+                const defaultValues = object(processedFields.map((v) => [v.name, v.config.defaultValue]));
 
                 this.setState({
                     isLoading: false,

@@ -1,96 +1,119 @@
-var _ = require("underscore");
+import {isArray, keys, uniq, find, filter, reduce} from 'underscore';
 
+const equalIgnoreCase = (a, b) => String(a).toLowerCase() === String(b).toLowerCase();
+const inValues = (values, value = '') => {
+
+    if (isArray(value)) {
+
+        return value.some((v) => values.some((vv) => equalIgnoreCase(v, vv)));
+
+    }
+
+    return values.some((v) => equalIgnoreCase(v, value));
+
+};
+
+const checkChangedFieldByConstraint = (customField, constraint) => {
+
+    if (!equalIgnoreCase(customField.name, constraint.name)) return false;
+
+    if ('valueIn' in constraint) return inValues(constraint.valueIn, customField.value);
+    if ('valueNotIn' in constraint) return !inValues(constraint.valueNotIn, customField.value);
+
+    return false;
+
+};
+
+const findRequiredConstrainsByCfs = (constraints, customFields) =>
+    customFields.reduce((res, changedCF) =>
+        res.concat(constraints.filter((entityCFConstraint) =>
+            checkChangedFieldByConstraint(changedCF, entityCFConstraint))), []);
 
 export default class CFConstraintsRequirements {
 
     constructor(cfConstraintsConfig) {
+
         this.config = cfConstraintsConfig;
+
     }
 
     getConfig() {
+
         return this.config;
+
     }
 
     getEntityTypesToInterrupt() {
-        var types = _.reduce(this.config, function(entityTypesMemo, rule) {
-            return entityTypesMemo.concat(_.keys(rule.constraints));
-        }, []);
 
-        return _.uniq(types);
+        const types = this.config.reduce((res, rule) => res.concat(keys(rule.constraints)), []);
+
+        return uniq(types);
+
     }
 
     getRequiredCFsForState(entityWithRequirements) {
-        var entityTypeCFConstraintsRule = this.getEntityTypeCFConstraintsRule(entityWithRequirements);
 
-        if (!entityTypeCFConstraintsRule) {
-            return [];
-        }
+        const entityTypeCFConstraintsRule = this.getEntityTypeCFConstraintsRule(entityWithRequirements);
 
-        var stateCFConstraints = entityTypeCFConstraintsRule.entityStates;
+        if (!entityTypeCFConstraintsRule) return [];
 
-        var requiredCFConstraints = _.filter(stateCFConstraints, function(stateCFConstraint) {
-            return stateCFConstraint.name.toLowerCase() === entityWithRequirements.requirementsData.newState.name.toLowerCase();
-        });
+        const stateCFConstraints = entityTypeCFConstraintsRule.entityStates;
+
+        if (!stateCFConstraints) return [];
+
+        const requiredCFConstraints = stateCFConstraints.filter((stateCFConstraint) =>
+            equalIgnoreCase(stateCFConstraint.name, entityWithRequirements.requirementsData.newState.name));
 
         return this._getRequiredCFs(entityWithRequirements, requiredCFConstraints);
+
     }
 
-    getRequiredCFsForCFs(entityWithRequirements) {
-        var entityCFConstraints = this.getEntityCFConstraints(entityWithRequirements);
+    getRequiredCFsForCFs(entity) {
 
-        if (!entityCFConstraints) {
-            return [];
-        }
+        const entityConstraints = this.getEntityCFConstraints(entity);
+        const changedFields = entity.requirementsData.changedCFs;
 
-        var requiredCFConstraints = _.reduce(entityWithRequirements.requirementsData.changedCFs, function(cfConstraintsMemo, changedCF) {
-            var cfConstraints = _.filter(entityCFConstraints, function(entityCFConstraint) {
-                return entityCFConstraint.name.toLowerCase() === changedCF.name.toLowerCase()
-                    && (entityCFConstraint.valueIn
-                    ? _.some(entityCFConstraint.valueIn, function(value) {
-                    return value === changedCF.value;
-                })
-                    : _.every(entityCFConstraint.valueNotIn, function(value) {
-                    return value !== changedCF.value;
-                }))
-            });
-            return cfConstraintsMemo.concat(cfConstraints);
-        }, []);
+        if (!entityConstraints) return [];
 
-        return this._getRequiredCFs(entityWithRequirements, requiredCFConstraints);
+        const requiredConstraints = findRequiredConstrainsByCfs(entityConstraints, changedFields);
+
+        return this._getRequiredCFs(entity, requiredConstraints);
+
     }
 
     getEntityTypeCFConstraintsRule(entityWithRequirements) {
-        var processCFConstraintsRule = this.getProcessCFConstraintsRule(entityWithRequirements);
 
-        if (!processCFConstraintsRule) {
-            return null;
-        }
+        const processCFConstraintsRule = this.getProcessCFConstraintsRule(entityWithRequirements);
+
+        if (!processCFConstraintsRule) return null;
 
         return processCFConstraintsRule.constraints[entityWithRequirements.entity.entityType.name.toLowerCase()];
+
     }
 
     getEntityCFConstraints(entityWithRequirements) {
-        var entityTypeCFConstraintsRule = this.getEntityTypeCFConstraintsRule(entityWithRequirements);
+
+        const entityTypeCFConstraintsRule = this.getEntityTypeCFConstraintsRule(entityWithRequirements);
+
         return entityTypeCFConstraintsRule ? entityTypeCFConstraintsRule.customFields : null;
+
     }
 
     getProcessCFConstraintsRule(entityWithRequirements) {
-        return _.find(this.config,
-            function(constraint) {
-                return Number(constraint.processId) === Number(entityWithRequirements.processId);
-            });
+
+        return find(this.config, (constraint) =>
+            Number(constraint.processId) === Number(entityWithRequirements.processId));
+
     }
 
     _getRequiredCFs(entityWithRequirements, requiredCFConstraints) {
-        var requiredCFs = _.reduce(requiredCFConstraints, function(requiredCFsMemo, cfConstraint) {
-            var requiredCFsByConstraint = _.filter(entityWithRequirements.entity.customFields, function(cf) {
-                return _.find(cfConstraint.requiredCustomFields, function(requiredCF) {
-                    return cf.name.toLowerCase() === requiredCF.toLowerCase() && (!cf.value || cf.value.toString() === '');
-                });
-            });
-            return requiredCFsMemo.concat(requiredCFsByConstraint);
-        }, []);
 
-        return _.uniq(requiredCFs);
+        const requiredCFs = reduce(requiredCFConstraints, (res, cfConstraint) =>
+            res.concat(filter(entityWithRequirements.entity.customFields, (cf) =>
+                find(cfConstraint.requiredCustomFields, (requiredCF) =>
+                    equalIgnoreCase(cf.name, requiredCF) && (!cf.value || cf.value.toString() === '')))), []);
+
+        return uniq(requiredCFs);
+
     }
 }
