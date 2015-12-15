@@ -1,7 +1,17 @@
-var _ = require("Underscore");
+import _, {isString} from 'Underscore';
 var Storage = require("tp3/mashups/storage");
 var CFConstraintsCFInterrupter = require("./CFConstraints.cf.interrupter");
+
+const processRestServerValue = (field, value) => {
+
+    if (field.type.toLowerCase() === 'multipleselectionlist') return isString(value) ? value.split(',') : [];
+
+    return value;
+
+};
+
 var CFConstraintsCFInterrupterStore = CFConstraintsCFInterrupter.extend({
+
     init: function(dataProvider, requirements, requireEntityCFsCallback) {
         this._super(dataProvider, requirements, requireEntityCFsCallback);
     },
@@ -19,6 +29,7 @@ var CFConstraintsCFInterrupterStore = CFConstraintsCFInterrupter.extend({
     },
 
     _getCFsChanges: function(entity, changesToHandle) {
+
         var entityChanges = _.find(changesToHandle, function(change) {
             return change.id == entity.id;
         });
@@ -33,7 +44,11 @@ var CFConstraintsCFInterrupterStore = CFConstraintsCFInterrupter.extend({
             return _.find(entity.customFields, function(cf) {
                 return changedCf.name == cf.name && changedCf.value != cf.value;
             });
-        });
+        })
+        .map((entityCustomField) => ({
+            ...entityCustomField,
+            value: processRestServerValue(entityCustomField, entityCustomField.value)
+        }));
     }
 });
 
