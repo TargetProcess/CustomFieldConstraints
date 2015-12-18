@@ -6,11 +6,11 @@
   "scripts": {
     "start": "outputPath=$TARGETPROCESS_MASHUPS_PATH/$npm_package_name; rm -rf $outputPath && NODE_ENV=development webpack --watch --output-path $outputPath",
     "build": "webpack",
-    "build-production": "webpack --output-path build --config webpack-production.config.js && mv build/index.js build/release.js",
-    "build-library": "rm -rf build/library && webpack --output-path build/library --config webpack-library.config.js && cp docs/README.md build/library/README.mkd && cp docs/*.png build/library",
-    "build-all": "npm run build-production && npm run build-library",
+    "build:production": "webpack --output-path build --config webpack-production.config.js && mv build/index.js build/release.js",
+    "build:library": "rm -rf build/library && webpack --output-path build/library --config webpack-library.config.js && cp docs/README.md build/library/README.mkd && cp docs/*.png build/library",
+    "build:all": "npm run build:production && npm run build:library",
     "test": "eslint --quiet . && karma start --single-run --reporters spec,coverage --browsers PhantomJS",
-    "test-dev": "karma start --reporters spec,notify --browsers PhantomJS"
+    "test:dev": "karma start --reporters spec,notify --browsers PhantomJS"
   },
   "repository": {
     "type": "git",
