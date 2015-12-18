@@ -6,6 +6,7 @@ import {buttons} from './Form.css';
 export default class Form extends React.Component {
 
     static propTypes = {
+        entity: T.object,
         fields: T.arrayOf(FormRow.propTypes.item),
         onChange: T.func,
         onSubmit: T.func,
@@ -20,7 +21,7 @@ export default class Form extends React.Component {
 
     render() {
 
-        const {fields, showProgress} = this.props;
+        const {entity, fields, showProgress} = this.props;
         const hasInvalid = fields.some(({validationErrors}) => validationErrors.length);
 
         return (
@@ -28,6 +29,7 @@ export default class Form extends React.Component {
                 {fields.map((field, k) => (
                     <FormRow
                         autoFocus={!k}
+                        entity={entity}
                         item={field}
                         key={field.name}
                         onChange={this.handleChange}

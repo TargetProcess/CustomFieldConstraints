@@ -24,7 +24,8 @@ export default class Input extends React.Component {
     }
 
     static defaultProps = {
-        onChange: noop
+        onChange: noop,
+        specificProps: {}
     }
 
     render() {

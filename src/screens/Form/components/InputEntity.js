@@ -8,16 +8,19 @@ import Bubble from 'components/Bubble';
 import TargetprocessFinder from './TargetprocessFinder';
 import TargetprocessLinkentity from './TargetprocessLinkentity';
 
-import {block, placeholder, inputwrapper} from './InputEntity.css';
+import S from './InputEntity.css';
 
 export default class InputEntity extends React.Component {
 
     static propTypes = {
+        filterEntityTypeName: T.string,
+        filterFields: T.object,
         onBlur: T.func,
         onChange: T.func
     }
 
     static defaultProps = {
+        filterFields: {},
         onBlur: noop,
         onChange: noop
     }
@@ -28,27 +31,10 @@ export default class InputEntity extends React.Component {
         showFinderBubble: false
     }
 
-    componentDidMount() {
-
-        const inBubble = (el) => $(el).closest('.tau-bubble').length;
-
-        this.clickListener = (e) => {
-
-            if (this.state.showFinder && !inBubble(e.target)) {
-
-                this.handleClickOutsideFinder();
-
-            }
-
-        };
-
-        document.body.addEventListener('click', this.clickListener);
-
-    }
-
     render() {
 
-        const {entity, showFinder} = this.state;
+        const {filterEntityTypeName, filterFields} = this.props;
+        const {entity, showFinder, showFinderBubble} = this.state;
         let finder;
         let finderBubble;
 
@@ -56,10 +42,8 @@ export default class InputEntity extends React.Component {
 
             finder = (
                 <TargetprocessFinder
-                    filterEntityTypeName="userstory"
-                    filterFields={{
-                        'project.id': 512
-                    }}
+                    filterEntityTypeName={filterEntityTypeName}
+                    filterFields={filterFields}
                     onAdjust={this.handleFinderAdjusted}
                     onRendered={this.handleFinderRendered}
                     onSelect={this.handleSelect}
@@ -76,10 +60,11 @@ export default class InputEntity extends React.Component {
                             collision: 'flipfit flipfit'
                         })
                     }}
+                    onClickOutside={this.handleClickOutsideFinder}
                     overlay={finder}
                     ref="bubble"
                     style={{
-                        visibility: this.state.showFinderBubble ? 'visible' : 'hidden'
+                        visibility: showFinderBubble ? 'visible' : 'hidden'
                     }}
                     target={findDOMNode(this.refs.trigger)}
                 />
@@ -98,7 +83,7 @@ export default class InputEntity extends React.Component {
         } else {
 
             innerOutput = (
-                <span className={placeholder}>
+                <span className={S.placeholder}>
                     {'Click to select entity'}
                 </span>
             );
@@ -108,19 +93,28 @@ export default class InputEntity extends React.Component {
         return (
             <div
                 {...this.props}
-                className={block}
+                className={S.block}
+                id={null}
                 onBlur={noop}
             >
-                <div className={cx('tau-resetable-input', inputwrapper)}>
+                <div className={S.inputwrapper}>
                     <div
-                        className={cx('tau-in-text', {'tau-error': this.props.isInvalid})}
+
+                        className={cx('tau-in-text', {
+                            'tau-error': this.props.isInvalid
+                        }, S.input)}
+                        id={this.props.id}
                         onClick={this.handleFocus}
                         ref="trigger"
-                        tabIndex="0"
+                        tabIndex="-1"
                     >
                         {innerOutput}
                     </div>
-                    {entity ? <button onClick={this.handleClickReset} type="button" /> : null}
+                    {entity ? (
+                        <button className={S.reset} onClick={this.handleClickReset} type="button">
+                            <i className="tau-icon-general tau-icon-close-round" />
+                        </button>
+                    ) : null}
                 </div>
                 {finderBubble}
             </div>
@@ -131,6 +125,7 @@ export default class InputEntity extends React.Component {
     handleFocus = () => {
 
         this.setState({
+            ...this.state,
             showFinder: !this.state.showFinder
         });
 
@@ -162,7 +157,9 @@ export default class InputEntity extends React.Component {
 
     }
 
-    handleClickOutsideFinder = () => {
+    handleClickOutsideFinder = (e) => {
+
+        if (!$(e.target).closest('body').length) return;
 
         this.setState({
             ...this.state,

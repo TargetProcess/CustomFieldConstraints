@@ -6,7 +6,7 @@ export default class Bubble extends React.Component {
 
     static propTypes = {
         config: PropTypes.object,
-        onOuterClick: PropTypes.func.isRequired,
+        onClickOutside: PropTypes.func.isRequired,
         overlay: PropTypes.node.isRequired,
         style: PropTypes.object,
         target: PropTypes.object.isRequired
@@ -14,7 +14,7 @@ export default class Bubble extends React.Component {
 
     static defaultProps = {
         config: {},
-        onOuterClick: noop,
+        onClickOutside: noop,
         style: {}
     }
 
@@ -70,7 +70,7 @@ export default class Bubble extends React.Component {
     renderBubble(target, overlay) {
 
         this.bubble = findDOMNode(React.render(overlay, this.span));
-        // debugger;
+
         $(target)
             .tauBubble({
                 target: target,
@@ -95,7 +95,7 @@ export default class Bubble extends React.Component {
         if (e.target !== React.findDOMNode(target) && !React.findDOMNode(target).contains(e.target)
             && e.target !== this.bubble && !this.bubble.contains(e.target)) {
 
-            this.props.onOuterClick();
+            this.props.onClickOutside(e);
 
         }
 

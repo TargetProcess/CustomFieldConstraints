@@ -62,7 +62,7 @@ export default class TargetprocessFinder extends React.Component {
 
         const events = {
             entitySelected: ({entity}) => this.handleSelect(entity),
-            adjustPosition: () => this.handleAdjust()
+            'result.rendered': () => this.handleAdjust()
         };
 
         if (events[eventName]) events[eventName](data);
