@@ -136,7 +136,13 @@ export default class FormContainer extends React.Component {
 
         const realCustomFields = this.getCustomFields();
 
-        if (!realCustomFields.length) return null;
+        if (!realCustomFields.length) {
+
+            setTimeout(() => this.props.onAfterSave(), 100);
+
+            return null;
+
+        }
 
         return (
             <Overlay onClose={this.props.onCancel}>
