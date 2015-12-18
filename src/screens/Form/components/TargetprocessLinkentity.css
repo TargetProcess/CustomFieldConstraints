@@ -1,9 +1,9 @@
 :local(.block) {
     display: flex;
     align-items: baseline;
+    margin-bottom: 1px;
 }
 
 :local(.block) > .tau-linkentity__icon {
-    padding-left: 5px;;
     flex: 0 0 auto;
 }

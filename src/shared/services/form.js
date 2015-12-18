@@ -13,6 +13,12 @@ export const transformFromServerFieldValue = (field, value) => {
 
     }
 
+    if (field.type === 'multipleentities') {
+
+        return (isString(value) && value) ? value.split(',') : [];
+
+    }
+
     return value;
 
 };
@@ -27,7 +33,10 @@ export const transformFieldFromServer = (field) => {
     processedField.config.defaultValue =
         transformFromServerFieldValue(processedField, processedField.config.defaultValue);
 
-    if (processedField.type === 'multipleselectionlist' || processedField.type === 'dropdown') {
+    if (processedField.type === 'multipleselectionlist' ||
+        processedField.type === 'dropdown' ||
+        processedField.type === 'multipleentities' ||
+        processedField.type === 'entity') {
 
         processedField.value = processServerSelectOptions(processedField.value);
 
@@ -50,6 +59,12 @@ export const transformToServerFieldValue = (field, value) => {
         const {id, entityType: {name: kind}, name} = value;
 
         return {id, kind, name};
+
+    }
+
+    if (field.type === 'multipleentities' && value) {
+
+        return value.map((entity) => `${entity.id} ${entity.entityType.name.toLowerCase()}`).join(',');
 
     }
 
@@ -78,7 +93,8 @@ const isEmptyValidator = (field, value) => {
         text: (val) => !val,
         url: ({url, label} = {}) => !url || !label,
         checkbox: (val) => val !== false && val !== true,
-        multipleselectionlist: (val) => !val.length
+        multipleselectionlist: (val) => !val.length,
+        multipleentities: (val) => !val.length
     };
 
     if ((validators[field.type] || validators.text)(value)) return new Error('Field is empty');
@@ -89,6 +105,7 @@ export const isEmptyInitialValue = (field, value) => {
 
     const checks = {
         multipleselectionlist: (val) => !val.length,
+        multipleentities: (val) => !val.length,
         defaults: (val) => val === null
     };
 

@@ -7,10 +7,14 @@ export default class TargetprocessLinkentity extends React.Component {
 
     render() {
 
-        const {entity, className} = this.props;
+        const {className, entity, short} = this.props;
 
         return (
-            <span {...this.props} className={cx('tau-linkentity', block, className)}>
+            <span
+                {...this.props}
+                className={cx('tau-linkentity', block, className)}
+                title={short ? entity.name : null}
+            >
                 <em
                     className={cx('tau-entity-icon',
                         `tau-entity-icon--${entity.entityType.name.toLowerCase()}`,
@@ -18,7 +22,10 @@ export default class TargetprocessLinkentity extends React.Component {
                 >
                     {entity.id}
                 </em>
-                <span className="tau-linkentity__inner">{entity.name}</span>
+                {short ? null : (
+                    <span className="tau-linkentity__inner">{entity.name}</span>
+                )}
+
             </span>
         );
 

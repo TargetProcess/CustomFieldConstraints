@@ -35,10 +35,12 @@ export default class FormRow extends React.Component {
 
         if (fieldType === 'money') label = `${label}, ${field.config.units}`;
 
-        if (fieldType === 'entity') {
+        if (fieldType === 'entity' || fieldType === 'multipleentities') {
 
             specificProps = {
-                filterEntityTypeName: entity.entityType.name.toLowerCase(),
+                filterEntityTypeName: {
+                    $in: field.value
+                },
                 filterFields: (entity.project && entity.project.id) ? {
                     'project.id': entity.project.id
                 } : {}

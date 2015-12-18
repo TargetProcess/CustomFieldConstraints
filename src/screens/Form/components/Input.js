@@ -11,6 +11,7 @@ import InputRichtext from './InputRichtext';
 import InputTemplatedUrl from './InputTemplatedUrl';
 import InputText from './InputText';
 import InputUrl from './InputUrl';
+import InputMultipleEntities from './InputMultipleEntities';
 
 export default class Input extends React.Component {
 
@@ -43,7 +44,8 @@ export default class Input extends React.Component {
             richtext: InputRichtext,
             templatedurl: InputTemplatedUrl,
             text: InputText,
-            url: InputUrl
+            url: InputUrl,
+            multipleentities: InputMultipleEntities
         }[fieldType] || InputText;
 
         return (

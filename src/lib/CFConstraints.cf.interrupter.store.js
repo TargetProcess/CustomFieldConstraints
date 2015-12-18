@@ -4,7 +4,7 @@ var CFConstraintsCFInterrupter = require("./CFConstraints.cf.interrupter");
 
 const processRestServerValue = (field, value) => {
 
-    if (field.type.toLowerCase() === 'multipleselectionlist') return isString(value) ? value.split(',') : [];
+    if (field.type && field.type.toLowerCase() === 'multipleselectionlist') return isString(value) ? value.split(',') : [];
 
     return value;
 

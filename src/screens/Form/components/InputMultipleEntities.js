@@ -4,14 +4,14 @@ import InputEntityBase from './InputEntityBase';
 
 import TargetprocessLinkentity from './TargetprocessLinkentity';
 
-export default class InputEntity extends React.Component {
+export default class InputMultipleEntities extends React.Component {
 
     static propTypes = {
-        value: T.object
+        value: T.array
     }
 
     static defaultProps = {
-        value: void 0
+        value: []
     }
 
     render() {
@@ -20,19 +20,23 @@ export default class InputEntity extends React.Component {
 
         let innerOutput;
 
-        if (value) {
+        if (value.length) {
 
-            innerOutput = (
-                <TargetprocessLinkentity entity={value} />
-            );
+            innerOutput = value.map((entity) => (
+                <TargetprocessLinkentity
+                    entity={entity}
+                    key={entity.id}
+                    short={true}
+                />
+            ));
 
         }
 
         return (
             <InputEntityBase
                 {...this.props}
-                multiple={false}
-                placeholder="Click to select entity"
+                multiple={true}
+                placeholder="Click to select entities"
                 ref="input"
             >
                 {innerOutput}

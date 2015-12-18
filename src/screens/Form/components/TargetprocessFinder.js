@@ -18,8 +18,26 @@ export default class TargetprocessFinder extends React.Component {
 
     static defaultProps = {
         filterDsl: void 0,
-        filterEntityTypeName: void 0,
-        filterFields: void 0,
+        filterEntityTypeName: [
+            'project',
+            'program',
+            'release',
+            'iteration',
+            'teamiteration',
+            'testcase',
+            'testplan',
+            'build',
+            'impediment',
+
+            'epic',
+            'feature',
+            'userstory',
+            'task',
+            'bug',
+            'testplanrun',
+            'request'
+        ],
+        filterFields: {},
         onAdjust: noop,
         onSelect: noop
     }
@@ -30,21 +48,17 @@ export default class TargetprocessFinder extends React.Component {
 
         const finderConfig = {};
 
-        if (filterEntityTypeName) {
+        finderConfig.entityType = null;
 
-            finderConfig.entityType = filterEntityTypeName;
+        finderConfig.filter = {
+            entityType: filterEntityTypeName
+        };
 
-        }
+        finderConfig.filter = {...finderConfig.filter, ...filterFields};
 
-        if (filterFields || filterDsl) {
+        if (filterDsl) {
 
-            finderConfig.filter = {...filterFields};
-
-            if (filterDsl) {
-
-                finderConfig.filter.init_dsl = filterDsl; // eslint-disable-line camelcase
-
-            }
+            finderConfig.filter.init_dsl = filterDsl; // eslint-disable-line camelcase
 
         }
 
@@ -62,7 +76,8 @@ export default class TargetprocessFinder extends React.Component {
 
         const events = {
             entitySelected: ({entity}) => this.handleSelect(entity),
-            'result.rendered': () => this.handleAdjust()
+            'result.rendered': () => this.handleAdjust(),
+            'content.$element.ready': () => this.handleAdjust()
         };
 
         if (events[eventName]) events[eventName](data);
