@@ -41,6 +41,9 @@ var CFConstraintsQuickAdd = Class.extend({
     },
 
     _readyToModifyBindData: function(evtArgs, afterInitEvtArg, dataBindEvtArg, settingsReadyEvtArg) {
+
+        if (dataBindEvtArg.types.UserProjectAllocation || dataBindEvtArg.types.TeamProjectAllocation) return;
+
         evtArgs['before_dataBind'].suspendMain();
 
         var configurator = afterInitEvtArg.config.context.configurator;
