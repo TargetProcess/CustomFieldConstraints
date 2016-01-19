@@ -1,6 +1,7 @@
-var $ = require("jQuery");
-var _ = require("Underscore");
-var CFConstraintsInterrupter = require("./CFConstraints.interrupter");
+var $ = require('jQuery');
+var _ = require('Underscore');
+
+var CFConstraintsInterrupter = require('./../Interrupter');
 
 var CFConstraintsStateInterrupter = CFConstraintsInterrupter.extend({
 
@@ -23,18 +24,19 @@ var CFConstraintsStateInterrupter = CFConstraintsInterrupter.extend({
         var tasksDetailsPromise = this.dataProvider.getTasksDetailsPromise(entitiesDetailed);
 
         return $.when(teamProjectsPromise, entityStatesDetailsPromise, tasksDetailsPromise)
-            .then(function(teamProjects, entityStatesDetailed, tasks) {
+            .then((teamProjects, entityStatesDetailed, tasks) => {
                 return this._getEntitiesWithRequirements(entitiesDetailed, entityStatesDetailed, changesToHandle,
                     defaultProcess, tasks, teamProjects);
-            }.bind(this));
+            });
     },
 
     _getEntitiesWithRequirements: function(entitiesDetailed, entityStatesDetailed, changesToHandle, defaultProcess, tasks, teamProjects) {
-        var entitiesToHandle = _.map(entitiesDetailed, function(entity) {
+        var entitiesToHandle = _.map(entitiesDetailed, (entity) => {
             var entities = [],
                 newState = this._getNewState(entity, entityStatesDetailed, changesToHandle, defaultProcess, teamProjects);
 
-            if (newState){
+            if (newState) {
+
                 var entityToHandle = {
                     entity: entity,
                     processId: this.dataProvider.getEntityProcessId(entity, defaultProcess),
@@ -50,41 +52,39 @@ var CFConstraintsStateInterrupter = CFConstraintsInterrupter.extend({
                 entities.push(entityToHandle);
             }
 
-
             return entities;
-        }, this);
+        });
+
         return _.flatten(entitiesToHandle, true);
     },
 
     _getUserStoryTasksToHandle: function(entityToHandle, tasks, entityStatesDetailed, defaultProcess) {
         var userStory = entityToHandle.entity;
 
-        var entityTasks = _.filter(tasks, function(task) {
-            return task.userStory.id == userStory.id;
-        });
+        var entityTasks = _.filter(tasks, (task) => task.userStory.id === userStory.id);
 
         if (entityTasks.length === 0) {
             return [];
         }
 
-        var taskNewState = _.find(entityStatesDetailed, function(entityState) {
+        var taskNewState = _.find(entityStatesDetailed, (entityState) => {
             return entityState.isFinal
-                && entityState.process.id == entityToHandle.processId
+                && entityState.process.id === entityToHandle.processId
                 && entityState.entityType.name.toLowerCase() === 'task';
         });
 
-        return _.map(entityTasks, function(task) {
+        return _.map(entityTasks, (task) => {
             return {
                 entity: task,
                 processId: this.dataProvider.getEntityProcessId(task, defaultProcess),
                 requirementsData: {
                     newState: taskNewState
                 }
-            }
-        }, this);
+            };
+        });
     },
 
-    _getNewState: function(entity, entityStatesDetailed, changesToInterrupt, defaultProcess, teamProjects) {
+    _getNewState: function() {
         this._throwNotImplemented();
     }
 });

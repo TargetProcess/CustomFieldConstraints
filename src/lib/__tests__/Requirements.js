@@ -1,6 +1,6 @@
-import Requirements from '../CFConstraints.requirements';
+import Requirements from '../Requirements';
 
-describe('CFConstrains.requirements', () => {
+describe('Requirements', () => {
 
     it('getConfig()', () => {
 
@@ -291,7 +291,6 @@ describe('CFConstrains.requirements', () => {
             }
 
         })).to.be.eql([{name: 'yyy'}, {name: 'zzz'}]);
-
 
     });
 

@@ -1,6 +1,7 @@
-var $ = require("jQuery");
-var _ = require("Underscore");
-var CFConstraintsInterrupter = require("./CFConstraints.interrupter");
+var $ = require('jQuery');
+var _ = require('Underscore');
+
+var CFConstraintsInterrupter = require('./../Interrupter');
 
 var CFConstraintsCFInterrupter = CFConstraintsInterrupter.extend({
     init: function(dataProvider, requirements, requireEntityCFsCallback) {
@@ -12,9 +13,10 @@ var CFConstraintsCFInterrupter = CFConstraintsInterrupter.extend({
     },
 
     _buildEntitiesWithRequirements: function(entitiesDetailed, changesToHandle, defaultProcess) {
-        var EntitiesWithRequirementsDeferred = $.Deferred();
 
-        var entitiesWithRequirements = _.map(entitiesDetailed, function(entity) {
+        var EntitiesWithRequirementsDeferred = new $.Deferred();
+
+        var entitiesWithRequirements = _.map(entitiesDetailed, (entity) => {
             return {
                 entity: entity,
                 processId: this.dataProvider.getEntityProcessId(entity, defaultProcess),
@@ -22,7 +24,7 @@ var CFConstraintsCFInterrupter = CFConstraintsInterrupter.extend({
                     changedCFs: this._getCFsChanges(entity, changesToHandle)
                 }
             };
-        }, this);
+        });
 
         EntitiesWithRequirementsDeferred.resolve(entitiesWithRequirements);
         return EntitiesWithRequirementsDeferred.promise();

@@ -2,13 +2,15 @@
 /* eslint global-require: 0 */
 import {invoke} from 'Underscore';
 
-import DataProvider from './lib/CFConstraints.data.provider';
-import Requirements from './lib/CFConstraints.requirements';
-import StateInterrupterStore from './lib/CFConstraints.state.interrupter.store';
-import CFInterrupterStore from './lib/CFConstraints.cf.interrupter.store';
-import StateInterrupterSlice from './lib/CFConstraints.state.interrupter.slice';
-import CFInterrupterSlice from './lib/CFConstraints.cf.interrupter.slice';
-import QuickAddAdapter from './lib/CFConstraints.quick.add';
+import DataProvider from './lib/DataProvider';
+import Requirements from './lib/Requirements';
+
+import StateInterrupterStore from './lib/entity/state/StoreInterrupter';
+import CFInterrupterStore from './lib/entity/customFields/StoreInterrupter';
+import StateInterrupterSlice from './lib/entity/state/SliceInterrupter';
+import CFInterrupterSlice from './lib/entity/customFields/SliceInterrupter';
+
+import QuickAddAdapter from './lib/quickAdd';
 
 const {placeholderId} = mashup.variables;
 const mashupConfig = mashup.config;

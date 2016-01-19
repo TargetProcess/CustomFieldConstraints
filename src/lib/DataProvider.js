@@ -1,8 +1,9 @@
-var $ = require("jQuery");
-var _ = require("Underscore");
-var Storage = require("tp3/mashups/storage");
-var Store2 = require("tau/libs/store2/store2");
-var Class = require("tau/core/class");
+var $ = require('jQuery');
+var _ = require('Underscore');
+
+var Storage = require('tp3/mashups/storage');
+var Store2 = require('tau/libs/store2/store2');
+var Class = require('tau/core/class');
 
 var CFConstraintsDataProvider = Class.extend({
 
@@ -11,14 +12,19 @@ var CFConstraintsDataProvider = Class.extend({
     },
 
     getEntitiesDetailsPromise: function(entitiesIds, entityType) {
-        var getEntitiesDetailsDeferred = $.Deferred();
+        var getEntitiesDetailsDeferred = new $.Deferred();
         this.storage.getEntities()
             .ofType(entityType)
-            .filteredBy({id: {$in: entitiesIds}})
+            .filteredBy({
+                id: {
+                    $in: entitiesIds
+                }
+            })
             .withFieldSetRestrictedTo(this._getEntitiesDetailsFilter(entityType))
             .withCallOnDone(function(entitiesDetailed) {
-                getEntitiesDetailsDeferred.resolve(_.map(entitiesDetailed, _.bind(function(entityDetailed){
-                    if (entityDetailed && entityDetailed.entityType){
+                getEntitiesDetailsDeferred.resolve(_.map(entitiesDetailed, _.bind(function(
+                    entityDetailed) {
+                    if (entityDetailed && entityDetailed.entityType) {
                         entityDetailed.type = entityDetailed.entityType.name;
                     }
                     return entityDetailed;
@@ -29,10 +35,14 @@ var CFConstraintsDataProvider = Class.extend({
     },
 
     getDefaultProcessPromise: function() {
-        var getDefaultProcessDeferred = $.Deferred();
+        var getDefaultProcessDeferred = new $.Deferred();
         this.storage.getEntities()
             .ofType('process')
-            .filteredBy({isDefault: {$eq: 'true'}})
+            .filteredBy({
+                isDefault: {
+                    $eq: 'true'
+                }
+            })
             .withFieldSetRestrictedTo(['id'])
             .withCallOnDone(function(processes) {
                 var defaultProcess = processes[0];
@@ -43,19 +53,25 @@ var CFConstraintsDataProvider = Class.extend({
     },
 
     getEntityStatesDetailsPromise: function(changesToInterrupt, entitiesDetailed, defaultProcess) {
-        var getEntityStatesDetails = $.Deferred();
+        var getEntityStatesDetails = new $.Deferred();
         this.storage.getEntities()
             .ofType('entityState')
             .filteredBy(this._getEntityStateFilter(entitiesDetailed, defaultProcess))
-            .withFieldSetRestrictedTo([
-                {workflow: ['id']},
-                {process: ['id']},
-                {entityType: ['name']},
+            .withFieldSetRestrictedTo([{
+                workflow: ['id']
+            }, {
+                process: ['id']
+            }, {
+                entityType: ['name']
+            },
                 'name',
                 'isInitial',
                 'isFinal',
-                'isPlanned',
-                {subEntityStates: ['id', 'name', {workflow: ['id']}, 'isInitial', 'isFinal', 'isPlanned']}
+                'isPlanned', {
+                    subEntityStates: ['id', 'name', {
+                        workflow: ['id']
+                    }, 'isInitial', 'isFinal', 'isPlanned']
+                }
             ])
             .withCallOnDone(getEntityStatesDetails.resolve)
             .execute();
@@ -63,7 +79,7 @@ var CFConstraintsDataProvider = Class.extend({
     },
 
     getTasksDetailsPromise: function(entities) {
-        var getTasksDeferred = $.Deferred();
+        var getTasksDeferred = new $.Deferred();
         var tasksIds = _.chain(entities)
             .filter(function(entity) {
                 return entity.entityType.name.toLowerCase() === 'userstory';
@@ -82,14 +98,23 @@ var CFConstraintsDataProvider = Class.extend({
         if (tasksIds.length > 0) {
             this.storage.getEntities()
                 .ofType('task')
-                .filteredBy({id: {$in: tasksIds}})
-                .withFieldSetRestrictedTo(['id', 'name', 'customFields', {entityType: ['name']}, {project: [
-                    {process: ['id']}
-                ]}, {userStory: ['id', 'name']}])
+                .filteredBy({
+                    id: {
+                        $in: tasksIds
+                    }
+                })
+                .withFieldSetRestrictedTo(['id', 'name', 'customFields', {
+                    entityType: ['name']
+                }, {
+                    project: [{
+                        process: ['id']
+                    }]
+                }, {
+                    userStory: ['id', 'name']
+                }])
                 .withCallOnDone(getTasksDeferred.resolve)
                 .execute();
-        }
-        else {
+        } else {
             getTasksDeferred.resolve([]);
         }
 
@@ -110,15 +135,25 @@ var CFConstraintsDataProvider = Class.extend({
         if (_.isEmpty(teamProjectIds)) {
             return $.when([]);
         }
-        var getTeamProjectsDetails = $.Deferred();
+        var getTeamProjectsDetails = new $.Deferred();
         this.storage.getEntities()
             .ofType('teamProject')
-            .filteredBy({id: {$in: teamProjectIds}})
-            .withFieldSetRestrictedTo([
-                {team: ['id']},
-                {project: ['id']},
-                {workflows: ['id', 'name', {entityType: ['name']}, {parentWorkflow: ['id']}]}
-            ])
+            .filteredBy({
+                id: {
+                    $in: teamProjectIds
+                }
+            })
+            .withFieldSetRestrictedTo([{
+                team: ['id']
+            }, {
+                project: ['id']
+            }, {
+                workflows: ['id', 'name', {
+                    entityType: ['name']
+                }, {
+                    parentWorkflow: ['id']
+                }]
+            }])
             .withCallOnDone(getTeamProjectsDetails.resolve)
             .execute();
         return getTeamProjectsDetails.promise();
@@ -131,7 +166,8 @@ var CFConstraintsDataProvider = Class.extend({
             .findAll('entitystate?' +
                 'take=1000&skip=0' +
                 '&select=new%20%28id,%20name,%20isInitial,%20isFinal,%20isPlanned,%20entityType%20as%20entityType,%20process%20as%20process%29' +
-                '&where=entityType.name%20in%20[' + entityTypesValues + ']%20and%20process.id%20in%20[' + processIdsValues + ']');
+                '&where=entityType.name%20in%20[' + entityTypesValues + ']%20and%20process.id%20in%20[' +
+                processIdsValues + ']');
     },
 
     getCustomFieldsForTypesAndProcessesPromise: function(configurator, entityTypes, processIds) {
@@ -141,33 +177,41 @@ var CFConstraintsDataProvider = Class.extend({
             .findAll('customfield?' +
                 'take=1000&skip=0' +
                 '&select=new%20(required,name,%20id,%20config,%20fieldType,%20value,%20entityType.name%20as%20entityTypeName,process.id%20as%20processId)' +
-                '&where=entityType.name%20in%20[' + entityTypesValues + ']%20and%20process.id%20in%20[' + processIdsValues + ']');
+                '&where=entityType.name%20in%20[' + entityTypesValues + ']%20and%20process.id%20in%20[' +
+                processIdsValues + ']');
     },
 
     getEntityProcessId: function(entityDetailed, defaultProcess) {
-        return entityDetailed.entityType.name.toLowerCase() === 'project'
-            ? entityDetailed.process.id
-            : entityDetailed.project
-            ? entityDetailed.project.process.id
-            : defaultProcess.id;
+        return entityDetailed.entityType.name.toLowerCase() === 'project' ? entityDetailed.process.id :
+            entityDetailed.project ? entityDetailed.project.process.id : defaultProcess.id;
     },
 
     _getEntitiesDetailsFilter: function(entityType) {
-        var filter = ['customFields', 'name', {entityType: ['name']}];
-        filter.push(this._isProjectType(entityType)
-                ? {process: ['id']}
-                : {
-                project: [
-                    {process: ['id']},
-                    {teamProjects: ['id']}
-                ]
-            }
-        );
+        var filter = ['customFields', 'name', {
+            entityType: ['name']
+        }];
+        filter.push(this._isProjectType(entityType) ? {
+            process: ['id']
+        } : {
+            project: [{
+                process: ['id']
+            }, {
+                teamProjects: ['id']
+            }]
+        });
         if (entityType.toLowerCase() === 'userstory') {
-            filter.push({tasks: ['id', 'name', {entityState: ['isFinal']}]});
+            filter.push({
+                tasks: ['id', 'name', {
+                    entityState: ['isFinal']
+                }]
+            });
         }
         if (this._isAssignableType(entityType)) {
-            filter.push({assignedTeams: ['id', {team: ['id']}]});
+            filter.push({
+                assignedTeams: ['id', {
+                    team: ['id']
+                }]
+            });
         }
 
         return filter;
@@ -181,7 +225,13 @@ var CFConstraintsDataProvider = Class.extend({
             .unique()
             .value();
 
-        return {process: {id: {$in: processIds}}};
+        return {
+            process: {
+                id: {
+                    $in: processIds
+                }
+            }
+        };
     },
 
     _isProjectType: function(entityType) {
@@ -190,7 +240,8 @@ var CFConstraintsDataProvider = Class.extend({
 
     _isAssignableType: function(entityType) {
         return _.contains(['epic', 'feature', 'userstory', 'request', 'bug', 'task',
-            'testplan', 'testplanrun'], entityType.toLowerCase());
+            'testplan', 'testplanrun'
+        ], entityType.toLowerCase());
     }
 
 });

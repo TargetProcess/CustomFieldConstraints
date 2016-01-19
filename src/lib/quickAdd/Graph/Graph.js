@@ -1,6 +1,12 @@
-var _ = require('underscore');
+import _ from 'underscore';
 
-class CFConstraintsGraph {
+import Edge from './Edge';
+import Vertex from './Vertex';
+import ValueVertex from './ValueVertex';
+import ValueInValidity from './ValueInValidity';
+import ValueNotInValidity from './ValueNotInValidity';
+
+export default class CFConstraintsGraph {
     constructor(cfs, cfConstraintsConfig, defaultValues, onVertexIsValidChangeCallback) {
         this._cfConstraintsConfig = cfConstraintsConfig;
         this._onVertexIsValidChangeCallback = onVertexIsValidChangeCallback;
@@ -32,7 +38,6 @@ class CFConstraintsGraph {
                 processes: {}
             };
         for (var processId in cfsTree) {
-            //noinspection JSUnfilteredForInLoop
             verticesWrapped.processes[processId] = this._buildProcessVertexWrapped(cfsTree, processId, _.bind(this._onVertexIsValidChangeCallback, this, processId));
         }
         return verticesWrapped;
@@ -50,20 +55,20 @@ class CFConstraintsGraph {
 
     _buildProcessVertexWrapped(cfsTree, processId, onIsValidChangeCallback) {
         var processVertexWrapped = {
-                vertex: new CFConstraintsGraphVertex(processId, true),
+                vertex: new Vertex(processId, true),
                 entityTypes: {}
             },
-            processConstraintRule = _.find(this._cfConstraintsConfig, function(processConstraintRule) {
-                return processConstraintRule.processId == processId;
+            processConstraintRule = _.find(this._cfConstraintsConfig, function(v) {
+                return v.processId === processId;
             });
 
         var cfsSubTree = cfsTree[processId];
         for (var entityTypeName in cfsSubTree) {
-            //noinspection JSUnfilteredForInLoop
+
             var entityTypeConstraintRule = processConstraintRule ? processConstraintRule.constraints[entityTypeName.toLowerCase()] : null,
                 entityTypeVertexWrapped = this._buildEntityTypeVertexWrapped(cfsSubTree, entityTypeName, entityTypeConstraintRule, _.bind(onIsValidChangeCallback, this, entityTypeName)),
-                edge = new CFConstraintsGraphEdge(processVertexWrapped.vertex, entityTypeVertexWrapped.vertex, new CFConstraintsGraphEdgeValidityConstraintByInVertexValidity());
-            //noinspection JSUnfilteredForInLoop
+                edge = new Edge(processVertexWrapped.vertex, entityTypeVertexWrapped.vertex, new ValueInValidity());
+
             processVertexWrapped.entityTypes[entityTypeName] = entityTypeVertexWrapped;
             processVertexWrapped.vertex.getOutEdges().push(edge);
             entityTypeVertexWrapped.vertex.getInEdges().push(edge);
@@ -74,19 +79,19 @@ class CFConstraintsGraph {
 
     _buildEntityTypeVertexWrapped(cfsTree, entityTypeName, entityTypeConstraintRule, onIsValidChangeCallback) {
         var entityTypeVertexWrapped = {
-                vertex: new CFConstraintsGraphVertex(entityTypeName, true),
+                vertex: new Vertex(entityTypeName, true),
                 cfs: {}
             },
             cfConstraints = entityTypeConstraintRule
-                ? entityTypeConstraintRule['customFields'] || []
+                ? entityTypeConstraintRule.customFields || []
                 : [];
         var cfsSubTree = cfsTree[entityTypeName],
             rootCFVertices = {};
 
         for (var cfName in cfsSubTree) {
-            //noinspection JSUnfilteredForInLoop
-            var rootCFVertex = this._buildRootCFVertex(cfsSubTree[cfName], onIsValidChangeCallback)
-            var edge = new CFConstraintsGraphEdge(entityTypeVertexWrapped.vertex, rootCFVertex, new CFConstraintsGraphEdgeValidityConstraintByInVertexValidity());
+
+            var rootCFVertex = this._buildRootCFVertex(cfsSubTree[cfName], onIsValidChangeCallback);
+            var edge = new Edge(entityTypeVertexWrapped.vertex, rootCFVertex, new ValueInValidity());
 
             rootCFVertices[rootCFVertex.getId()] = rootCFVertex;
             entityTypeVertexWrapped.vertex.getOutEdges().push(edge);
@@ -97,7 +102,7 @@ class CFConstraintsGraph {
     }
 
     _buildRootCFVertex(cf, onIsValidChangeCallback) {
-        return new CFConstraintsGraphValueVertex(cf.name, true, onIsValidChangeCallback, cf.config.defaultValue);
+        return new ValueVertex(cf.name, true, onIsValidChangeCallback, cf.config.defaultValue);
     }
 
     _buildCFVertices(rootCFVertices, cfConstraints, onIsValidChangeCallback) {
@@ -120,7 +125,7 @@ class CFConstraintsGraph {
                 _.forEach(vertexConstraint.requiredCustomFields, function(requiredCustomField) {
                     var outVertex = this._getOrCreateOutVertex(vertices, requiredCustomField, onIsValidChangeCallback),
                         edgeValidityConstraint = this._createEdgeValidityConstraint(vertexConstraint),
-                        edge = new CFConstraintsGraphEdge(inVertex, outVertex, edgeValidityConstraint);
+                        edge = new Edge(inVertex, outVertex, edgeValidityConstraint);
                     this._ensureOutVertexActualValidity(outVertex, edge);
                     inVertex.getOutEdges().push(edge);
                     outVertex.getInEdges().push(edge);
@@ -129,7 +134,7 @@ class CFConstraintsGraph {
                         vertices[outVertexId] = outVertex;
                         vertexIdQueue.push(outVertexId);
                     }
-                }, this)
+                }, this);
             }, this);
             inVertexId = vertexIdQueue.shift();
         }
@@ -145,13 +150,13 @@ class CFConstraintsGraph {
 
     _getOrCreateOutVertex(vertices, requiredCustomField, onIsValidChangeCallback) {
         var defaultValue = this._defaultValues[requiredCustomField] || null;
-        return vertices[requiredCustomField] || new CFConstraintsGraphValueVertex(requiredCustomField, false, onIsValidChangeCallback, defaultValue);
+        return vertices[requiredCustomField] || new ValueVertex(requiredCustomField, false, onIsValidChangeCallback, defaultValue);
     }
 
     _createEdgeValidityConstraint(vertexConstraint) {
         return vertexConstraint.valueIn
-            ? new CFConstraintsGraphEdgeValidityConstraintByVertexValidityAndInVertexValueIn(vertexConstraint.valueIn)
-            : new CFConstraintsGraphEdgeValidityConstraintByVertexValidityAndInVertexValueNotIn(vertexConstraint.valueNotIn);
+            ? new ValueInValidity(vertexConstraint.valueIn)
+            : new ValueNotInValidity(vertexConstraint.valueNotIn);
     }
 
     _ensureOutVertexActualValidity(outVertex, edge) {
@@ -190,126 +195,3 @@ class CFConstraintsGraph {
         }
     }
 }
-
-class CFConstraintsGraphVertex {
-    constructor(id, isValid) {
-        this._id = id;
-        this._isValid = isValid;
-        this._inEdges = [];
-        this._outEdges = [];
-    }
-
-    getId() {
-        return this._id;
-    }
-
-    isValid() {
-        return this._isValid;
-    }
-
-    isValidByEdges() {
-        return !!_.find(this._inEdges, function(inEdge) {
-            return inEdge.isValid();
-        });
-    }
-
-    setIsValid(isValid) {
-        this._isValid = isValid;
-    }
-
-    getInEdges() {
-        return this._inEdges;
-    }
-
-    getOutEdges() {
-        return this._outEdges;
-    }
-}
-
-class CFConstraintsGraphValueVertex extends CFConstraintsGraphVertex {
-    constructor(id, isValid, onIsValidChangeCallback, value) {
-        super(id, isValid, onIsValidChangeCallback);
-        this._onIsValidChange = onIsValidChangeCallback;
-        this._value = value;
-
-    }
-    setIsValid(isValid) {
-        super.setIsValid(isValid);
-        this._onIsValidChange({
-            id: this._id,
-            isValid: this._isValid,
-            value: this._value
-        });
-    }
-    getValue() {
-        return this._value;
-    }
-    setValue(value) {
-        this._value = value;
-    }
-}
-
-class CFConstraintsGraphEdge {
-    constructor(inVertex, outVertex, validityConstraint) {
-        this._inVertex = inVertex;
-        this._outWertex = outVertex;
-        this._validityConstraint = validityConstraint;
-    }
-
-    getInVertex() {
-        return this._inVertex;
-    }
-
-    getOutVertex() {
-        return this._outWertex;
-    }
-
-    isValid() {
-        return this._validityConstraint.isValid(this);
-    }
-}
-
-class CFConstraintsGraphEdgeValidityConstraintByInVertexValidity {
-    isValid(edge) {
-        return edge.getInVertex().isValid();
-    }
-}
-
-class CFConstraintsGraphEdgeValidityConstraintByVertexValidityAndInVertexValue extends CFConstraintsGraphEdgeValidityConstraintByInVertexValidity {
-    constructor(inVertexValues) {
-        super();
-        this._inVertexValues = inVertexValues;
-    }
-
-    _hasValue(value) {
-        for (var i = 0, len = this._inVertexValues.length; i < len; i++) {
-            var inValue = this._inVertexValues[i];
-            if ((!inValue && !value) || (inValue == value)) {
-                return true;
-            }
-        }
-        return false;
-    }
-}
-
-class CFConstraintsGraphEdgeValidityConstraintByVertexValidityAndInVertexValueIn extends CFConstraintsGraphEdgeValidityConstraintByVertexValidityAndInVertexValue {
-    constructor(inVertexValuesIn) {
-        super(inVertexValuesIn);
-    }
-
-    isValid(edge) {
-        return super.isValid(edge) && this._hasValue(edge.getInVertex().getValue());
-    }
-}
-
-class CFConstraintsGraphEdgeValidityConstraintByVertexValidityAndInVertexValueNotIn extends CFConstraintsGraphEdgeValidityConstraintByVertexValidityAndInVertexValue {
-    constructor(inVertexValuesNotIn) {
-        super(inVertexValuesNotIn);
-    }
-
-    isValid(edge) {
-        return super.isValid(edge) && !this._hasValue(edge.getInVertex().getValue());
-    }
-}
-
-module.exports = CFConstraintsGraph;

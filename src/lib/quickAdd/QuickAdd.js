@@ -1,11 +1,15 @@
-var $ = require("jQuery");
-var _ = require("Underscore");
-var ComponentEventListener = require("tp3/mashups/componenteventlistener");
-var Class = require("tau/core/class");
-var CFProcessor = require("./CFConstraints.quick.add.cf.processor");
-var StateProcessor = require("./CFConstraints.quick.add.state.processor");
-var CascadeTracker = require("./CFConstraints.quick.add.cascade.tracker");
+var $ = require('jQuery');
+var _ = require('Underscore');
+
+var ComponentEventListener = require('tp3/mashups/componenteventlistener');
+var Class = require('tau/core/class');
+
+var CFProcessor = require('./CustomFieldsProcessor');
+var StateProcessor = require('./StateProcessor');
+var CascadeTracker = require('./Tracker');
+
 var CFConstraintsQuickAdd = Class.extend({
+
     init: function(dataProvider, requirements) {
         this.requirements = requirements;
         this.dataProvider = dataProvider;
@@ -44,7 +48,7 @@ var CFConstraintsQuickAdd = Class.extend({
 
         if (dataBindEvtArg.types.UserProjectAllocation || dataBindEvtArg.types.TeamProjectAllocation) return;
 
-        evtArgs['before_dataBind'].suspendMain();
+        evtArgs.before_dataBind.suspendMain();
 
         var configurator = afterInitEvtArg.config.context.configurator;
         this._getContextPromise(configurator).done(_.bind(function(context) {
@@ -72,7 +76,7 @@ var CFConstraintsQuickAdd = Class.extend({
 
                     this._modifyBindData(dataBindEvtArg, requiredCFsToModify);
 
-                    evtArgs['before_dataBind'].resumeMain();
+                    evtArgs.before_dataBind.resumeMain();
                 }, this));
         }, this));
     },
@@ -84,7 +88,9 @@ var CFConstraintsQuickAdd = Class.extend({
     },
 
     _getContextPromise: function(configurator) {
-        var getContextDeferred = $.Deferred();
+
+        var getContextDeferred = new $.Deferred();
+
         configurator.getAppStateStore().get({fields: ['acid'], callback: _.bind(function(acidData) {
             configurator.getApplicationContextService().getApplicationContext({acid: acidData.acid}, {
                 success: _.bind(function(context) {
@@ -93,7 +99,7 @@ var CFConstraintsQuickAdd = Class.extend({
                 failure: _.bind(function(error) {
                     getContextDeferred.reject(error);
                 })
-            })
+            });
         }, this)});
         return getContextDeferred.promise();
     },
@@ -105,16 +111,16 @@ var CFConstraintsQuickAdd = Class.extend({
 
         _.forEach(data.processes, function(process) {
             _.forEach(data.entityTypes, function(entityType) {
-                var filteredCFs = _.filter(data.customFields, function(cf) {
-                    return cf.processId == process.id && cf.entityTypeName.toLowerCase() == entityType.toLowerCase();
+                var filteredCFs = _.filter(data.customFields, function(v) {
+                    return v.processId === process.id && v.entityTypeName.toLowerCase() === entityType.toLowerCase();
                 });
                 calculatedRequiredCFs = calculatedRequiredCFs.concat(this.stateProcessor.getCFs(stateName, data.entityStates, process, entityType, evtArgs.dataBindEvtArg, filteredCFs));
                 calculatedRequiredCFs = calculatedRequiredCFs.concat(this.cfProcessor.getCFs(cf, data.entityStates, process, entityType, evtArgs.dataBindEvtArg, filteredCFs));
-            }, this)
+            }, this);
         }, this);
 
-        var requiredCFs = _.filter(data.customFields, function(cf) {
-                return cf.required;
+        var requiredCFs = _.filter(data.customFields, function(v) {
+                return v.required;
             }),
             cascadeCFs = this.cascadeTracker.buildCascadeCFs(calculatedRequiredCFs.concat(requiredCFs), data.customFields);
 

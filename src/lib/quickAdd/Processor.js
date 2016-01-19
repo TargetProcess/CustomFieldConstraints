@@ -1,10 +1,10 @@
-var _ = require("Underscore");
-var Storage = require("tp3/mashups/storage");
-var ComponentEventListener = require("tp3/mashups/componenteventlistener");
-var SliceDecoder = require("./CFConstraints.slice.decoder");
-var Requirements = require("./CFConstraints.requirements");
-var Class = require("tau/core/class");
-var CFConstraintsQuickAdd = Class.extend({
+var _ = require('Underscore');
+var Class = require('tau/core/class');
+
+var SliceDecoder = require('./../SliceDecoder');
+
+var Processor = Class.extend({
+
     init: function(requirements) {
         this.requirements = requirements;
         this.sliceDecoder = new SliceDecoder();
@@ -23,7 +23,7 @@ var CFConstraintsQuickAdd = Class.extend({
         if (requiredCFs.length > 0) {
             _.forEach(requiredCFs, function(cf) {
                 var cfDefinition = _.find(customFields, function(processCF) {
-                    return processCF.name.toLowerCase() == cf.name.toLowerCase();
+                    return processCF.name.toLowerCase() === cf.name.toLowerCase();
                 });
 
                 if (!cfDefinition.required) {
@@ -39,33 +39,27 @@ var CFConstraintsQuickAdd = Class.extend({
         var sliceDefinition = this._getSliceDefinition(afterInitEvtArg);
 
         if (sliceDefinition && settingsReadyEvtArg) {
-            return this._getAxisName(afterInitEvtArg, sliceDefinition, settingsReadyEvtArg, 'x')
-                || this._getAxisName(afterInitEvtArg, sliceDefinition, settingsReadyEvtArg, 'y')
-                || this._getAxisDefaultValue();
+            return this._getAxisName(afterInitEvtArg, sliceDefinition, settingsReadyEvtArg, 'x') || this._getAxisName(
+                afterInitEvtArg, sliceDefinition, settingsReadyEvtArg, 'y') || this._getAxisDefaultValue();
         }
 
         return this._getAxisDefaultValue();
     },
 
-    _getRequiredCFs: function(newValue, entityStates, process, entityType, customFields) {
-    },
+    _getRequiredCFs: function() {},
 
-    _getAxisValueName: function() {
-    },
+    _getAxisValueName: function() {},
 
-    _getAxisDefaultValue: function() {
-    },
+    _getAxisDefaultValue: function() {},
 
-    _getNewAxisValue: function(axisValue, axisAction) {
-    },
+    _getNewAxisValue: function() {},
 
     _getAxisName: function(afterInitEvtArg, sliceDefinition, settingsReadyEvtArg, axisName) {
 
         const propertyName = this._getAxisValueName();
 
-        if (sliceDefinition[axisName]
-            && !this._compareArrays(sliceDefinition[axisName].types, settingsReadyEvtArg.types)
-        ) {
+        if (sliceDefinition[axisName] && !this._compareArrays(sliceDefinition[axisName].types,
+                settingsReadyEvtArg.types)) {
 
             const isNewlist = !Boolean(afterInitEvtArg.config.options.action);
             let axisAction;
@@ -79,7 +73,7 @@ var CFConstraintsQuickAdd = Class.extend({
             } else if (afterInitEvtArg.config.options.action[axisName]) {
 
                 axisValue = _.find(sliceDefinition[axisName].types, function(type) {
-                    return type.toLowerCase().indexOf(propertyName) == 0;
+                    return type.toLowerCase().indexOf(propertyName) === 0;
                 });
                 axisAction = afterInitEvtArg.config.options.action[axisName];
 
@@ -94,23 +88,23 @@ var CFConstraintsQuickAdd = Class.extend({
     },
 
     _getSliceDefinition: function(afterInitEvtArg) {
-        return (afterInitEvtArg.config.options && afterInitEvtArg.config.options.slice) ? afterInitEvtArg.config.options.slice.config.definition : null;
+        return (afterInitEvtArg.config.options && afterInitEvtArg.config.options.slice) ? afterInitEvtArg.config
+            .options.slice.config.definition : null;
     },
 
     _compareArrays: function(arrayNames1, array2) {
         var selectNames = function(array) {
             return _.map(array, function(el) {
                 return el.name.toLowerCase();
-            })
+            });
         };
 
         var arrayNames2 = selectNames(array2);
 
-        return arrayNames1.length == array2.length
-            && _.every(arrayNames1, function(el) {
+        return arrayNames1.length === array2.length && _.every(arrayNames1, function(el) {
             return _.contains(arrayNames2, el.toLowerCase());
         });
     }
 });
 
-module.exports = CFConstraintsQuickAdd;
+module.exports = Processor;

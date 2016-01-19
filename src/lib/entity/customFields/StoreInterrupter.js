@@ -1,6 +1,7 @@
 import _, {isString} from 'Underscore';
-var Storage = require("tp3/mashups/storage");
-var CFConstraintsCFInterrupter = require("./CFConstraints.cf.interrupter");
+var Storage = require('tp3/mashups/storage');
+
+var CFConstraintsCFInterrupter = require('./Interrupter');
 
 const processRestServerValue = (field, value) => {
 
@@ -30,26 +31,26 @@ var CFConstraintsCFInterrupterStore = CFConstraintsCFInterrupter.extend({
 
     _getCFsChanges: function(entity, changesToHandle) {
 
-        var entityChanges = _.find(changesToHandle, function(change) {
-            return change.id == entity.id;
-        });
+        var entityChanges = _.find(changesToHandle, (change) => change.id === entity.id);
 
-        var cfsChangesToHandle = _.reduce(entityChanges.changes, function(cfsChangesToHandleMemo, change) {
+        var cfsChangesToHandle = _.reduce(entityChanges.changes, (cfsChangesToHandleMemo, change) => {
             return this._shouldChangeBeHandled(change)
                 ? cfsChangesToHandleMemo.concat(change.value)
                 : cfsChangesToHandleMemo;
-        }, [], this);
+        }, []);
 
-        return _.filter(cfsChangesToHandle, function(changedCf) {
-            return _.find(entity.customFields, function(cf) {
-                return changedCf.name == cf.name && changedCf.value != cf.value;
+        return _.filter(cfsChangesToHandle, (changedCf) => {
+            return _.find(entity.customFields, (cf) => {
+                return changedCf.name === cf.name && changedCf.value !== cf.value;
             });
         })
         .map((entityCustomField) => ({
             ...entityCustomField,
             value: processRestServerValue(entityCustomField, entityCustomField.value)
         }));
+
     }
+
 });
 
 module.exports = CFConstraintsCFInterrupterStore;

@@ -1,7 +1,8 @@
-var _ = require("Underscore");
-var SliceInterrupter = require("tp3/mashups/sliceinterrupter");
-var CFConstraintsStateInterrupter = require("./CFConstraints.state.interrupter");
-var SliceDecoder = require("./CFConstraints.slice.decoder");
+var _ = require('Underscore');
+var SliceInterrupter = require('tp3/mashups/sliceinterrupter');
+
+var CFConstraintsStateInterrupter = require('./Interrupter');
+var SliceDecoder = require('./../../SliceDecoder');
 
 var CFConstraintsStateInterrupterSlice = CFConstraintsStateInterrupter.extend({
 
@@ -19,58 +20,69 @@ var CFConstraintsStateInterrupterSlice = CFConstraintsStateInterrupter.extend({
     },
 
     _getNewState: function(entity, entityStatesDetailed, changesToInterrupt, defaultProcess, teamProjects) {
-        var entityStateChange = _.find(changesToInterrupt, function(change) {
-            return parseInt(this.sliceDecoder.decode(change.id)) === entity.id;
+
+        var entityStateChange = _.find(changesToInterrupt, (change) => {
+            return parseInt(this.sliceDecoder.decode(change.id), 10) === entity.id;
         }, this);
 
         return this._getEntityState(entity, entityStatesDetailed, entityStateChange.changes, defaultProcess, teamProjects);
+
     },
 
     _getEntityState: function(entity, entityStates, changes, defaultProcess, teamProjects) {
-        var change = _.find(changes, function(change) {
-            return this._shouldChangeBeHandled(change);
-        }, this);
-        if (!change) {
-            return null;
-        }
+
+        var change = _.find(changes, (subChange) => {
+            return this._shouldChangeBeHandled(subChange);
+        });
+
+        if (!change) return null;
+
         var stateName = this.sliceDecoder.decode(change.value);
 
         if (this._isTeamStateChange(change)) {
+
             return this._getTeamState(stateName, entity, entityStates, teamProjects);
+
         } else {
-            return _.find(entityStates, function(state) {
+
+            return _.find(entityStates, (state) => {
                 return state.process.id === this.dataProvider.getEntityProcessId(entity, defaultProcess)
                     && state.entityType.name === entity.entityType.name
-                    && this.isStateEqual(stateName, state)
-            }, this);
+                    && this.isStateEqual(stateName, state);
+            });
+
         }
     },
 
     _getTeamState: function(stateName, entity, entityStates, teamProjects) {
-        if (_.isEmpty(entity.assignedTeams)) {
-            return null;
-        }
-        var workflowIds = _.compact(_.map(entity.assignedTeams, function(teamAssignment) {
+
+        if (_.isEmpty(entity.assignedTeams)) return null;
+
+        var workflowIds = _.compact(_.map(entity.assignedTeams, (teamAssignment) => {
+
             var teamId = teamAssignment.team.id;
-            var teamProject = _.find(teamProjects, function(teamProjects) {
-                return teamProjects.project.id === entity.project.id &&
-                    teamProjects.team.id === teamId;
+            var teamProject = _.find(teamProjects, (subTeamProjects) => {
+                return subTeamProjects.project.id === entity.project.id &&
+                    subTeamProjects.team.id === teamId;
             });
             if (!teamProject) {
                 return null;
             }
-            return _.find(teamProject.workflows, function(workflow) {
+            return _.find(teamProject.workflows, (workflow) => {
                 return workflow.entityType.name === entity.entityType.name;
             }).id;
+
         }));
-        return _.find(entityStates, function(state) {
+
+        return _.find(entityStates, (state) => {
             if (this.isProperState(stateName, state, workflowIds)) {
                 return true;
             }
-            return _.some(state.subEntityStates, function(sub) {
+            return _.some(state.subEntityStates, (sub) => {
                 return this.isProperState(stateName, sub, workflowIds);
-            }.bind(this));
-        }.bind(this));
+            });
+        });
+
     },
 
     isProperState: function(stateName, state, workflowIds) {

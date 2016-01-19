@@ -1,6 +1,6 @@
-import Graph from '../CFConstraints.graph';
+import Graph from '../Graph';
 
-describe('CFConstrains.graph', () => {
+describe('Graph', () => {
 
     it('build default graph on costruct', () => {
 

@@ -1,8 +1,9 @@
 import {isString, flatten, partial, pluck} from 'underscore';
 
-var SliceInterrupter = require("tp3/mashups/sliceinterrupter");
-var CFConstraintsCFInterrupter = require("./CFConstraints.cf.interrupter");
-var SliceDecoder = require("./CFConstraints.slice.decoder");
+var SliceInterrupter = require('tp3/mashups/sliceinterrupter');
+
+var CFConstraintsCFInterrupter = require('./Interrupter');
+var SliceDecoder = require('./../../SliceDecoder');
 
 var CFConstraintsCFInterrupterSlice = CFConstraintsCFInterrupter.extend({
 

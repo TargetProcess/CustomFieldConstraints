@@ -1,3 +1,4 @@
+/* eslint no-bitwise:0, operator-assignment:0 */
 var SliceDecoder = function() {
 };
 
@@ -25,7 +26,7 @@ SliceDecoder.prototype = {
             [47, 48]
         ];
 
-        for (z in n) {//noinspection JSUnfilteredForInLoop
+        for (z in n) {
             for (i = n[z][0]; i < n[z][1]; i++) {
                 v.push(w(i));
             }
@@ -50,4 +51,3 @@ SliceDecoder.prototype = {
 };
 
 module.exports = SliceDecoder;
-

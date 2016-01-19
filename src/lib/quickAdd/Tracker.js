@@ -1,7 +1,9 @@
-var $ = require("jQuery");
-var _ = require("Underscore");
-var Class = require("tau/core/class");
-var CFConstraintsGraph = require("./CFConstraints.graph");
+var $ = require('jQuery');
+var _ = require('Underscore');
+var Class = require('tau/core/class');
+
+var CFConstraintsGraph = require('./Graph');
+
 var CFConstraintsQuickAddCascadeTracker = Class.extend({
     init: function(requirements) {
         this._requirements = requirements;
@@ -23,16 +25,16 @@ var CFConstraintsQuickAddCascadeTracker = Class.extend({
             cascadeCF;
 
         for (processId in verticesWrapped.processes) {
-            //noinspection JSUnfilteredForInLoop
+
             for (entityTypeName in verticesWrapped.processes[processId].entityTypes) {
-                //noinspection JSUnfilteredForInLoop
+
                 cfVertices = verticesWrapped.processes[processId].entityTypes[entityTypeName].cfs;
                 _.forEach(cfVertices, function(cfVertex) {
                     cfNameLowered = cfVertex.getId().toLowerCase();
-                    //noinspection JSUnfilteredForInLoop
+
                     isRootCF = this._isRootCF(rootCFs, cfNameLowered, processId, entityTypeName);
                     if (!isRootCF) {
-                        //noinspection JSUnfilteredForInLoop
+
                         cascadeCF = this._findCFDefinition(cfDefinitions, cfNameLowered, processId,
                             entityTypeName);
                         this._cascadeCFs.push(cascadeCF);
@@ -65,13 +67,13 @@ var CFConstraintsQuickAddCascadeTracker = Class.extend({
     },
     _isCF: function(cf, cfNameLowered, processId, entityTypeName) {
         return cf.name.toLowerCase() === cfNameLowered &&
-            cf.processId == processId &&
+            cf.processId === processId &&
             cf.entityTypeName.toLowerCase() === entityTypeName.toLowerCase();
     },
     _isRootCF: function(rootCFs, cfNameLowered, processId, entityTypeName) {
-        return !!_.find(rootCFs, function(cf) {
+        return Boolean(_.find(rootCFs, function(cf) {
             return this._isCF(cf, cfNameLowered, processId, entityTypeName);
-        }, this);
+        }, this));
     },
     _findCFDefinition: function(cfDefinitions, cfNameLowered, processId, entityTypeName) {
         return _.find(cfDefinitions, function(cfDefinition) {
@@ -84,7 +86,7 @@ var CFConstraintsQuickAddCascadeTracker = Class.extend({
         cfElement
             .val(this._buildCFElementValue(cfElement, cfValue, shouldBeVisible))
             .toggleClass('placeholder', !shouldBeVisible)
-            .parent().toggle(!!shouldBeVisible);
+            .parent().toggle(Boolean(shouldBeVisible));
 
         if (this._positionShouldBeAdjustedHandler) {
             this._positionShouldBeAdjustedHandler();
