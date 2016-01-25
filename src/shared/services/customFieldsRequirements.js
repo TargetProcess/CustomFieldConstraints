@@ -106,22 +106,24 @@ const checkCustomFieldByValue = (fieldByConfig, value) => {
 
 };
 
-const getConnectedCustomFieldByValue = (fieldByConfig, customFieldValue) => {
+const getConnectedCustomFieldByValue = (fieldByConfig, customFieldValue, skipValuesCheck) => {
 
     if (!fieldByConfig.requiredCustomFields) return [];
+
+    if (skipValuesCheck) return fieldByConfig.requiredCustomFields;
 
     return checkCustomFieldByValue(fieldByConfig, customFieldValue) ? fieldByConfig.requiredCustomFields : [];
 
 };
 
-const getConnectedCustomFieldsByValue = (fieldsByStateFromCustomFieldsConfig, customFieldValue, customFieldsConfig) => {
+const getConnectedCustomFieldsByValue = (fieldsByStateFromCustomFieldsConfig, customFieldValue, customFieldsConfig, skipValuesCheck) => {
 
     return fieldsByStateFromCustomFieldsConfig.reduce((res, v) =>
-        res.concat(getConnectedCustomFieldByValue(v, customFieldValue, customFieldsConfig)), []);
+        res.concat(getConnectedCustomFieldByValue(v, customFieldValue, skipValuesCheck)), []);
 
 };
 
-const getConnectedCustomFieldsByField = (field, customFieldsConfig, customFieldsValues, initialCustomFieldsValues) => {
+const getConnectedCustomFieldsByField = (field, customFieldsConfig, customFieldsValues, initialCustomFieldsValues, skipValuesCheck) => {
 
     const fieldsByStateFromCustomFieldsConfig =
         customFieldsConfig.filter((v) => equalIgnoreCase(v.name, field.name));
@@ -132,12 +134,12 @@ const getConnectedCustomFieldsByField = (field, customFieldsConfig, customFields
     const customFieldsConfigWithoutSource = customFieldsConfig.filter((v) => connectedNames.indexOf(v.name) < 0);
 
     const connected = getConnectedCustomFieldsByValue(fieldsByStateFromCustomFieldsConfig,
-        customFieldValue, customFieldsConfigWithoutSource);
+        customFieldValue, customFieldsConfigWithoutSource, skipValuesCheck);
 
     if (connected.length) {
 
         /* eslint-disable no-use-before-define */
-        return getConnectedCustomFields(connected, customFieldsConfigWithoutSource, customFieldsValues, initialCustomFieldsValues);
+        return getConnectedCustomFields(connected, customFieldsConfigWithoutSource, customFieldsValues, initialCustomFieldsValues, true, skipValuesCheck);
         /* eslint-enable no-use-before-define */
 
     }
@@ -146,7 +148,7 @@ const getConnectedCustomFieldsByField = (field, customFieldsConfig, customFields
 
 };
 
-const getConnectedCustomFields = (fields, customFieldsConfig, currentCustomFieldsValues, initialCustomFieldsValues, includeTop = true) => {
+const getConnectedCustomFields = (fields, customFieldsConfig, currentCustomFieldsValues, initialCustomFieldsValues, includeTop = true, skipValuesCheck = false) => {
 
     return fields.reduce((res, field) => {
 
@@ -156,7 +158,7 @@ const getConnectedCustomFields = (fields, customFieldsConfig, currentCustomField
 
         if (includeTop) ret = ret.concat(field);
 
-        ret = ret.concat(getConnectedCustomFieldsByField(field, customFieldsConfig, currentCustomFieldsValues, initialCustomFieldsValues));
+        ret = ret.concat(getConnectedCustomFieldsByField(field, customFieldsConfig, currentCustomFieldsValues, initialCustomFieldsValues, skipValuesCheck));
 
         return ret;
 
@@ -165,28 +167,28 @@ const getConnectedCustomFields = (fields, customFieldsConfig, currentCustomField
 };
 
 export const getCustomFieldsNamesForNewState = (entityState, config, processId, entityTypeName,
-    currentCustomFieldsValues = {}, initialCustomFieldsValues = {}) => {
+    currentCustomFieldsValues = {}, initialCustomFieldsValues = {}, {skipValuesCheck} = {skipValuesCheck: false}) => {
 
     const stateConfig = getFlatStateConfig(config, processId, entityTypeName, entityState);
     const customFieldsConfig = processCustomFieldsConfig(getFlatCustomFieldsConfig(config, processId, entityTypeName));
 
     const rootFields = stateConfig.requiredCustomFields.map((v) => ({name: v}));
 
-    const allFields = getConnectedCustomFields(rootFields, customFieldsConfig, currentCustomFieldsValues, initialCustomFieldsValues);
+    const allFields = getConnectedCustomFields(rootFields, customFieldsConfig, currentCustomFieldsValues, initialCustomFieldsValues, true, skipValuesCheck);
 
     return uniq(pluck(allFields, 'name'));
 
 };
 
 export const getCustomFieldsNamesForChangedCustomFields = (changedFieldsNames, config, processId, entityTypeName,
-    currentCustomFieldsValues = {}, initialCustomFieldsValues = {}) => {
+    currentCustomFieldsValues = {}, initialCustomFieldsValues = {}, {skipValuesCheck} = {skipValuesCheck: false}) => {
 
     const customFieldsConfig = processCustomFieldsConfig(getFlatCustomFieldsConfig(config, processId, entityTypeName));
 
     const rootFields = customFieldsConfig.filter((v) =>
         inValues(changedFieldsNames, v.name) && checkCustomFieldByValue(v, getValue(v, currentCustomFieldsValues)));
 
-    const allFields = getConnectedCustomFields(rootFields, customFieldsConfig, currentCustomFieldsValues, initialCustomFieldsValues, false);
+    const allFields = getConnectedCustomFields(rootFields, customFieldsConfig, currentCustomFieldsValues, initialCustomFieldsValues, false, skipValuesCheck);
 
     return uniq(pluck(allFields, 'name'));
 

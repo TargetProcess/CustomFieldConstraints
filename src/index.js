@@ -2,15 +2,22 @@
 /* eslint global-require: 0 */
 import {invoke} from 'Underscore';
 
-import DataProvider from './lib/DataProvider';
-import Requirements from './lib/Requirements';
+// import DataProvider from './lib/DataProvider';
+// import Requirements from './lib/Requirements';
 
-import StateInterrupterStore from './lib/entity/state/StoreInterrupter';
-import CFInterrupterStore from './lib/entity/customFields/StoreInterrupter';
-import StateInterrupterSlice from './lib/entity/state/SliceInterrupter';
-import CFInterrupterSlice from './lib/entity/customFields/SliceInterrupter';
+import stateSliceInterrupt from './lib/stateSlice';
+import stateStoreInterrupt from './lib/stateStore';
+import customFieldStoreInterrupt from './lib/customFieldStore';
+import customFieldSliceInterrupt from './lib/customFieldSlice';
 
-import QuickAddAdapter from './lib/quickAdd';
+// import StateInterrupterStore from './lib/entity/state/StoreInterrupter';
+// import CFInterrupterStore from './lib/entity/customFields/StoreInterrupter';
+// import StateInterrupterSlice from './lib/entity/state/SliceInterrupter';
+// import CFInterrupterSlice from './lib/entity/customFields/SliceInterrupter';
+
+// import QuickAddAdapter from './lib/quickAdd';
+
+import modifyQuickAdd from './lib/quickAdd';
 
 const {placeholderId} = mashup.variables;
 const mashupConfig = mashup.config;
@@ -66,18 +73,28 @@ const showPopup = (...args) => {
 
 const init = () => {
 
-    const dataProvider = new DataProvider();
-    const requirements = new Requirements(mashupConfig);
+    stateSliceInterrupt(mashupConfig, showPopup);
+    stateStoreInterrupt(mashupConfig, showPopup);
+    customFieldStoreInterrupt(mashupConfig, showPopup);
+    customFieldSliceInterrupt(mashupConfig, showPopup);
+
+    modifyQuickAdd(mashupConfig);
+
+    // const dataProvider = new DataProvider();
+    // const requirements = new Requirements(mashupConfig);
     const subscribers = [
-        new StateInterrupterStore(dataProvider, requirements, showPopup),
-        new CFInterrupterStore(dataProvider, requirements, showPopup),
-        new StateInterrupterSlice(dataProvider, requirements, showPopup),
-        new CFInterrupterSlice(dataProvider, requirements, showPopup),
-        new QuickAddAdapter(dataProvider, requirements)
+        // new StateInterrupterStore(dataProvider, requirements, showPopup),
+        // new CFInterrupterStore(dataProvider, requirements, showPopup),
+        // new StateInterrupterSlice(dataProvider, requirements, showPopup)
+        //,
+        // new CFInterrupterSlice(dataProvider, requirements, showPopup),
+        // new QuickAddAdapter(dataProvider, requirements)
     ];
 
     invoke(subscribers, 'subscribe');
 
 };
 
-init();
+setTimeout(init, 100);
+
+
