@@ -1,5 +1,5 @@
 import React, {PropTypes as T} from 'react';
-import {noop, pluck, uniqueId} from 'underscore';
+import {noop, pluck, underscored} from 'underscore';
 import cx from 'classnames';
 
 import Input from './Input';
@@ -50,7 +50,7 @@ export default class FormRow extends React.Component {
 
         const isInvalid = hasErrors && hasDirtyValue;
         const title = isInvalid ? pluck(validationErrors, 'message').join('\n') : null;
-        const id = uniqueId('formrow');
+        const id = underscored(name);
 
         return (
             <div className={S.block} title={title}>

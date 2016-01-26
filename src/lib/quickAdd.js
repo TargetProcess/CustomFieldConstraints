@@ -1,13 +1,14 @@
 import $, {when, Deferred, whenList} from 'jquery';
-import {find, object, flatten, memoize, compose, constant, unique, map, last, without} from 'underscore';
+import {find, object, flatten, compose, constant, unique, map, last, without, memoize} from 'underscore';
 
 import {addBusListener} from 'targetprocess-mashup-helper/lib/events';
 
 import decodeSliceValue from 'utils/decodeSliceValue';
-import {inValues, equalByShortcut, equalIgnoreCase, isGeneral, isAssignable} from 'utils';
-import store from 'services/store';
-import store2 from 'services/store2';
-import {getCustomFieldsNamesForNewState, getCustomFieldsNamesForChangedCustomFields} from 'services/customFieldsRequirements';
+import {inValues, equalIgnoreCase, isAssignable, SLICE_CUSTOMFIELD_PREFIX} from 'utils';
+
+import {getCustomFieldsForAxes} from 'services/axes';
+
+const getCustomFieldsForAxesMemo = memoize(getCustomFieldsForAxes);
 
 const onRender = (configurator, componentBusName, cb) => {
 
@@ -62,7 +63,7 @@ const onDataBind = (componentBusName, cb) =>
 const getSliceDefinition = ({config}) =>
     (config.options && config.options.slice) ? config.options.slice.config.definition : null;
 
-const getTargetValue = ({config}, {name: axisName}) =>
+const getTargetValue = ({config}, axisName) =>
     decodeSliceValue(config.options.action ? config.options.action[axisName] : last(config.options.path));
 
 const getEntityTypes = (initData, bindData) => {
@@ -100,7 +101,6 @@ const getEntityTypes = (initData, bindData) => {
 const getAxes = (initData, entityType) => {
 
     const defaultAssignableAxes = [{
-        name: 'x',
         type: 'entitystate',
         targetValue: '_Initial'
     }];
@@ -113,35 +113,23 @@ const getAxes = (initData, entityType) => {
 
         if (!axisDefinition) return res;
 
-        let axis;
-
         if (inValues(axisDefinition.types, 'entitystate')) {
 
-            axis = {
-                name: axisName,
-                type: 'entitystate'
-            };
+            return res.concat({
+                type: 'entitystate',
+                targetValue: getTargetValue(initData, axisName)
+            });
 
         }
 
-        const fieldPrefix = /^ddl(multipleselectionlist)?/;
-        const customFieldName = find(axisDefinition.types, (v) => v.match(fieldPrefix));
+        const customFieldName = find(axisDefinition.types, (v) => v.match(SLICE_CUSTOMFIELD_PREFIX));
 
         if (customFieldName) {
 
-            axis = {
-                name: axisName,
-                type: 'customfield',
-                customFieldName: customFieldName.replace(fieldPrefix, '')
-            };
-
-        }
-
-        if (axis) {
-
             return res.concat({
-                ...axis,
-                targetValue: getTargetValue(initData, axis)
+                type: 'customfield',
+                customFieldName: customFieldName.replace(SLICE_CUSTOMFIELD_PREFIX, ''),
+                targetValue: getTargetValue(initData, axisName)
             });
 
         }
@@ -152,139 +140,6 @@ const getAxes = (initData, entityType) => {
 
     if (isAssignable({entityType})) return unique(axes.concat(defaultAssignableAxes), (v) => v.type);
     else return axes;
-
-};
-
-const loadEntityStates = memoize((processId) => {
-
-    return store.get('EntityStates', {
-        include: [{
-            workflow: ['Id']
-        }, {
-            process: ['id']
-        }, {
-            entityType: ['name']
-        },
-            'name',
-            'isInitial',
-            'isFinal',
-            'isPlanned', {
-                subEntityStates: [
-                    'id',
-                    'name', {
-                        workflow: ['id']
-                    },
-                    'isInitial',
-                    'isFinal',
-                    'isPlanned'
-                ]
-            }
-        ],
-        where: `Process.Id in (${processId})`
-    });
-
-});
-
-const findInRealCustomFields = (customFieldsNames, realCustomFields) =>
-    customFieldsNames.reduce((res, v) => {
-
-        const realCustomField = find(realCustomFields, (field) => equalIgnoreCase(field.name, v));
-
-        return realCustomField ? res.concat(realCustomField) : res;
-
-    }, []);
-
-const getRealCustomFields = memoize((customFieldsNames, processId, entityType) => {
-
-    let customFields;
-
-    if (isGeneral({entityType})) {
-
-        customFields = store2.get('CustomField', {
-            take: 1000,
-            where: `process.id == ${processId} and entityType.name == "${entityType.name}"`,
-            select: 'new(required, name, id, config, fieldType, value, entityType, process)'
-        });
-
-    } else {
-
-        customFields = store2.get('CustomField', {
-            take: 1000,
-            where: `process.id == null and entityType.name == "${entityType.name}"`,
-            select: 'new(required, name, id, config, fieldType, value, entityType, process)'
-        });
-
-    }
-
-    return when(customFields)
-    .then((realCustomFields) => findInRealCustomFields(customFieldsNames, realCustomFields));
-
-});
-
-const getRealEntityState = (targetValue, processId, entityType) =>
-    when(loadEntityStates(processId))
-    .then((items) =>
-        find(items, (v) =>
-            equalIgnoreCase(v.entityType.name, entityType.name) &&
-            (equalIgnoreCase(targetValue, v.name) || equalByShortcut(targetValue, v))));
-
-const getRealTargetValue = (axis, targetValue, processId, entity) => {
-
-    if (axis.type === 'entitystate') {
-
-        return getRealEntityState(targetValue, processId, entity.entityType);
-
-    }
-
-    if (axis.type === 'customfield') {
-
-        return when(getRealCustomFields([axis.customFieldName], processId, entity.entityType))
-        .then((items) => items.length ? items[0] : null);
-
-    }
-
-};
-
-const getCustomFieldsForAxis = (config, axis, processes, entity, values = {}, options = {skipValuesCheck: false}) => {
-
-    let cfs = [];
-    const targetValue = axis.targetValue;
-
-    return processes
-        .reduce((res, {id: processId}) =>
-            res
-                .then(() => getRealTargetValue(axis, targetValue, processId, entity))
-                .then((realTargetValue) => {
-
-                    if (!realTargetValue) return [];
-
-                    if (axis.type === 'entitystate') {
-
-                        return getCustomFieldsNamesForNewState(realTargetValue, config, processId, entity.entityType.name, values, {}, options);
-
-                    }
-
-                    if (axis.type === 'customfield') {
-
-                        const fullValues = {
-                            ...values,
-                            [realTargetValue.name]: targetValue
-                        };
-
-                        return getCustomFieldsNamesForChangedCustomFields([realTargetValue.name], config, processId, entity.entityType.name, fullValues, {}, options);
-
-                    }
-
-                })
-                .then((customFieldsNames) => getRealCustomFields(customFieldsNames, processId, entity.entityType))
-                .then((customFields) => {
-
-                    cfs = cfs.concat(customFields);
-
-                })
-
-        , when([]))
-        .then(() => cfs);
 
 };
 
@@ -334,20 +189,6 @@ const applyActualCustomFields = ($el, allCustomFields, actualCustomFields) => {
 const collectValues = ($el, customFields) =>
     object(customFields.map((v) => [v.name, findCustomFieldElByName($el, v.name).val()]));
 
-const getCustomFieldsForAxes = (config, axes, processes, entity, values = {}, options = {}) =>
-    whenList(axes.map((axis) => getCustomFieldsForAxis(config, axis, processes, entity, values, options)))
-        .then((...args) => flatten(args))
-        .then((customFields) => {
-
-            const allCustomFields = unique(customFields, (v) => v.name);
-
-            // e.g. if we have state and cf axes and state axes requires same cf
-            const customFieldsAsAxes = axes.reduce((res, axis) => (axis.type === 'customfield') ? res.concat(axis.customFieldName) : res, []);
-
-            return allCustomFields.filter((v) => !inValues(customFieldsAsAxes, v.name));
-
-        });
-
 const findFormByEntityType = ($el, entityType) =>
     $el.find('.tau-control-set').filter(function() {
         return equalIgnoreCase($(this).data('type'), entityType.name);
@@ -379,7 +220,7 @@ const listenQuickAddComponentBusForEntityType = (configurator, busName, config, 
         const adjust = () => componentBus.fire('adjustPosition');
 
         const handler = (actualProcesses = processes, values = {}) =>
-            when(getCustomFieldsForAxes(config, axes, actualProcesses, {entityType}, values, {skipValuesCheck: false}))
+            when(getCustomFieldsForAxesMemo(config, axes, actualProcesses, {entityType}, values, {skipValuesCheck: false}))
                 .then((customFieldsToShow) => {
 
                     activeCustomFields = customFieldsToShow;
@@ -401,7 +242,7 @@ const listenQuickAddComponentBusForEntityType = (configurator, busName, config, 
 
     });
 
-    when(getCustomFieldsForAxes(config, axes, processes, {entityType}, {}, {skipValuesCheck: true}))
+    when(getCustomFieldsForAxesMemo(config, axes, processes, {entityType}, {}, {skipValuesCheck: true}))
     .then((customFields) => {
 
         allCustomFields = customFields;
@@ -415,8 +256,7 @@ const listenQuickAddComponentBusForEntityType = (configurator, busName, config, 
 const applyToComponent = (config, {busName}) =>
     onDataBind(busName, (next, configurator, initData, bindData) => {
 
-        getRealCustomFields.cache = [];
-        loadEntityStates.cache = [];
+        getCustomFieldsForAxesMemo.cache = [];
 
         const entityTypes = getEntityTypes(initData, bindData);
 

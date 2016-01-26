@@ -1,4 +1,4 @@
-import {isArray} from 'underscore';
+import {isArray, unique} from 'underscore';
 
 export const lc = (s) => s.toLowerCase();
 
@@ -65,3 +65,10 @@ export const isUser = (entity) => inValues([
     'User',
     'Requester'
 ], entity.entityType.name);
+
+export const getEntityTypesNamesFromConfig = (config) =>
+    unique(config.reduce((res, processEntry) => res.concat(Object.keys(processEntry.constraints)), []));
+
+export const SLICE_CUSTOMFIELD_PREFIX = /^ddl(multipleselectionlist)?/;
+
+export const isStateRelated = (name) => inValues(['entitystate', 'assignedteams', 'teamentitystate'], name);

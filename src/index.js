@@ -1,28 +1,14 @@
 /* globals mashup */
 /* eslint global-require: 0 */
-import {invoke} from 'Underscore';
-
-// import DataProvider from './lib/DataProvider';
-// import Requirements from './lib/Requirements';
-
-import stateSliceInterrupt from './lib/stateSlice';
-import stateStoreInterrupt from './lib/stateStore';
-import customFieldStoreInterrupt from './lib/customFieldStore';
-import customFieldSliceInterrupt from './lib/customFieldSlice';
-
-// import StateInterrupterStore from './lib/entity/state/StoreInterrupter';
-// import CFInterrupterStore from './lib/entity/customFields/StoreInterrupter';
-// import StateInterrupterSlice from './lib/entity/state/SliceInterrupter';
-// import CFInterrupterSlice from './lib/entity/customFields/SliceInterrupter';
-
-// import QuickAddAdapter from './lib/quickAdd';
 
 import modifyQuickAdd from './lib/quickAdd';
+import interruptSlice from './lib/slice';
+import interruptStore from './lib/store';
 
 const {placeholderId} = mashup.variables;
 const mashupConfig = mashup.config;
 
-const showPopupNew = ({entity, processId, requirementsData}, next) => {
+const showPopupNew = ({entity, axes}, next) => {
 
     require.ensure(['react', './screens/Form'], () => {
 
@@ -52,12 +38,11 @@ const showPopupNew = ({entity, processId, requirementsData}, next) => {
 
         React.render((
             <Form
+                changes={axes}
                 entity={entity}
                 mashupConfig={mashupConfig}
                 onAfterSave={handleAfterSave}
                 onCancel={handleCancel}
-                processId={processId}
-                requirementsData={requirementsData}
             />
         ), holder);
 
@@ -73,25 +58,10 @@ const showPopup = (...args) => {
 
 const init = () => {
 
-    stateSliceInterrupt(mashupConfig, showPopup);
-    stateStoreInterrupt(mashupConfig, showPopup);
-    customFieldStoreInterrupt(mashupConfig, showPopup);
-    customFieldSliceInterrupt(mashupConfig, showPopup);
+    interruptSlice(mashupConfig, showPopup);
+    interruptStore(mashupConfig, showPopup);
 
     modifyQuickAdd(mashupConfig);
-
-    // const dataProvider = new DataProvider();
-    // const requirements = new Requirements(mashupConfig);
-    const subscribers = [
-        // new StateInterrupterStore(dataProvider, requirements, showPopup),
-        // new CFInterrupterStore(dataProvider, requirements, showPopup),
-        // new StateInterrupterSlice(dataProvider, requirements, showPopup)
-        //,
-        // new CFInterrupterSlice(dataProvider, requirements, showPopup),
-        // new QuickAddAdapter(dataProvider, requirements)
-    ];
-
-    invoke(subscribers, 'subscribe');
 
 };
 
