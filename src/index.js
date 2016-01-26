@@ -66,5 +66,3 @@ const init = () => {
 };
 
 setTimeout(init, 100);
-
-

@@ -44,7 +44,7 @@ export const createInterrupter = ({systemInterrupter, getEntitiesFromChanges}) =
                 }
 
                 when(getEntitiesFromChanges(entitiesFromChanges))
-                .then((requirements) => requirements.filter((v) => v && v.axes.length))
+                .then((requirements) => requirements.filter((v) => v && v.axes.length)) // eslint-disable-line
                 .then((requirements) => processRequirements(requirements, next, resolve, reject))
                 .fail(() => resolve());
 

@@ -1,4 +1,4 @@
-/* eslint no-bitwise:0, operator-assignment:0 */
+/* eslint no-bitwise:0, operator-assignment:0, padded-blocks: 0, one-var: 0, guard-for-in: 0, newline-after-var: 0 */
 
 const decodeBase64 = function(s) {
     var e = {}, i, v = [], r = '', w = String.fromCharCode, z;
