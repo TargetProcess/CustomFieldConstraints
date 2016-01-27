@@ -1,5 +1,5 @@
 import React, {PropTypes as T} from 'react';
-import {find, object, has, noop, memoize} from 'underscore';
+import {find, object, has, noop} from 'underscore';
 import {when} from 'jquery';
 
 import Overlay from 'components/Overlay';
@@ -15,12 +15,9 @@ import {
 } from 'services/form';
 import {getCustomFieldsForAxes} from 'services/axes';
 
-const getCustomFieldsForAxesMemo = memoize(getCustomFieldsForAxes);
+import {equalIgnoreCase} from 'utils';
 
 import Form from './Form';
-import TargetprocessLinkentity from './TargetprocessLinkentity';
-
-import {header, note, error as errorStyle} from './FormContainer.css';
 
 import {isUser, isGeneral} from 'utils';
 
@@ -32,8 +29,7 @@ const getCustomFieldsByEntity = (processId, entity) => store2.get('CustomField',
 
 const getEntityCustomFieldValue = ({customFields: entityCustomFields}, field) => {
 
-    const entityCustomField = find(entityCustomFields, (entityField) =>
-        entityField.name.toLowerCase() === field.name.toLowerCase());
+    const entityCustomField = find(entityCustomFields, (entityField) => equalIgnoreCase(entityField.name, field.name));
 
     return entityCustomField ? transformFromServerFieldValue(field, entityCustomField.value) : null;
 
@@ -75,6 +71,7 @@ const loadFullEntity = (entity) => {
 
         return store.get('General', entity.id, {
             include: [
+                'Name',
                 'EntityType',
                 {
                     Project: [{
@@ -89,10 +86,13 @@ const loadFullEntity = (entity) => {
 
         return store.get('User', entity.id, {
             include: [
+                'FirstName',
+                'LastName',
                 'CustomFields'
             ]
         }).then((res) => ({
             ...entity,
+            name: `${res.firstName} ${res.lastName}`,
             res
         }));
 
@@ -100,29 +100,38 @@ const loadFullEntity = (entity) => {
 
 };
 
-const getProcessId = (entity) => entity.project ? entity.project.process.id : null;
+const getDefaultValues = (customFields) => object(customFields.map((v) => [v.name, v.config.defaultValue]));
 
-const getCustomFields = (mashupConfig, changes, entity, processId, values, defaultValues, allEntityCustomFields) => {
-
-    const processes = [{id: processId}];
-
-    const existingValues = object(allEntityCustomFields
-        .map((field) => [
+const getExistingValues = (customFields, entity) =>
+    object(customFields.map((field) =>
+        [
             field,
-            transformFromServerFieldValue(field, getEntityCustomFieldValue(entity, field))
+            getEntityCustomFieldValue(entity, field)
         ])
         .filter(([field, value]) => !isEmptyInitialValue(field, value))
         .map(([field, value]) => [field.name, value]));
 
+const getProcessId = (entity) => entity.project ? entity.project.process.id : null;
+
+const getOutputCustomFields = (mashupConfig, changes, entity, processId, values, entityCustomFields) => {
+
+    const processes = [{id: processId}];
+
     const allValues = {
-        ...defaultValues,
+        ...getDefaultValues(entityCustomFields),
         ...values
     };
 
-    const allValuesSanitized = object(allEntityCustomFields.map((v) =>
+    const allValuesSanitized = object(entityCustomFields.map((v) =>
         [v.name, sanitizeFieldValue(v, allValues[v.name])]));
 
-    return getCustomFieldsForAxesMemo(mashupConfig, changes, processes, entity, allValuesSanitized, {}, existingValues);
+    const existingValues = getExistingValues(entityCustomFields, entity);
+
+    return when(getCustomFieldsForAxes(mashupConfig, changes, processes, entity, allValuesSanitized, {}, existingValues))
+        .then((serverCustomFields) =>
+            serverCustomFields
+                .map(transformFieldFromServer)
+                .map((v) => prepareFieldForForm(entity, values, v)));
 
 };
 
@@ -142,17 +151,17 @@ export default class FormContainer extends React.Component {
     }
 
     state = {
-        defaultValues: {},
         isLoading: true,
         onAfterSave: noop,
         onCancel: noop,
-        values: {},
-        customFields: []
+        entityCustomFields: [],
+        outputCustomFields: [],
+        values: {}
     }
 
     componentDidMount() {
 
-        getCustomFieldsForAxesMemo.cache = [];
+        getCustomFieldsForAxes.resetCache();
 
         const {entity, changes, mashupConfig} = this.props;
         const {values} = this.state;
@@ -163,30 +172,26 @@ export default class FormContainer extends React.Component {
             const processId = getProcessId(fullEntity);
 
             when(getCustomFieldsByEntity(processId, fullEntity))
-            .then((allEntityCustomFields) => {
+            .then((serverCustomFields) => {
 
-                const processedFields = allEntityCustomFields.map((field) =>
-                    transformFieldFromServer(field));
-
-                const defaultValues = object(processedFields.map((v) => [v.name, v.config.defaultValue]));
+                const entityCustomFields = serverCustomFields.map((field) => transformFieldFromServer(field));
 
                 this.setState({
                     processId,
-                    allEntityCustomFields: processedFields,
-                    defaultValues,
+                    entityCustomFields,
                     entity: fullEntity
                 });
 
-                return getCustomFields(mashupConfig, changes, entity, processId, values, defaultValues, allEntityCustomFields);
+                return getOutputCustomFields(mashupConfig, changes, fullEntity, processId, values, entityCustomFields);
 
             })
-            .then((customFields) => {
+            .then((outputCustomFields) => {
 
-                if (!customFields.length) this.props.onAfterSave();
+                if (!outputCustomFields.length) this.props.onAfterSave();
                 else {
 
                     this.setState({
-                        customFields,
+                        outputCustomFields,
                         isLoading: false
                     });
 
@@ -205,30 +210,20 @@ export default class FormContainer extends React.Component {
             isSaving,
             globalError,
 
-            customFields,
-            values,
+            outputCustomFields,
             entity
         } = this.state;
 
         if (isLoading) return null;
-        if (!customFields.length) return null;
-
-        const realCustomFields = customFields
-            .map(transformFieldFromServer)
-            .map((v) => prepareFieldForForm(entity, values, v));
+        if (!outputCustomFields.length) return null;
 
         return (
             <Overlay onClose={this.props.onCancel}>
 
-                <TargetprocessLinkentity className={header} entity={entity} />
-
-                <div className={note}>{'Please specify the following custom fields'}</div>
-                {globalError ? (
-                    <div className={errorStyle}>{globalError}</div>
-                ) : null}
                 <Form
                     entity={entity}
-                    fields={realCustomFields}
+                    fields={outputCustomFields}
+                    globalError={globalError}
                     onChange={this.handleChange}
                     onSubmit={this.handleSubmit}
                     showProgress={isSaving}
@@ -295,13 +290,13 @@ export default class FormContainer extends React.Component {
         const values = {...this.state.values, [field.name]: value};
 
         const {mashupConfig, changes} = this.props;
-        const {entity, processId, defaultValues, allEntityCustomFields} = this.state;
+        const {entity, processId, entityCustomFields} = this.state;
 
-        when(getCustomFields(mashupConfig, changes, entity, processId, values, defaultValues, allEntityCustomFields))
-        .then((customFields) => {
+        when(getOutputCustomFields(mashupConfig, changes, entity, processId, values, entityCustomFields))
+        .then((outputCustomFields) => {
 
             this.setState({
-                customFields,
+                outputCustomFields,
                 values
             });
 

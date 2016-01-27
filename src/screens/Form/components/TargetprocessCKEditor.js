@@ -6,7 +6,7 @@ import configurator from 'tau/configurator';
 
 import InputTextarea from './InputTextarea';
 
-import {block} from './TargetprocessCKEditor.css';
+import S from './TargetprocessCKEditor.css';
 
 export default class TargetprocessCKEditor extends React.Component {
 
@@ -69,7 +69,7 @@ export default class TargetprocessCKEditor extends React.Component {
     render() {
 
         return (
-            <InputTextarea {...omit(this.props, 'onBlur', 'onChange')} className={block} ref="input" />
+            <InputTextarea {...omit(this.props, 'onBlur', 'onChange')} className={S.block} ref="input" />
         );
 
     }

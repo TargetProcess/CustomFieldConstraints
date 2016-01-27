@@ -1,7 +1,7 @@
 import React from 'react';
 import cx from 'classnames';
 
-import {block} from './TargetprocessLinkentity.css';
+import S from './TargetprocessLinkentity.css';
 
 export default class TargetprocessLinkentity extends React.Component {
 
@@ -12,7 +12,7 @@ export default class TargetprocessLinkentity extends React.Component {
         return (
             <span
                 {...this.props}
-                className={cx('tau-linkentity', block, className)}
+                className={cx('tau-linkentity', S.block, className)}
                 title={short ? entity.name : null}
             >
                 <em

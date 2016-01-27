@@ -20,27 +20,30 @@ const getEntityFromChange = (sourceChange, changeValues) => {
                 name: sourceChange.type
             }
         },
-        axes: changeValues.map((v) => {
+        axes: changeValues.reduce((res, v) => {
 
             if (v.name.match(SLICE_CUSTOMFIELD_PREFIX)) {
 
-                return {
+                return res.concat({
                     type: 'customfield',
                     customFieldName: v.name.replace(SLICE_CUSTOMFIELD_PREFIX, ''),
                     targetValue: decodeSliceValue(v.value)
-                };
+                });
 
             }
 
             if (isStateRelated(v.name)) {
 
-                return {
+                return res.concat({
                     type: lc(v.name),
                     targetValue: decodeSliceValue(v.value)
-                };
+                });
 
             }
-        })
+
+            return res;
+
+        }, [])
     };
 
     return when(createRequirementsByTasks(mainEntry))

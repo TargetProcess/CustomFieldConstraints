@@ -9,7 +9,7 @@ export const transformFromServerFieldValue = (field, value) => {
 
     if (field.type === 'multipleselectionlist') {
 
-        return isString(value) ? value.split(',') : [];
+        return (isString(value) && value) ? value.split(',') : [];
 
     }
 
@@ -30,8 +30,7 @@ export const transformFieldFromServer = (field) => {
         type: field.fieldType.toLowerCase()
     };
 
-    processedField.config.defaultValue =
-        transformFromServerFieldValue(processedField, processedField.config.defaultValue);
+    processedField.config.defaultValue = transformFromServerFieldValue(processedField, processedField.config.defaultValue);
 
     if (processedField.type === 'multipleselectionlist' ||
         processedField.type === 'dropdown' ||
@@ -39,6 +38,12 @@ export const transformFieldFromServer = (field) => {
         processedField.type === 'entity') {
 
         processedField.value = processServerSelectOptions(processedField.value);
+
+    }
+
+    if (processedField.type === 'multipleselectionlist' && processedField.config.defaultValue.length === 0) {
+
+        processedField.config.defaultValue = [processedField.value[0]];
 
     }
 

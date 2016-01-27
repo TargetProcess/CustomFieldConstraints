@@ -1,7 +1,7 @@
 import {when, whenList} from 'jquery';
-import {find, flatten, unique} from 'underscore';
+import {find, flatten, unique, memoize, pluck, partial} from 'underscore';
 
-import {inValues, equalByShortcut, equalIgnoreCase, isGeneral} from 'utils';
+import {inValues, equalByShortcut, equalIgnoreCase, isGeneral, isAssignable, isStateRelated} from 'utils';
 import store from 'services/store';
 import store2 from 'services/store2';
 import {
@@ -18,7 +18,7 @@ const findInRealCustomFields = (customFieldsNames, realCustomFields) =>
 
     }, []);
 
-const getRealCustomFields = (customFieldsNames, processId, entityType) => {
+const getRealCustomFields = memoize((customFieldsNames, processId, entityType) => {
 
     if (!customFieldsNames.length) return [];
 
@@ -45,13 +45,12 @@ const getRealCustomFields = (customFieldsNames, processId, entityType) => {
     return when(customFields)
     .then((realCustomFields) => findInRealCustomFields(customFieldsNames, realCustomFields));
 
-};
+});
 
-const loadEntityStates = (processId) => {
-
-    return store.get('EntityStates', {
+const loadEntityStates = memoize((processId) =>
+    store.get('EntityStates', {
         include: [{
-            workflow: ['Id']
+            workflow: ['id']
         }, {
             process: ['id']
         }, {
@@ -73,24 +72,111 @@ const loadEntityStates = (processId) => {
             }
         ],
         where: `Process.Id in (${processId})`
-    });
+    }));
+
+const matchEntityStateFlat = (valueToMatch, entityType, entityState) =>
+    equalIgnoreCase(entityState.entityType.name, entityType.name) &&
+        (equalIgnoreCase(valueToMatch, entityState.name) || equalByShortcut(valueToMatch, entityState));
+
+const matchEntityStateHeirarchy = (valueToMatch, entityType, entityState) => {
+
+    const match = partial(matchEntityStateFlat, valueToMatch, entityType);
+
+    return match(entityState) || entityState.subEntityStates.items.some(match);
 
 };
 
 const getRealEntityState = (targetValue, processId, entityType) =>
     when(loadEntityStates(processId))
-    .then((items) => {
+    .then((items) =>
+        targetValue.id ?
+        find(items, (v) => v.id === targetValue.id) :
+        find(items, (v) => matchEntityStateFlat(targetValue, entityType, v)));
 
-        if (targetValue.id) return find(items, (v) => v.id === targetValue.id);
-        else {
+const getRealCustomField = (customFieldName, processId, entityType) =>
+    when(getRealCustomFields([customFieldName], processId, entityType))
+        .then((items) => items.length ? items[0] : null);
 
-            return find(items, (v) =>
-                equalIgnoreCase(v.entityType.name, entityType.name) &&
-                (equalIgnoreCase(targetValue, v.name) || equalByShortcut(targetValue, v)));
+const loadTeamsData = memoize((entity) =>
+    store.get(entity.entityType.name, entity.id, {
+        include: [{
+            project: {
+                process: ['id'],
+                teamProjects: ['id']
+            },
+            assignedTeams: [
+                'id',
+                {
+                    team: ['id']
+                }
+            ]
+        }]
+    }));
 
-        }
+const loadTeamProjects = memoize((ids) => {
 
+    if (!ids.length) return [];
+
+    return store.get('TeamProjects', {
+        include: [{
+            team: ['id']
+        }, {
+            project: ['id']
+        }, {
+            workflows: ['id', 'name', {
+                entityType: ['name']
+            }, {
+                parentWorkflow: ['id']
+            }]
+        }],
+        where: `id in (${ids.join(',')})`
     });
+
+});
+
+const getRealEntityStateByTeam = (targetValue, processId, entity) => {
+
+    if (targetValue.id) return getRealEntityState(targetValue, processId, entity.entityType);
+
+    if (!isAssignable(entity)) return null;
+
+    const entityType = entity.entityType;
+
+    return when(loadEntityStates(processId), loadTeamsData(entity))
+        .then((entityStates, fullEntity) => {
+
+            const teamProjects = fullEntity.project ? fullEntity.project.teamProjects.items : [];
+            const assignedTeams = fullEntity.assignedTeams.items;
+            const project = fullEntity.project;
+
+            return when(entityStates, assignedTeams, project, loadTeamProjects(pluck(teamProjects, 'id')));
+
+        })
+        .then((entityStates, assignedTeams, project, teamProjects) => {
+
+            const workflows = assignedTeams.reduce((res, v) => {
+
+                const team = v.team;
+                const teamProject = find(teamProjects, (vv) =>
+                    vv.project.id === project.id && vv.team.id === team.id);
+
+                if (!teamProject) return res;
+
+                const workflow = teamProject.workflows.items.find((vv) =>
+                    equalIgnoreCase(vv.entityType.name, entity.entityType.name));
+
+                return workflow ? res.concat(workflow) : res;
+
+            }, []);
+
+            const workflowIds = pluck(workflows, 'id');
+
+            return entityStates.find((v) =>
+                inValues(workflowIds, v.workflow.id) && matchEntityStateHeirarchy(targetValue, entityType, v));
+
+        });
+
+};
 
 const getRealTargetValue = (axis, targetValue, processId, entity) => {
 
@@ -102,8 +188,13 @@ const getRealTargetValue = (axis, targetValue, processId, entity) => {
 
     if (axis.type === 'customfield') {
 
-        return when(getRealCustomFields([axis.customFieldName], processId, entity.entityType))
-        .then((items) => items.length ? items[0] : null);
+        return getRealCustomField(axis.customFieldName, processId, entity.entityType);
+
+    }
+
+    if (axis.type === 'assignedteams' || axis.type === 'teamentitystate') {
+
+        return getRealEntityStateByTeam(targetValue, processId, entity);
 
     }
 
@@ -122,7 +213,7 @@ const getCustomFieldsForAxis = (config, axis, processes, entity, values = {}, op
 
                     if (!realTargetValue) return [];
 
-                    if (axis.type === 'entitystate') {
+                    if (isStateRelated(axis.type)) {
 
                         return getCustomFieldsNamesForNewState(realTargetValue, config, processId, entity.entityType.name, values, initialValues, options);
 
@@ -138,6 +229,8 @@ const getCustomFieldsForAxis = (config, axis, processes, entity, values = {}, op
                         return getCustomFieldsNamesForChangedCustomFields([realTargetValue.name], config, processId, entity.entityType.name, fullValues, initialValues, options);
 
                     }
+
+                    return [];
 
                 })
                 .then((customFieldsNames) => getRealCustomFields(customFieldsNames, processId, entity.entityType))
@@ -165,3 +258,12 @@ export const getCustomFieldsForAxes = (config, axes, processes, entity, values =
             return allCustomFields.filter((v) => !inValues(customFieldsAsAxes, v.name));
 
         });
+
+getCustomFieldsForAxes.resetCache = () => {
+
+    getRealCustomFields.cache = [];
+    loadEntityStates.cache = [];
+    loadTeamsData.cache = [];
+    loadTeamProjects.cache = [];
+
+};

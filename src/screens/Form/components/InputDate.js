@@ -4,7 +4,7 @@ import cx from 'classnames';
 
 import dateUtils from 'tau/utils/utils.date';
 
-import {block} from './InputDate.css';
+import S from './InputDate.css';
 
 export default class InputDate extends React.Component {
 
@@ -28,7 +28,7 @@ export default class InputDate extends React.Component {
     render() {
 
         return (
-            <div className={cx('ui-dateeditor', block)}>
+            <div className={cx('ui-dateeditor', S.block)}>
                 <input
                     {...this.props}
                     className={cx('tau-in-text', {'tau-error': this.props.isInvalid})}

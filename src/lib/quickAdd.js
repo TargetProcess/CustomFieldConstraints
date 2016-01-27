@@ -1,5 +1,5 @@
 import $, {when, Deferred, whenList} from 'jquery';
-import {find, object, flatten, compose, constant, unique, map, last, without, memoize} from 'underscore';
+import {find, object, flatten, compose, constant, unique, map, last, without} from 'underscore';
 
 import {addBusListener} from 'targetprocess-mashup-helper/lib/events';
 
@@ -7,8 +7,6 @@ import decodeSliceValue from 'utils/decodeSliceValue';
 import {inValues, equalIgnoreCase, isAssignable, SLICE_CUSTOMFIELD_PREFIX} from 'utils';
 
 import {getCustomFieldsForAxes} from 'services/axes';
-
-const getCustomFieldsForAxesMemo = memoize(getCustomFieldsForAxes);
 
 const onRender = (configurator, componentBusName, cb) => {
 
@@ -34,7 +32,10 @@ const createTemplateItemFromCustomField = (customField) => ({
     caption: customField.name,
     fieldType: customField.fieldType,
     processId: customField.process ? customField.process.id : null,
-    required: true
+    required: true,
+    options: {
+        ...customField
+    }
 });
 
 const events = ['afterInit:last', 'before_dataBind'];
@@ -168,14 +169,16 @@ const findCustomFieldElByName = ($el, name) => $el.find(`[data-iscf=true][data-f
 const hideCustomFieldEl = ($cfEl) => {
 
     $cfEl.parent().removeClass('show');
-    $cfEl.data('validate').rules = without($cfEl.data('validate').rules, 'required');
+    $cfEl.parent().find('input, select').toArray().forEach((v) =>
+        $(v).data('validate').rules = without($(v).data('validate').rules, 'required'));
 
 };
 
 const showCustomFieldEl = ($cfEl) => {
 
     $cfEl.parent().addClass('show');
-    $cfEl.data('validate').rules = $cfEl.data('validate').rules.concat('required');
+    $cfEl.parent().find('input, select').toArray().forEach((v) =>
+        $(v).data('validate').rules = $(v).data('validate').rules.concat('required'));
 
 };
 
@@ -220,7 +223,7 @@ const listenQuickAddComponentBusForEntityType = (configurator, busName, config, 
         const adjust = () => componentBus.fire('adjustPosition');
 
         const handler = (actualProcesses = processes, values = {}) =>
-            when(getCustomFieldsForAxesMemo(config, axes, actualProcesses, {entityType}, values, {skipValuesCheck: false}))
+            when(getCustomFieldsForAxes(config, axes, actualProcesses, {entityType}, values, {skipValuesCheck: false}))
                 .then((customFieldsToShow) => {
 
                     activeCustomFields = customFieldsToShow;
@@ -242,7 +245,7 @@ const listenQuickAddComponentBusForEntityType = (configurator, busName, config, 
 
     });
 
-    when(getCustomFieldsForAxesMemo(config, axes, processes, {entityType}, {}, {skipValuesCheck: true}))
+    when(getCustomFieldsForAxes(config, axes, processes, {entityType}, {}, {skipValuesCheck: true}))
     .then((customFields) => {
 
         allCustomFields = customFields;
@@ -256,7 +259,7 @@ const listenQuickAddComponentBusForEntityType = (configurator, busName, config, 
 const applyToComponent = (config, {busName}) =>
     onDataBind(busName, (next, configurator, initData, bindData) => {
 
-        getCustomFieldsForAxesMemo.cache = [];
+        getCustomFieldsForAxes.resetCache();
 
         const entityTypes = getEntityTypes(initData, bindData);
 
