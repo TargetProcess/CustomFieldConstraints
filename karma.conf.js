@@ -9,11 +9,25 @@ module.exports = function(config) {
             }, {
                 test: /\.css$/,
                 loader: 'style!css?localIdentName=[name]-[local]'
-            }]
+            }],
+            noParse: [
+                /node_modules\/sinon\//,
+            ]
         },
         resolve: {
-            modulesDirectories: ['node_modules', 'shared', 'conf']
+            modulesDirectories: ['node_modules', 'shared', 'conf'],
+            alias: {
+                'sinon': 'sinon/pkg/sinon'
+            }
+        },
+        externals: {
+          "jsdom": "window",
+          "cheerio": "window",
+          "react-dom": "window",
+          "react-dom/server": "window",
+          "react-addons-test-utils": "window"
         }
+
     };
 
     if (config.reporters.indexOf('coverage') >= 0) {
@@ -44,15 +58,18 @@ module.exports = function(config) {
 
     config.set({
 
-        frameworks: ['chai', 'mocha', 'sinon', 'sinon-chai'],
+        frameworks: [
+            'mocha', 'chai', 'sinon',
+            'sinon-chai'
+        ],
 
         files: [
             './node_modules/phantomjs-polyfill/bind-polyfill.js',
-            'tests.bundle.js'
+            'test/bundle.js'
         ],
 
         preprocessors: {
-            'tests.bundle.js': ['webpack', 'sourcemap']
+            'test/bundle.js': ['webpack', 'sourcemap']
         },
 
         coverageReporter: {
