@@ -7,8 +7,8 @@ tau.mashups.addModule("CustomFieldConstraints/config", [
                     {
                         "name": "Open",
                         "requiredCustomFields": [
-                            "ent",
-                            "ment"
+                            "Cf1",
+                            "Cf3"
                         ]
                     }
                 ],
@@ -20,6 +20,25 @@ tau.mashups.addModule("CustomFieldConstraints/config", [
                         ],
                         "requiredCustomFields": [
                             "Cf2"
+                        ]
+                    },
+                    {
+                        "name": "Cf3",
+                        "valueIn": [
+                            "Cf3ValueThatRequiresCf4"
+                        ],
+                        "requiredCustomFields": [
+                            "Cf4"
+                        ]
+                    }
+                ]
+            },
+            "task": {
+                "entityStates": [
+                    {
+                        "name": "Done",
+                        "requiredCustomFields": [
+                            "Cf1"
                         ]
                     }
                 ]
@@ -33,6 +52,28 @@ tau.mashups.addModule("CustomFieldConstraints/config", [
                         ],
                         "requiredCustomFields": [
                             "Cf2"
+                        ]
+                    }
+                ]
+            }
+        }
+    },
+    {
+        "constraints": {
+            "user": {
+                "entityStates": [
+                    {
+                        "name": "Open",
+                        "requiredCustomFields": [
+                            "Age"
+                        ]
+                    }
+                ],
+                "customFields": [
+                    {
+                        "name": "Age",
+                        "requiredCustomFields": [
+                            "Height"
                         ]
                     }
                 ]
