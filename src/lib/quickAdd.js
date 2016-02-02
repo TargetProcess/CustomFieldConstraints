@@ -194,7 +194,7 @@ const collectValues = ($el, customFields) =>
     object(customFields.map((v) => [v.name, findCustomFieldElByName($el, v.name).val()]));
 
 const findFormByEntityType = ($el, entityType) =>
-    $el.find('.tau-control-set').toArray().filter((v) => equalIgnoreCase($(v).data('type'), entityType.name));
+    $($el.find('.tau-control-set').toArray().filter((v) => equalIgnoreCase($(v).data('type'), entityType.name)));
 
 const onCustomFieldsChange = ($el, customFields, handler) =>
     customFields.map((v) => findCustomFieldElByName($el, v.name).on('change, input', compose(handler, constant(void 0))));
