@@ -18,7 +18,7 @@ export default class InputEntityBase extends React.Component {
         onBlur: T.func,
         onChange: T.func,
         placeholder: T.string
-    }
+    };
 
     static defaultProps = {
         filterFields: {},
@@ -26,13 +26,13 @@ export default class InputEntityBase extends React.Component {
         onBlur: noop,
         onChange: noop,
         placeholder: 'Click to select'
-    }
+    };
 
     state = {
         value: void 0,
         showFinder: false,
         showFinderBubble: false
-    }
+    };
 
     render() {
 
@@ -136,7 +136,7 @@ export default class InputEntityBase extends React.Component {
 
         }
 
-    }
+    };
 
     handleSelect = (entity) => {
 
@@ -148,7 +148,7 @@ export default class InputEntityBase extends React.Component {
             showFinderBubble: multiple
         }, () => this.props.onChange(entity));
 
-    }
+    };
 
     handleClickReset = () => {
 
@@ -158,7 +158,7 @@ export default class InputEntityBase extends React.Component {
             showFinderBubble: false
         }, () => this.props.onChange(void 0));
 
-    }
+    };
 
     handleClickOutsideFinder = (e) => {
 
@@ -170,7 +170,7 @@ export default class InputEntityBase extends React.Component {
             showFinderBubble: false
         }, () => this.props.onBlur());
 
-    }
+    };
 
     handleFinderAdjusted = () => {
 
@@ -199,7 +199,7 @@ export default class InputEntityBase extends React.Component {
 
         }, 300);
 
-    }
+    };
 
     get value() {
 

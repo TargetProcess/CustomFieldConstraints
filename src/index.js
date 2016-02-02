@@ -13,7 +13,7 @@ const showPopupNew = ({entity, axes}, next) => {
     require.ensure(['react', './screens/Form'], () => {
 
         const React = require('react');
-        const Form = require('./screens/Form');
+        const Form = require('./screens/Form').default;
 
         const holder = document.getElementById(placeholderId).appendChild(document.createElement('div'));
 

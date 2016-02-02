@@ -14,7 +14,7 @@ export default class TargetprocessFinder extends React.Component {
         filterFields: T.object,
         onAdjust: T.func,
         onSelect: T.func
-    }
+    };
 
     static defaultProps = {
         filterDsl: void 0,
@@ -40,7 +40,7 @@ export default class TargetprocessFinder extends React.Component {
         filterFields: {},
         onAdjust: noop,
         onSelect: noop
-    }
+    };
 
     render() {
 
@@ -82,10 +82,10 @@ export default class TargetprocessFinder extends React.Component {
 
         if (events[eventName]) events[eventName](data);
 
-    }
+    };
 
-    handleSelect = (entity) => this.props.onSelect(entity)
+    handleSelect = (entity) => this.props.onSelect(entity);
 
-    handleAdjust = () => this.props.onAdjust()
+    handleAdjust = () => this.props.onAdjust();
 
 }

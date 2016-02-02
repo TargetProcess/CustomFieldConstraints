@@ -18,15 +18,11 @@ const findInRealCustomFields = (customFieldsNames, realCustomFields) =>
 
     }, []);
 
-const getRealCustomFields = memoize((customFieldsNames, processId, entityType) => {
-
-    if (!customFieldsNames.length) return [];
-
-    let customFields;
+const loadCustomFields = memoize((processId, entityType) => {
 
     if (isGeneral({entityType})) {
 
-        customFields = store2.get('CustomField', {
+        return store2.get('CustomField', {
             take: 1000,
             where: `process.id == ${processId} and entityType.name == "${entityType.name}"`,
             select: 'new(required, name, id, config, fieldType, value, entityType, process)'
@@ -34,7 +30,7 @@ const getRealCustomFields = memoize((customFieldsNames, processId, entityType) =
 
     } else {
 
-        customFields = store2.get('CustomField', {
+        return store2.get('CustomField', {
             take: 1000,
             where: `process.id == null and entityType.name == "${entityType.name}"`,
             select: 'new(required, name, id, config, fieldType, value, entityType, process)'
@@ -42,10 +38,16 @@ const getRealCustomFields = memoize((customFieldsNames, processId, entityType) =
 
     }
 
-    return when(customFields)
+});
+
+const getRealCustomFields = (customFieldsNames, processId, entityType) => {
+
+    if (!customFieldsNames.length) return [];
+
+    return when(loadCustomFields(processId, entityType))
     .then((realCustomFields) => findInRealCustomFields(customFieldsNames, realCustomFields));
 
-});
+};
 
 const loadEntityStates = memoize((processId) =>
     store.get('EntityStates', {
@@ -261,7 +263,7 @@ export const getCustomFieldsForAxes = (config, axes, processes, entity, values =
 
 getCustomFieldsForAxes.resetCache = () => {
 
-    getRealCustomFields.cache = [];
+    loadCustomFields.cache = [];
     loadEntityStates.cache = [];
     loadTeamsData.cache = [];
     loadTeamProjects.cache = [];

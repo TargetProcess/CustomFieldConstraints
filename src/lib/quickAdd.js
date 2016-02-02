@@ -13,15 +13,16 @@ const onRender = (configurator, componentBusName, cb) => {
     const afterRenderHandler = function(e) {
 
         const element = e.data.element;
-        const self = this;
-        const componentBus = self;
+        const componentBus = this; // eslint-disable-line no-invalid-this, consistent-this
 
         cb(element, componentBus);
 
     };
 
     configurator.getComponentBusRegistry().getByName(componentBusName).then((bus) => {
+
         bus.on('afterRender', afterRenderHandler);
+
     });
 
 };
@@ -193,9 +194,7 @@ const collectValues = ($el, customFields) =>
     object(customFields.map((v) => [v.name, findCustomFieldElByName($el, v.name).val()]));
 
 const findFormByEntityType = ($el, entityType) =>
-    $el.find('.tau-control-set').filter(function() {
-        return equalIgnoreCase($(this).data('type'), entityType.name);
-    });
+    $el.find('.tau-control-set').toArray().filter((v) => equalIgnoreCase($(v).data('type'), entityType.name));
 
 const onCustomFieldsChange = ($el, customFields, handler) =>
     customFields.map((v) => findCustomFieldElByName($el, v.name).on('change, input', compose(handler, constant(void 0))));

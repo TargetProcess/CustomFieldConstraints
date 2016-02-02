@@ -148,7 +148,7 @@ export default class FormContainer extends React.Component {
         mashupConfig: T.array,
         onAfterSave: T.func,
         onCancel: T.func
-    }
+    };
 
     state = {
         isLoading: true,
@@ -157,7 +157,7 @@ export default class FormContainer extends React.Component {
         entityCustomFields: [],
         outputCustomFields: [],
         values: {}
-    }
+    };
 
     componentDidMount() {
 
@@ -165,6 +165,8 @@ export default class FormContainer extends React.Component {
 
         const {entity, changes, mashupConfig} = this.props;
         const {values} = this.state;
+
+        if (!changes.length) return null;
 
         when(loadFullEntity(entity))
         .then((fullEntity) => {
@@ -205,6 +207,8 @@ export default class FormContainer extends React.Component {
 
     render() {
 
+        const {changes} = this.props;
+
         const {
             isLoading,
             isSaving,
@@ -214,6 +218,7 @@ export default class FormContainer extends React.Component {
             entity
         } = this.state;
 
+        if (!changes.length) return null;
         if (isLoading) return null;
         if (!outputCustomFields.length) return null;
 
@@ -283,7 +288,7 @@ export default class FormContainer extends React.Component {
 
             });
 
-    }
+    };
 
     handleChange = (field, value) => {
 
@@ -302,6 +307,6 @@ export default class FormContainer extends React.Component {
 
         });
 
-    }
+    };
 
 }

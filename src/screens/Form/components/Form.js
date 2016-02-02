@@ -8,24 +8,24 @@ import TargetprocessLinkentity from './TargetprocessLinkentity';
 export default class Form extends React.Component {
 
     static propTypes = {
-        entity: T.object,
+        entity: T.object.isRequired,
         fields: T.arrayOf(FormRow.propTypes.item),
         globalError: T.string,
         onChange: T.func,
         onSubmit: T.func,
         showProgress: T.bool,
         values: T.object
-    }
+    };
 
     static defaultProps = {
         fields: [],
         values: {}
-    }
+    };
 
     render() {
 
         const {entity, fields, showProgress, globalError} = this.props;
-        const hasInvalid = fields.some(({validationErrors}) => validationErrors.length);
+        const hasInvalid = fields.some(({validationErrors = []}) => validationErrors.length);
 
         return (
             <div>
@@ -73,12 +73,12 @@ export default class Form extends React.Component {
 
         this.props.onSubmit(values);
 
-    }
+    };
 
     handleChange = (field, value) => {
 
         this.props.onChange(field, value);
 
-    }
+    };
 
 }

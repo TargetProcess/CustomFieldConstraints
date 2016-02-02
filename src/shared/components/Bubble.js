@@ -10,13 +10,13 @@ export default class Bubble extends React.Component {
         overlay: PropTypes.node.isRequired,
         style: PropTypes.object,
         target: PropTypes.object.isRequired
-    }
+    };
 
     static defaultProps = {
         config: {},
         onClickOutside: noop,
         style: {}
-    }
+    };
 
     componentDidMount() {
 
@@ -99,7 +99,7 @@ export default class Bubble extends React.Component {
 
         }
 
-    }
+    };
 
     adjust() {
 

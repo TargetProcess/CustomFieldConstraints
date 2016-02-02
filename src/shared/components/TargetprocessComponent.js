@@ -10,13 +10,13 @@ export default class TargetprocessComponent extends React.Component {
         context: T.object,
         onEvents: T.func,
         type: T.string.isRequired
-    }
+    };
 
     static defaultProps = {
         context: {},
         config: {},
         onEvents: noop
-    }
+    };
 
     componentDidMount() {
 

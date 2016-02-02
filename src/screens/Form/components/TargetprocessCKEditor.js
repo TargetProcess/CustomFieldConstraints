@@ -12,7 +12,7 @@ export default class TargetprocessCKEditor extends React.Component {
 
     state = {
         canApplyRicheditor: Boolean($.ui.richeditor)
-    }
+    };
 
     componentDidMount() {
 

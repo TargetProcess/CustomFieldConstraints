@@ -6,7 +6,7 @@ export default class InputMultidropdown extends React.Component {
 
     static defaultProps = {
         value: []
-    }
+    };
 
     render() {
 
@@ -37,7 +37,7 @@ export default class InputMultidropdown extends React.Component {
         // input has no value even some option was selected on focus before
         setTimeout(() => this.props.onChange(e), 0);
 
-    }
+    };
 
     get value() {
 

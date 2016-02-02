@@ -1,3 +1,5 @@
+var webpack = require('webpack');
+
 module.exports = function(config) {
 
     var webpackConfig = {
@@ -11,23 +13,27 @@ module.exports = function(config) {
                 loader: 'style!css?localIdentName=[name]-[local]'
             }],
             noParse: [
-                /node_modules\/sinon\//,
+                /node_modules\/sinon\//
             ]
         },
         resolve: {
             modulesDirectories: ['node_modules', 'shared', 'conf'],
             alias: {
-                'sinon': 'sinon/pkg/sinon'
+                sinon: 'sinon/pkg/sinon'
             }
         },
         externals: {
-          "jsdom": "window",
-          "cheerio": "window",
-          "react-dom": "window",
-          "react-dom/server": "window",
-          "react-addons-test-utils": "window"
-        }
-
+            jsdom: 'window',
+            cheerio: 'window',
+            'react-dom': 'window',
+            'react-dom/server': 'window',
+            'react-addons-test-utils': 'window'
+        },
+        plugins: [
+            new webpack.DefinePlugin({
+                'process.env.NODE_ENV': JSON.stringify('development')
+            })
+        ]
     };
 
     if (config.reporters.indexOf('coverage') >= 0) {

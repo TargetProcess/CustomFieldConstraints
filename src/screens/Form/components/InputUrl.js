@@ -10,7 +10,7 @@ export default class InputUrl extends React.Component {
             url: void 0,
             label: void 0
         }
-    }
+    };
 
     render() {
 

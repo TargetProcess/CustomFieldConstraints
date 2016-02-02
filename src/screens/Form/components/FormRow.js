@@ -12,21 +12,22 @@ export default class FormRow extends React.Component {
         autoFocus: T.bool,
         entity: T.object,
         item: T.shape({
-            name: T.string,
-            field: Input.propTypes.field.isRequired,
+            name: T.string.isRequired,
+            field: Input.propTypes.field,
             value: T.any
         }).isRequired,
         onChange: T.func
-    }
+    };
 
     static defaultProps = {
+        autoFocus: false,
         onChange: noop
-    }
+    };
 
     render() {
 
         const {entity, item, onChange, autoFocus} = this.props;
-        const {name, field, hasDirtyValue, value, hasErrors, validationErrors} = item;
+        const {name, field = Input.defaultProps.field, hasDirtyValue, value, hasErrors, validationErrors = []} = item;
         const fieldType = field.type;
         let label = name;
         let specificProps = {};
@@ -41,16 +42,16 @@ export default class FormRow extends React.Component {
                 filterEntityTypeName: {
                     $in: field.value
                 },
-                filterFields: (entity.project && entity.project.id) ? {
+                filterFields: (entity && entity.project && entity.project.id) ? {
                     'project.id': entity.project.id
                 } : {}
             };
 
         }
 
-        const isInvalid = hasErrors && hasDirtyValue;
+        const isInvalid = Boolean(hasErrors && hasDirtyValue);
         const title = isInvalid ? pluck(validationErrors, 'message').join('\n') : null;
-        const id = underscored(name);
+        const id = underscored ? underscored(name) : name;
 
         return (
             <div className={S.block} title={title}>

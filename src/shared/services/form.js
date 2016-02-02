@@ -41,7 +41,7 @@ export const transformFieldFromServer = (field) => {
 
     }
 
-    if (processedField.type === 'multipleselectionlist' && processedField.config.defaultValue.length === 0) {
+    if (processedField.type === 'multipleselectionlist' && processedField.config.defaultValue.length === 0 && processedField.value.length) {
 
         processedField.config.defaultValue = [processedField.value[0]];
 

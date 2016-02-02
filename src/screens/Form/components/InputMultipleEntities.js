@@ -8,11 +8,11 @@ export default class InputMultipleEntities extends React.Component {
 
     static propTypes = {
         value: T.array
-    }
+    };
 
     static defaultProps = {
         value: []
-    }
+    };
 
     render() {
 

@@ -8,7 +8,6 @@
 
     "plugins": [
         "react",
-        "babel",
         "mocha"
     ],
 
@@ -230,8 +229,6 @@
         "react/self-closing-comp": 2,
         "react/sort-comp": [2, {"order": ["lifecycle", "rendering", "everything-else"]}],
         "react/wrap-multilines": 2,
-
-        "babel/object-curly-spacing": [2, "never"],
 
         "mocha/no-exclusive-tests": 2
     }
