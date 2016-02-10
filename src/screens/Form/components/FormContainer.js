@@ -15,11 +15,9 @@ import {
 } from 'services/form';
 import {getCustomFieldsForAxes} from 'services/axes';
 
-import {equalIgnoreCase} from 'utils';
+import {isUser, isGeneral, equalIgnoreCase} from 'utils';
 
 import Form from './Form';
-
-import {isUser, isGeneral} from 'utils';
 
 const getCustomFieldsByEntity = (processId, entity) => store2.get('CustomField', {
     take: 1000,
@@ -67,7 +65,20 @@ const prepareFieldForForm = (entity, values, field) => {
 
 const loadFullEntity = (entity) => {
 
-    if (isGeneral(entity)) {
+    if (equalIgnoreCase(entity.entityType.name, 'project')) {
+
+        return store.get('Project', entity.id, {
+            include: [
+                'Name',
+                'EntityType',
+                {
+                    Process: ['Id']
+                },
+                'CustomFields'
+            ]
+        });
+
+    } else if (isGeneral(entity)) {
 
         return store.get('General', entity.id, {
             include: [
@@ -111,7 +122,13 @@ const getExistingValues = (customFields, entity) =>
         .filter(([field, value]) => !isEmptyInitialValue(field, value))
         .map(([field, value]) => [field.name, value]));
 
-const getProcessId = (entity) => entity.project ? entity.project.process.id : null;
+const getProcessId = (entity) => {
+
+    if (entity.process) return entity.process.id;
+    else if (entity.project) return entity.project.process.id;
+    else return null;
+
+};
 
 const getOutputCustomFields = (mashupConfig, changes, entity, processId, values, entityCustomFields) => {
 
