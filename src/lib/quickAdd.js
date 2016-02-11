@@ -292,6 +292,8 @@ export default (mashupConfig) => {
 
     const relationsTabComponentBusName = 'relations-quick-add-general';
 
+    const entityTabsQuickAddBusName = 'entity quick add';
+
     const componentsConfig = [
         {
             busName: topLeftAddButtonComponentBusName
@@ -309,6 +311,9 @@ export default (mashupConfig) => {
 
         {
             busName: relationsTabComponentBusName
+        },
+        {
+            busName: entityTabsQuickAddBusName
         }
     ];
 
