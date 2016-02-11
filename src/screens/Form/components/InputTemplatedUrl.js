@@ -9,7 +9,7 @@ export default class InputTemplatedUrl extends React.Component {
     render() {
 
         const {field} = this.props;
-        const {value: template} = field;
+        const {template} = field.config;
         const [before, after] = template.split('{0}');
 
         return (

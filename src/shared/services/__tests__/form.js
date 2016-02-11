@@ -7,7 +7,7 @@ import {
     validateFieldValue
 } from '../form';
 
-describe('form', () => {
+describe.skip('form', () => {
 
     describe('transformFieldFromServer', () => {
 

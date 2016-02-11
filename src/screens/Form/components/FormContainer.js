@@ -1,67 +1,26 @@
 import React, {PropTypes as T} from 'react';
-import {find, object, has, noop} from 'underscore';
+import {find, object, noop, map} from 'underscore';
 import {when} from 'jquery';
 
 import Overlay from 'components/Overlay';
 import store from 'services/store';
 import store2 from 'services/store2';
-import {
-    transformFromServerFieldValue,
-    transformFieldFromServer,
-    transformToServerFieldValue,
-    sanitizeFieldValue,
-    validateFieldValue,
-    isEmptyInitialValue
-} from 'services/form';
+
 import {getCustomFieldsForAxes} from 'services/axes';
 
 import {isUser, isGeneral, equalIgnoreCase} from 'utils';
 
-import Form from './Form';
+import FormComponent from './Form';
+
+import CustomField from 'services/CustomField';
+import * as CustomFieldValue from 'services/CustomFieldValue';
+import Form from 'services/Form';
 
 const getCustomFieldsByEntity = (processId, entity) => store2.get('CustomField', {
     take: 1000,
     where: `process.id == ${processId || 'null'} and entityType.id == ${entity.entityType.id}`,
     select: 'new(required, name, id, config, fieldType, value, entityType, process)'
 });
-
-const getEntityCustomFieldValue = ({customFields: entityCustomFields}, field) => {
-
-    const entityCustomField = find(entityCustomFields, (entityField) => equalIgnoreCase(entityField.name, field.name));
-
-    return entityCustomField ? transformFromServerFieldValue(field, entityCustomField.value) : null;
-
-};
-
-const getInitialCustomFieldValue = (entity, field) => {
-
-    const value = getEntityCustomFieldValue(entity, field);
-
-    return isEmptyInitialValue(field, value) ? field.config.defaultValue : value;
-
-};
-
-const prepareFieldForForm = (entity, values, field) => {
-
-    const {name} = field;
-    const initialValue = getInitialCustomFieldValue(entity, field);
-    const hasDirtyValue = has(values, field.name);
-    const dirtyValue = values[field.name];
-    const currentValue = hasDirtyValue ? dirtyValue : initialValue;
-
-    const validationErrors = validateFieldValue(field, currentValue);
-    const hasErrors = Boolean(validationErrors.length);
-
-    return {
-        name,
-        field,
-        hasDirtyValue,
-        hasErrors,
-        validationErrors,
-        value: currentValue
-    };
-
-};
 
 const loadFullEntity = (entity) => {
 
@@ -111,17 +70,6 @@ const loadFullEntity = (entity) => {
 
 };
 
-const getDefaultValues = (customFields) => object(customFields.map((v) => [v.name, v.config.defaultValue]));
-
-const getExistingValues = (customFields, entity) =>
-    object(customFields.map((field) =>
-        [
-            field,
-            getEntityCustomFieldValue(entity, field)
-        ])
-        .filter(([field, value]) => !isEmptyInitialValue(field, value))
-        .map(([field, value]) => [field.name, value]));
-
 const getProcessId = (entity) => {
 
     if (entity.process) return entity.process.id;
@@ -130,25 +78,30 @@ const getProcessId = (entity) => {
 
 };
 
-const getOutputCustomFields = (mashupConfig, changes, entity, processId, values, entityCustomFields) => {
+const getOutputCustomFields = (mashupConfig, changes, processId, entity, entityCustomFields = [], existingCustomFieldsValues = [], formValues = {}) => {
+
+    const existingValuesNormalized = object(existingCustomFieldsValues.filter((v) => !v.isEmpty).map((v) => [v.name, v.value]));
+
+    const defaultValuesNormalized = object(entityCustomFields.filter((v) => !v.isEmptyDefaultValue).map((v) => [v.name, v.defaultValue]));
+
+    const formCustomFieldsValues = map(formValues, (value, name) => CustomFieldValue.fromInputValue(find(entityCustomFields, (cf) => cf.name === name), value));
+    const formCustomFieldsValuesNormalized = object(formCustomFieldsValues.map((v) => [v.name, v.value]));
+
+    const currentValuesNormalized = {
+        ...defaultValuesNormalized,
+        ...formCustomFieldsValuesNormalized
+    };
 
     const processes = [{id: processId}];
 
-    const allValues = {
-        ...getDefaultValues(entityCustomFields),
-        ...values
-    };
+    return when(getCustomFieldsForAxes(mashupConfig, changes, processes, entity, currentValuesNormalized, {}, existingValuesNormalized))
+        .then((serverCustomFields) => {
 
-    const allValuesSanitized = object(entityCustomFields.map((v) =>
-        [v.name, sanitizeFieldValue(v, allValues[v.name])]));
+            const customFields = serverCustomFields.map((v) => CustomField(v));
 
-    const existingValues = getExistingValues(entityCustomFields, entity);
+            return customFields;
 
-    return when(getCustomFieldsForAxes(mashupConfig, changes, processes, entity, allValuesSanitized, {}, existingValues))
-        .then((serverCustomFields) =>
-            serverCustomFields
-                .map(transformFieldFromServer)
-                .map((v) => prepareFieldForForm(entity, values, v)));
+        });
 
 };
 
@@ -173,7 +126,7 @@ export default class FormContainer extends React.Component {
         onCancel: noop,
         entityCustomFields: [],
         outputCustomFields: [],
-        values: {}
+        formValues: {}
     };
 
     componentDidMount() {
@@ -181,7 +134,7 @@ export default class FormContainer extends React.Component {
         getCustomFieldsForAxes.resetCache();
 
         const {entity, changes, mashupConfig} = this.props;
-        const {values} = this.state;
+        const {formValues} = this.state;
 
         if (!changes.length) return null;
 
@@ -193,15 +146,19 @@ export default class FormContainer extends React.Component {
             when(getCustomFieldsByEntity(processId, fullEntity))
             .then((serverCustomFields) => {
 
-                const entityCustomFields = serverCustomFields.map((field) => transformFieldFromServer(field));
+                const entityCustomFields = serverCustomFields.map((serverCustomField) => CustomField(serverCustomField));
+
+                const existingCustomFieldsValues = entityCustomFields.map((customField) =>
+                    CustomFieldValue.fromServerValue(customField, find(fullEntity.customFields, (v) => v.name === customField.name).value));
 
                 this.setState({
                     processId,
                     entityCustomFields,
-                    entity: fullEntity
+                    entity: fullEntity,
+                    existingCustomFieldsValues
                 });
 
-                return getOutputCustomFields(mashupConfig, changes, fullEntity, processId, values, entityCustomFields);
+                return getOutputCustomFields(mashupConfig, changes, processId, fullEntity, entityCustomFields, existingCustomFieldsValues, formValues);
 
             })
             .then((outputCustomFields) => {
@@ -239,12 +196,16 @@ export default class FormContainer extends React.Component {
         if (isLoading) return null;
         if (!outputCustomFields.length) return null;
 
+        const {formValues, existingCustomFieldsValues} = this.state;
+
+        const form = Form(outputCustomFields, formValues, existingCustomFieldsValues);
+        const fields = form.fields;
+
         return (
             <Overlay onClose={this.props.onCancel}>
-
-                <Form
+                <FormComponent
                     entity={entity}
-                    fields={outputCustomFields}
+                    fields={fields}
                     globalError={globalError}
                     onChange={this.handleChange}
                     onSubmit={this.handleSubmit}
@@ -255,20 +216,25 @@ export default class FormContainer extends React.Component {
 
     }
 
-    handleSubmit = (savedFields) => {
+    handleSubmit = (formValues_) => {
+
+        const formValues = object(formValues_.map((v) => [v.name, v.value]));
 
         const {entity} = this.props;
+        const {entityCustomFields, existingCustomFieldsValues} = this.state;
+        const customFields = entityCustomFields.filter((v) => formValues.hasOwnProperty(v.name));
 
-        const isAllFieldsValid = savedFields
-            .every(({field, value}) => !validateFieldValue(field, sanitizeFieldValue(field, value)).length);
+        const form = Form(customFields, formValues, existingCustomFieldsValues);
 
-        if (!isAllFieldsValid) return;
+        if (!form.isValid) return;
+
+        const customFieldValues = form.fields.map((v) => v.customFieldValue);
 
         const dataToSave = {
-            customFields: savedFields
-                .map(({field, value, name}) => ({
+            customFields: customFieldValues
+                .map(({name, serverValue}) => ({
                     name,
-                    value: transformToServerFieldValue(field, sanitizeFieldValue(field, value))
+                    value: serverValue
                 }))
         };
 
@@ -309,17 +275,17 @@ export default class FormContainer extends React.Component {
 
     handleChange = (field, value) => {
 
-        const values = {...this.state.values, [field.name]: value};
+        const formValues = {...this.state.formValues, [field.name]: value};
 
         const {mashupConfig, changes} = this.props;
-        const {entity, processId, entityCustomFields} = this.state;
+        const {entity, processId, entityCustomFields, existingCustomFieldsValues} = this.state;
 
-        when(getOutputCustomFields(mashupConfig, changes, entity, processId, values, entityCustomFields))
+        when(getOutputCustomFields(mashupConfig, changes, processId, entity, entityCustomFields, existingCustomFieldsValues, formValues))
         .then((outputCustomFields) => {
 
             this.setState({
                 outputCustomFields,
-                values
+                formValues
             });
 
         });

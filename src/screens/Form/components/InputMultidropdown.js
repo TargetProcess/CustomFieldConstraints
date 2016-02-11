@@ -11,7 +11,7 @@ export default class InputMultidropdown extends React.Component {
     render() {
 
         const {field, value} = this.props;
-        const options = field.value;
+        const options = field.config.options;
 
         return (
             <select

@@ -1,89 +1,13 @@
-import {compact, invoke, isString} from 'underscore';
-
-const processServerSelectOptions = (options = []) =>
-    isString(options) ?
-    compact(invoke(options.split(/\r?\n/), 'trim')) :
-    [];
-
-export const transformFromServerFieldValue = (field, value) => {
-
-    if (field.type === 'multipleselectionlist') {
-
-        return (isString(value) && value) ? value.split(',') : [];
-
-    }
-
-    if (field.type === 'multipleentities') {
-
-        return (isString(value) && value) ? value.split(',') : [];
-
-    }
-
-    return value;
-
-};
-
-export const transformFieldFromServer = (field) => {
-
-    const processedField = {
-        ...field,
-        type: field.fieldType.toLowerCase()
-    };
-
-    processedField.config.defaultValue = transformFromServerFieldValue(processedField, processedField.config.defaultValue);
-
-    if (processedField.type === 'multipleselectionlist' ||
-        processedField.type === 'dropdown' ||
-        processedField.type === 'multipleentities' ||
-        processedField.type === 'entity') {
-
-        processedField.value = processServerSelectOptions(processedField.value);
-
-    }
-
-    if (processedField.type === 'multipleselectionlist' && processedField.config.defaultValue.length === 0 && processedField.value.length) {
-
-        processedField.config.defaultValue = [processedField.value[0]];
-
-    }
-
-    return processedField;
-
-};
-
-export const transformToServerFieldValue = (field, value) => {
-
-    if (field.type === 'multipleselectionlist' && value) {
-
-        return value.join(',');
-
-    }
-
-    if (field.type === 'entity' && value) {
-
-        const {id, entityType: {name: kind}, name} = value;
-
-        return {id, kind, name};
-
-    }
-
-    if (field.type === 'multipleentities' && value) {
-
-        return value.map((entity) => `${entity.id} ${entity.entityType.name.toLowerCase()}`).join(',');
-
-    }
-
-    return value;
-
-};
+import {isEmpty, find} from 'underscore';
+import * as CustomFieldValue from 'services/CustomFieldValue';
 
 export const sanitizeFieldValue = (field, value) => {
 
     if (field.type === 'url' && value) {
 
         return ({
-            url: value.url.trim(),
-            label: value.label.trim()
+            url: (value.url || '').trim(),
+            label: (value.label || '').trim()
         });
 
     }
@@ -106,19 +30,7 @@ const isEmptyValidator = (field, value) => {
 
 };
 
-export const isEmptyInitialValue = (field, value) => {
-
-    const checks = {
-        multipleselectionlist: (val) => !val.length,
-        multipleentities: (val) => !val.length,
-        defaults: (val) => val === null
-    };
-
-    return ((checks[field.type] || checks.defaults)(value));
-
-};
-
-export const validateFieldValue = (field, value) => {
+const validateFieldValue = (field, value) => {
 
     const sanitizedValue = sanitizeFieldValue(field, value);
 
@@ -133,5 +45,63 @@ export const validateFieldValue = (field, value) => {
     });
 
     return validationErrors;
+
+};
+
+export default (customFields, formValues, existingCustomFieldsValues) => {
+
+    const isBound = !isEmpty(formValues);
+
+    const formFields = customFields.map((customField) => {
+
+        let customFieldValue;
+        let isDirty = false;
+
+        if (isBound && formValues.hasOwnProperty(customField.name)) {
+
+            isDirty = true;
+            customFieldValue = CustomFieldValue.fromInputValue(customField, formValues[customField.name]);
+
+        } else {
+
+            customFieldValue = find(existingCustomFieldsValues, (v) => v.name === customField.name);
+            customFieldValue = {
+                ...customFieldValue,
+                value: customFieldValue.isEmpty ? customFieldValue.customField.defaultValue : customFieldValue.value
+            };
+
+        }
+
+        if (!customFieldValue) {
+
+            customFieldValue = CustomFieldValue.fromInputValue(customField, null);
+
+        }
+
+        const {name} = customFieldValue;
+        const initialValue = customFieldValue.value;
+        const hasDirtyValue = isDirty;
+        const currentValue = initialValue;
+
+        const validationErrors = validateFieldValue(customFieldValue.customField, customFieldValue.value);
+        const hasErrors = Boolean(validationErrors.length);
+
+        return {
+            name,
+            customFieldValue,
+            field: customFieldValue.customField,
+            hasDirtyValue,
+            hasErrors,
+            isValid: !validationErrors.length,
+            validationErrors,
+            value: currentValue
+        };
+
+    });
+
+    return {
+        fields: formFields,
+        isValid: formFields.every((v) => v.isValid)
+    };
 
 };

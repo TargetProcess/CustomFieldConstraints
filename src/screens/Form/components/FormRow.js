@@ -34,13 +34,22 @@ export default class FormRow extends React.Component {
 
         if (fieldType === 'checkbox') label = '';
 
-        if (fieldType === 'money') label = `${label}, ${field.config.units}`;
+        if (fieldType === 'money') {
+
+            label = (
+                <span>
+                    <span>{label}{", "}</span>
+                    <span dangerouslySetInnerHTML={{__html: field.config.units}} />
+                </span>
+            );
+
+        }
 
         if (fieldType === 'entity' || fieldType === 'multipleentities') {
 
             specificProps = {
                 filterEntityTypeName: {
-                    $in: field.value
+                    $in: field.config.entityTypeIds
                 },
                 filterFields: (entity && entity.project && entity.project.id) ? {
                     'project.id': entity.project.id

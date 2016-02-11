@@ -22,6 +22,7 @@ export default class TargetprocessCKEditor extends React.Component {
 
         $editor.richeditor({
             ckPath: configurator.getCkPath(),
+            ckFinderPath: configurator.getCkFinderPath(),
             settings: {
                 toolbar: 'Basic',
                 toolbarStartupExpanded: true,

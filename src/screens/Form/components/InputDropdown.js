@@ -6,7 +6,7 @@ export default class InputDropdown extends React.Component {
     render() {
 
         const {field, value} = this.props;
-        const options = [''].concat(field.value);
+        const options = [''].concat(field.config.options);
 
         return (
             <select
