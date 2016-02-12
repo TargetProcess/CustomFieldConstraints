@@ -1,12 +1,19 @@
 import $, {when, Deferred, whenList} from 'jquery';
-import {find, object, flatten, compose, constant, unique, map, last, without} from 'underscore';
+import {find, object, flatten, compose, constant, unique, map, last, without, memoize} from 'underscore';
 
 import {addBusListener} from 'targetprocess-mashup-helper/lib/events';
 
 import decodeSliceValue from 'utils/decodeSliceValue';
 import {inValues, equalIgnoreCase, isAssignable, SLICE_CUSTOMFIELD_PREFIX} from 'utils';
 
+import store from 'services/store';
+
 import {getCustomFieldsForAxes} from 'services/axes';
+
+const loadProject = (projectId) =>
+    store.get('Projects', projectId, {
+        include: ['Process']
+    });
 
 const onRender = (configurator, componentBusName, cb) => {
 
@@ -21,7 +28,7 @@ const onRender = (configurator, componentBusName, cb) => {
 
     configurator.getComponentBusRegistry().getByName(componentBusName).then((bus) => {
 
-        bus.on('afterRender', afterRenderHandler);
+        bus.on('afterRender', afterRenderHandler, null, null, 9999);
 
     });
 
@@ -124,6 +131,16 @@ const getAxes = (initData, entityType) => {
 
         }
 
+        // to get process if one of axis is project
+        if (inValues(axisDefinition.types, 'project')) {
+
+            return res.concat({
+                type: 'project',
+                targetValue: getTargetValue(initData, axisName)
+            });
+
+        }
+
         const customFieldName = find(axisDefinition.types, (v) => v.match(SLICE_CUSTOMFIELD_PREFIX));
 
         if (customFieldName) {
@@ -170,6 +187,7 @@ const findCustomFieldElByName = ($el, name) => $el.find(`[data-iscf=true][data-f
 const hideCustomFieldEl = ($cfEl) => {
 
     $cfEl.parent().removeClass('show');
+    $cfEl.parent().addClass('hide');
     $cfEl.parent().find('input, select').toArray().forEach((v) =>
         $(v).data('validate').rules = without($(v).data('validate').rules, 'required'));
 
@@ -178,6 +196,7 @@ const hideCustomFieldEl = ($cfEl) => {
 const showCustomFieldEl = ($cfEl) => {
 
     $cfEl.parent().addClass('show');
+    $cfEl.parent().removeClass('hide');
     $cfEl.parent().find('input, select').toArray().forEach((v) =>
         $(v).data('validate').rules = $(v).data('validate').rules.concat('required'));
 
@@ -199,14 +218,23 @@ const findFormByEntityType = ($el, entityType) =>
 const onCustomFieldsChange = ($el, customFields, handler) =>
     customFields.map((v) => findCustomFieldElByName($el, v.name).on('change, input', compose(handler, constant(void 0))));
 
+const getProcessValue = ($el) => {
+
+    const $select = $el.find('.project');
+
+    if (!$select.length) return null;
+
+    const value = $select.val();
+    const processId = parseInt($select.children().filter(`[value=${value}]`).data('option').processId, 10);
+
+    return {id: processId};
+
+};
+
 const onProcessChange = ($el, handler) =>
-    $el.find('.project').on('change, input', (e) => {
+    $el.find('.project').on('change, input', () => {
 
-        const $select = $(e.currentTarget);
-        const value = $select.val();
-        const processId = parseInt($select.children().filter(`[value=${value}]`).data('option').processId, 10);
-
-        setTimeout(() => handler({id: processId}), 1);
+        setTimeout(() => handler(getProcessValue($el)), 1);
 
     });
 
@@ -221,8 +249,32 @@ const listenQuickAddComponentBusForEntityType = (configurator, busName, config, 
         const $el = findFormByEntityType($elCommon, entityType);
         const adjust = () => componentBus.fire('adjustPosition');
 
-        const handler = (actualProcesses = processes, values = {}) =>
-            when(getCustomFieldsForAxes(config, axes, actualProcesses, {entityType}, values, {skipValuesCheck: false}))
+        const getActiveProcess = memoize(() => {
+
+            const val = getProcessValue($el);
+
+            if (val !== null) return val;
+
+            const projectAxis = find(axes, (v) => v.type === 'project');
+
+            if (!projectAxis) return null;
+
+            return when(loadProject(projectAxis.targetValue))
+                .then((project) => project.process)
+                .fail(() => null);
+
+        });
+
+        const handler = (actualProcess, values = {}) => {
+
+            if (!actualProcess) {
+
+                return when(applyActualCustomFields($el, allCustomFields, []))
+                    .then(adjust);
+
+            }
+
+            return when(getCustomFieldsForAxes(config, axes, [actualProcess], {entityType}, values, {skipValuesCheck: false}))
                 .then((customFieldsToShow) => {
 
                     activeCustomFields = customFieldsToShow;
@@ -231,12 +283,17 @@ const listenQuickAddComponentBusForEntityType = (configurator, busName, config, 
                 })
                 .then(adjust);
 
-        handler();
+        };
+
+        setTimeout(() =>
+            when(getActiveProcess())
+                .then(handler), 1); // some quick add magic
 
         onCustomFieldsChange($el, allCustomFields, () => {
 
             actualValues = collectValues($el, activeCustomFields);
-            handler(processes, actualValues);
+            when(getActiveProcess())
+                .then((process) => handler(process, actualValues));
 
         });
 
