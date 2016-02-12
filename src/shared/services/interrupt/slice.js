@@ -1,9 +1,11 @@
-import {flatten} from 'underscore';
+import {flatten, noop} from 'underscore';
 import {when, whenList} from 'jquery';
 
-import SystemStoreInterrupter from 'tp3/mashups/storage';
+import SystemSliceInterrupter from 'tp3/mashups/sliceinterrupter';
 
-import {equalIgnoreCase, isStateRelated, lc} from 'utils';
+import decodeSliceValue from 'utils/decodeSliceValue';
+
+import {SLICE_CUSTOMFIELD_PREFIX, isStateRelated, lc} from 'utils';
 
 import {createInterrupter} from './base';
 import {createRequirementsByTasks} from './requirementsByTasks';
@@ -11,21 +13,22 @@ import {createRequirementsByTasks} from './requirementsByTasks';
 const getEntityFromChange = (sourceChange, changeValues) => {
 
     const mainEntry = {
+
         entity: {
-            id: sourceChange.id,
+            id: parseInt(decodeSliceValue(sourceChange.id), 10),
             entityType: {
                 name: sourceChange.type
             }
         },
         axes: changeValues.reduce((res, v) => {
 
-            if (equalIgnoreCase(v.name, 'customfields')) {
+            if (v.name.match(SLICE_CUSTOMFIELD_PREFIX)) {
 
-                return res.concat(v.value.map((vv) => ({
+                return res.concat({
                     type: 'customfield',
-                    customFieldName: vv.name,
-                    targetValue: vv.value
-                })));
+                    customFieldName: v.name.replace(SLICE_CUSTOMFIELD_PREFIX, ''),
+                    targetValue: decodeSliceValue(v.value)
+                });
 
             }
 
@@ -33,14 +36,15 @@ const getEntityFromChange = (sourceChange, changeValues) => {
 
                 return res.concat({
                     type: lc(v.name),
-                    targetValue: v.value
+                    targetValue: decodeSliceValue(v.value)
                 });
 
             }
 
             return res;
 
-        }, [])
+        }, []),
+        replaceCustomFieldValueInChanges: noop
     };
 
     return when(createRequirementsByTasks(mainEntry))
@@ -53,6 +57,6 @@ const getEntitiesFromChanges = (sourceChanges) =>
     .then((...args) => flatten(args));
 
 export default createInterrupter({
-    systemInterrupter: new SystemStoreInterrupter(),
+    systemInterrupter: new SystemSliceInterrupter(),
     getEntitiesFromChanges
 });

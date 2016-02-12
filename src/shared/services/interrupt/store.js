@@ -1,11 +1,9 @@
-import {flatten} from 'underscore';
+import {flatten, find} from 'underscore';
 import {when, whenList} from 'jquery';
 
-import SystemSliceInterrupter from 'tp3/mashups/sliceinterrupter';
+import SystemStoreInterrupter from 'tp3/mashups/storage';
 
-import decodeSliceValue from 'utils/decodeSliceValue';
-
-import {SLICE_CUSTOMFIELD_PREFIX, isStateRelated, lc} from 'utils';
+import {equalIgnoreCase, isStateRelated, lc} from 'utils';
 
 import {createInterrupter} from './base';
 import {createRequirementsByTasks} from './requirementsByTasks';
@@ -13,22 +11,21 @@ import {createRequirementsByTasks} from './requirementsByTasks';
 const getEntityFromChange = (sourceChange, changeValues) => {
 
     const mainEntry = {
-
         entity: {
-            id: parseInt(decodeSliceValue(sourceChange.id), 10),
+            id: sourceChange.id,
             entityType: {
                 name: sourceChange.type
             }
         },
         axes: changeValues.reduce((res, v) => {
 
-            if (v.name.match(SLICE_CUSTOMFIELD_PREFIX)) {
+            if (equalIgnoreCase(v.name, 'customfields')) {
 
-                return res.concat({
+                return res.concat(v.value.map((vv) => ({
                     type: 'customfield',
-                    customFieldName: v.name.replace(SLICE_CUSTOMFIELD_PREFIX, ''),
-                    targetValue: decodeSliceValue(v.value)
-                });
+                    customFieldName: vv.name,
+                    targetValue: vv.value
+                })));
 
             }
 
@@ -36,14 +33,25 @@ const getEntityFromChange = (sourceChange, changeValues) => {
 
                 return res.concat({
                     type: lc(v.name),
-                    targetValue: decodeSliceValue(v.value)
+                    targetValue: v.value
                 });
 
             }
 
             return res;
 
-        }, [])
+        }, []),
+        replaceCustomFieldValueInChanges: (customFieldName, value) => {
+
+            const customFields = find(changeValues, (v) => equalIgnoreCase(v.name, 'customfields'));
+
+            if (!customFields) return;
+
+            const change = find(customFields.value, (v) => equalIgnoreCase(v.name, customFieldName));
+
+            if (change) change.value = value;
+
+        }
     };
 
     return when(createRequirementsByTasks(mainEntry))
@@ -56,6 +64,6 @@ const getEntitiesFromChanges = (sourceChanges) =>
     .then((...args) => flatten(args));
 
 export default createInterrupter({
-    systemInterrupter: new SystemSliceInterrupter(),
+    systemInterrupter: new SystemStoreInterrupter(),
     getEntitiesFromChanges
 });

@@ -1,14 +1,14 @@
 /* globals mashup */
 /* eslint global-require: 0 */
 
-import modifyQuickAdd from './lib/quickAdd';
-import interruptSlice from './lib/slice';
-import interruptStore from './lib/store';
+import modifyQuickAdd from './shared/services/interrupt/quickAdd';
+import interruptSlice from './shared/services/interrupt/slice';
+import interruptStore from './shared/services/interrupt/store';
 
 const {placeholderId} = mashup.variables;
 const mashupConfig = mashup.config;
 
-const showPopupNew = ({entity, axes}, next) => {
+const showPopupNew = ({entity, axes, replaceCustomFieldValueInChanges}, next) => {
 
     require.ensure(['react', './screens/Form'], () => {
 
