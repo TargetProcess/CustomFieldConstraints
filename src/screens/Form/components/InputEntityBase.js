@@ -12,7 +12,7 @@ import S from './InputEntityBase.css';
 export default class InputEntityBase extends React.Component {
 
     static propTypes = {
-        filterEntityTypeName: T.string,
+        filterEntityTypeName: TargetprocessFinder.propTypes.filterEntityTypeName,
         filterFields: T.object,
         multiple: T.bool,
         onBlur: T.func,

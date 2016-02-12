@@ -1,19 +1,52 @@
-import {isString, isEmpty} from 'underscore';
+import {isString, isEmpty, isNumber} from 'underscore';
 
 const transformFromServerValue = (field, value) => {
 
     switch (field.type) {
         case 'multipleselectionlist':
-        case 'multipleentities':
             return (isString(value) && value) ? value.split(',') : [];
-        case 'url': return {};
+        case 'url': return value || {};
+        case 'entity':
+            if (value) {
+
+                const {id, kind, name} = value;
+
+                return {
+                    id,
+                    name,
+                    entityType: {
+                        name: kind
+                    }
+                };
+
+            }
+
+            return value;
+        case 'multipleentities': {
+
+            const vals = (isString(value) && value) ? value.split(',') : [];
+
+            return vals.map((v) => {
+
+                const [id, kind] = v.split(' ');
+
+                return {
+                    id,
+                    entityType: {
+                        name: kind
+                    }
+                };
+
+            });
+
+        }
         default:
             return value;
     }
 
 };
 
-const isEmptyServerValue = (customField, serverValue) => isEmpty(serverValue);
+const isEmptyServerValue = (customField, serverValue) => !isNumber(serverValue) && isEmpty(serverValue);
 const isInitializedServerValue = (customField, serverValue) => serverValue !== null;
 
 const transformFromInputValue = (customField, value) => value;
@@ -67,8 +100,8 @@ export const fromInputValue = (customField, inputValue) => {
         name: customField.name,
         customField,
         value,
-        isEmpty: isEmptyServerValue(customField, isEmpty),
-        isInitialized: isInitializedServerValue(customField, isEmpty),
+        isEmpty: isEmptyServerValue(customField, inputValue),
+        isInitialized: isInitializedServerValue(customField, inputValue),
         serverValue: transformToServerValue(customField, value)
     };
 

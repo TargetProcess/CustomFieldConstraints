@@ -9,7 +9,8 @@ export default class TargetprocessFinder extends React.Component {
         filterDsl: T.string,
         filterEntityTypeName: T.oneOfType([
             T.string,
-            T.arrayOf(T.string)
+            T.arrayOf(T.string),
+            T.object
         ]),
         filterFields: T.object,
         onAdjust: T.func,

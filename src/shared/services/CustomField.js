@@ -40,6 +40,9 @@ const transformFromServerDefaultValue = (serverCustomField) => {
         case 'multipleentities':
             defaultValue = (isString(value) && value) ? value.split(',') : [];
             break;
+        case 'entity':
+            defaultValue = value || null;
+            break;
         default:
             defaultValue = value;
             break;
