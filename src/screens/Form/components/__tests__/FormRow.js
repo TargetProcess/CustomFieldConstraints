@@ -51,7 +51,7 @@ describe('FormRow', () => {
 
         expect(dom.find('.FormRow-label').children('label').children('span').children('span').equals(
             <span>
-                <span>foo ,</span>
+                <span>{'foo ,'}</span>
                 <span dangerouslySetInnerHTML={{__html: '$$$'}}></span>
             </span>))
             .to.be.true;

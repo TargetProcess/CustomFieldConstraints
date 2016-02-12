@@ -727,7 +727,6 @@ describe('customFieldsRequirements', () => {
                 xxx: 1442
             };
 
-
             const entityState = {
                 name: 'Open'
             };

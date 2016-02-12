@@ -176,37 +176,37 @@ export default class FormContainer extends React.Component {
 
             const processId = getProcessId(fullEntity);
 
-            when(getCustomFieldsByEntity(processId, fullEntity))
-            .then((serverCustomFields) => {
+            return when(getCustomFieldsByEntity(processId, fullEntity), fullEntity, processId);
 
-                const entityCustomFields = serverCustomFields.map((serverCustomField) => CustomField(serverCustomField));
+        })
+        .then((serverCustomFields, fullEntity, processId) => {
 
-                const existingCustomFieldsValues = entityCustomFields.map((customField) =>
-                    CustomFieldValue.fromServerValue(customField, find(fullEntity.customFields, (v) => v.name === customField.name).value));
+            const entityCustomFields = serverCustomFields.map((serverCustomField) => CustomField(serverCustomField));
+
+            const existingCustomFieldsValues = entityCustomFields.map((customField) =>
+                CustomFieldValue.fromServerValue(customField, find(fullEntity.customFields, (v) => v.name === customField.name).value));
+
+            this.setState({
+                processId,
+                entityCustomFields,
+                entity: fullEntity,
+                existingCustomFieldsValues
+            });
+
+            return getOutputCustomFields(mashupConfig, changes, processId, fullEntity, entityCustomFields, existingCustomFieldsValues, formValues);
+
+        })
+        .then((outputCustomFields) => {
+
+            if (!outputCustomFields.length) this.props.onAfterSave();
+            else {
 
                 this.setState({
-                    processId,
-                    entityCustomFields,
-                    entity: fullEntity,
-                    existingCustomFieldsValues
+                    outputCustomFields,
+                    isLoading: false
                 });
 
-                return getOutputCustomFields(mashupConfig, changes, processId, fullEntity, entityCustomFields, existingCustomFieldsValues, formValues);
-
-            })
-            .then((outputCustomFields) => {
-
-                if (!outputCustomFields.length) this.props.onAfterSave();
-                else {
-
-                    this.setState({
-                        outputCustomFields,
-                        isLoading: false
-                    });
-
-                }
-
-            });
+            }
 
         });
 
