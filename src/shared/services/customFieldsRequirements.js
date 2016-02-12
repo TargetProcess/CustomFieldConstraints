@@ -193,3 +193,24 @@ export const getCustomFieldsNamesForChangedCustomFields = (changedFieldsNames, c
     return uniq(pluck(allFields, 'name'));
 
 };
+
+export const getCustomFieldsNamesForChangedCustomFieldsWithDependent = (changedFieldsNames, entityState, config, processId, entityTypeName,
+    currentCustomFieldsValues = {}, initialCustomFieldsValues = {}, options = {}) => {
+
+    const ownFields = getCustomFieldsNamesForChangedCustomFields(changedFieldsNames, config, processId, entityTypeName, currentCustomFieldsValues, initialCustomFieldsValues, options);
+
+    const rootFields = processCustomFieldsConfig(getFlatCustomFieldsConfig(config, processId, entityTypeName));
+
+    const fieldsFromParentCustomFieldsConstraints = rootFields.reduce((res, field) => {
+
+        return res.concat(getCustomFieldsNamesForChangedCustomFields([field.name], config, processId, entityTypeName, initialCustomFieldsValues, currentCustomFieldsValues, options));
+
+    }, []);
+
+    const fieldsFromEntityStateConstraints = entityState ? getCustomFieldsNamesForNewState(entityState, config, processId, entityTypeName, {}, currentCustomFieldsValues, options) : [];
+
+    const fieldsFromChanged = changedFieldsNames.filter((fieldName) => inValues(fieldsFromParentCustomFieldsConstraints, fieldName) || inValues(fieldsFromEntityStateConstraints, fieldName));
+
+    return uniq(fieldsFromChanged.concat(ownFields));
+
+};

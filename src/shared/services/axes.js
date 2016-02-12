@@ -1,12 +1,13 @@
 import {when, whenList} from 'jquery';
-import {find, flatten, unique, memoize, pluck, partial} from 'underscore';
+import {find, flatten, unique, memoize, pluck, partial, omit} from 'underscore';
 
 import {inValues, equalByShortcut, equalIgnoreCase, isGeneral, isAssignable, isStateRelated} from 'utils';
 import store from 'services/store';
 import store2 from 'services/store2';
 import {
     getCustomFieldsNamesForNewState,
-    getCustomFieldsNamesForChangedCustomFields
+    getCustomFieldsNamesForChangedCustomFields,
+    getCustomFieldsNamesForChangedCustomFieldsWithDependent
 } from 'services/customFieldsRequirements';
 
 const findInRealCustomFields = (customFieldsNames, realCustomFields) =>
@@ -223,12 +224,22 @@ const getCustomFieldsForAxis = (config, axis, processes, entity, values = {}, op
 
                     if (axis.type === 'customfield') {
 
-                        const fullValues = {
-                            ...values,
-                            [realTargetValue.name]: targetValue
-                        };
+                        if (axis.checkDependent && targetValue === null) {
 
-                        return getCustomFieldsNamesForChangedCustomFields([realTargetValue.name], config, processId, entity.entityType.name, fullValues, initialValues, options);
+                            const fullValues = omit(values, realTargetValue.name);
+
+                            return getCustomFieldsNamesForChangedCustomFieldsWithDependent([realTargetValue.name], entity.entityState ? entity.entityState : null, config, processId, entity.entityType.name, fullValues, initialValues, options);
+
+                        } else {
+
+                            const fullValues = {
+                                ...values,
+                                [realTargetValue.name]: targetValue
+                            };
+
+                            return getCustomFieldsNamesForChangedCustomFields([realTargetValue.name], config, processId, entity.entityType.name, fullValues, initialValues, options);
+
+                        }
 
                     }
 
@@ -255,9 +266,13 @@ export const getCustomFieldsForAxes = (config, axes, processes, entity, values =
             const allCustomFields = unique(customFields, (v) => v.name);
 
             // e.g. if we have state and cf axes and state axes requires same cf
-            const customFieldsAsAxes = axes.reduce((res, axis) => (axis.type === 'customfield') ? res.concat(axis.customFieldName) : res, []);
+            if (axes.length > 1) {
 
-            return allCustomFields.filter((v) => !inValues(customFieldsAsAxes, v.name));
+                const customFieldsAsAxes = axes.reduce((res, axis) => (axis.type === 'customfield') ? res.concat(axis.customFieldName) : res, []);
+
+                return allCustomFields.filter((v) => !inValues(customFieldsAsAxes, v.name));
+
+            } else return allCustomFields;
 
         });
 

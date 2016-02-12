@@ -8,7 +8,7 @@ import store2 from 'services/store2';
 
 import {getCustomFieldsForAxes} from 'services/axes';
 
-import {isUser, isGeneral, equalIgnoreCase} from 'utils';
+import {isUser, isGeneral, isAssignable, equalIgnoreCase} from 'utils';
 
 import FormComponent from './Form';
 
@@ -31,7 +31,40 @@ const loadFullEntity = (entity) => {
                 'Name',
                 'EntityType',
                 {
+                    EntityState: [
+                        'Id',
+                        'Name',
+                        'isInitial',
+                        'isFinal',
+                        'isPlanned'
+                    ]
+                },
+                {
                     Process: ['Id']
+                },
+                'CustomFields'
+            ]
+        });
+
+    } else if (isAssignable(entity)) {
+
+        return store.get(entity.entityType.name, entity.id, {
+            include: [
+                'Name',
+                'EntityType',
+                {
+                    EntityState: [
+                        'Id',
+                        'Name',
+                        'isInitial',
+                        'isFinal',
+                        'isPlanned'
+                    ]
+                },
+                {
+                    Project: [{
+                        Process: ['Id']
+                    }]
                 },
                 'CustomFields'
             ]
@@ -39,7 +72,7 @@ const loadFullEntity = (entity) => {
 
     } else if (isGeneral(entity)) {
 
-        return store.get('General', entity.id, {
+        return store.get(entity.entityType.name, entity.id, {
             include: [
                 'Name',
                 'EntityType',
@@ -220,7 +253,7 @@ export default class FormContainer extends React.Component {
 
         const formValues = object(formValues_.map((v) => [v.name, v.value]));
 
-        const {entity} = this.props;
+        const {entity, replaceCustomFieldValueInChanges} = this.props;
         const {entityCustomFields, existingCustomFieldsValues} = this.state;
         const customFields = entityCustomFields.filter((v) => formValues.hasOwnProperty(v.name));
 
@@ -242,6 +275,8 @@ export default class FormContainer extends React.Component {
             ...this.state,
             isSaving: true
         });
+
+        customFieldValues.forEach(({name, serverValue}) => replaceCustomFieldValueInChanges(name, serverValue));
 
         store.save(entity.entityType.name, entity.id, dataToSave)
             .then(() => this.setState({

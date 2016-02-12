@@ -5,7 +5,7 @@ import {
     transformToServerFieldValue,
     sanitizeFieldValue,
     validateFieldValue
-} from '../form';
+} from '../Form';
 
 describe.skip('form', () => {
 

@@ -67,7 +67,7 @@ export default (customFields, formValues, existingCustomFieldsValues) => {
             customFieldValue = find(existingCustomFieldsValues, (v) => v.name === customField.name);
             customFieldValue = {
                 ...customFieldValue,
-                value: customFieldValue.isEmpty ? customFieldValue.customField.defaultValue : customFieldValue.value
+                value: customFieldValue.customField.defaultValue
             };
 
         }

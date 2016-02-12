@@ -1,6 +1,7 @@
 import {
     getCustomFieldsNamesForNewState,
-    getCustomFieldsNamesForChangedCustomFields
+    getCustomFieldsNamesForChangedCustomFields,
+    getCustomFieldsNamesForChangedCustomFieldsWithDependent
 } from '../customFieldsRequirements';
 
 describe('customFieldsRequirements', () => {
@@ -629,8 +630,7 @@ describe('customFieldsRequirements', () => {
             };
 
             const existingValues = {
-                xxx: 1442,
-                y: null
+                xxx: 1442
             };
 
             expect(getCustomFieldsNamesForChangedCustomFields(changedFieldsNames, config, processId, 'userstory', cfValues, existingValues))
@@ -665,12 +665,150 @@ describe('customFieldsRequirements', () => {
             };
 
             const existingValues = {
-                xxx: 1442,
-                y: null
+                xxx: 1442
             };
 
             expect(getCustomFieldsNamesForChangedCustomFields(changedFieldsNames, config, processId, 'userstory', cfValues, existingValues))
                 .to.be.eql([]);
+
+        });
+
+        it('returns requirements when reset field', () => {
+
+            const config = [{
+                processId: 13,
+                constraints: {
+                    userstory: {
+                        customFields: [{
+                            name: 'xxx',
+                            requiredCustomFields: ['yyy']
+                        }]
+                    }
+                }
+            }];
+
+            const processId = 13;
+            const changedFieldsNames = ['xxx'];
+
+            const cfValues = {
+                xxx: null
+            };
+
+            const existingValues = {};
+
+            expect(getCustomFieldsNamesForChangedCustomFields(changedFieldsNames, config, processId, 'userstory', cfValues, existingValues))
+                .to.be.eql(['yyy']);
+
+        });
+
+        it('returns requirements when reset dependent field', () => {
+
+            const config = [{
+                processId: 13,
+                constraints: {
+                    userstory: {
+                        customFields: [{
+                            name: 'xxx',
+                            requiredCustomFields: ['yyy']
+                        }, {
+                            name: 'yyy',
+                            requiredCustomFields: ['zzz']
+                        }]
+                    }
+                }
+            }];
+
+            const processId = 13;
+            const changedFieldsNames = ['yyy'];
+
+            const cfValues = {};
+
+            const existingValues = {
+                xxx: 1442
+            };
+
+
+            const entityState = {
+                name: 'Open'
+            };
+
+            expect(getCustomFieldsNamesForChangedCustomFieldsWithDependent(changedFieldsNames, entityState, config, processId, 'userstory', cfValues, existingValues))
+                .to.be.eql(['yyy', 'zzz']);
+
+        });
+
+        it('returns direct requirements when not dependent field', () => {
+
+            const config = [{
+                processId: 13,
+                constraints: {
+                    userstory: {
+                        customFields: [{
+                            name: 'xxx',
+                            requiredCustomFields: ['yyy']
+                        }, {
+                            name: 'yyy',
+                            requiredCustomFields: ['zzz']
+                        }]
+                    }
+                }
+            }];
+
+            const processId = 13;
+            const changedFieldsNames = ['yyy'];
+
+            const cfValues = {
+                yyy: 123
+            };
+
+            const existingValues = {
+                xxx: 1442
+            };
+
+            const entityState = {
+                name: 'Open'
+            };
+
+            expect(getCustomFieldsNamesForChangedCustomFieldsWithDependent(changedFieldsNames, entityState, config, processId, 'userstory', cfValues, existingValues))
+                .to.be.eql(['zzz']);
+
+        });
+
+        it('returns requirements when reset dependent field by entity state', () => {
+
+            const config = [{
+                processId: 13,
+                constraints: {
+                    userstory: {
+                        entityStates: [{
+                            name: 'Open',
+                            requiredCustomFields: ['xxx']
+                        }],
+                        customFields: [{
+                            name: 'xxx',
+                            requiredCustomFields: ['yyy']
+                        }, {
+                            name: 'yyy',
+                            requiredCustomFields: ['zzz']
+                        }]
+                    }
+                }
+            }];
+
+            const processId = 13;
+            const changedFieldsNames = ['xxx'];
+
+            const cfValues = {};
+
+            const existingValues = {
+            };
+
+            const entityState = {
+                name: 'Open'
+            };
+
+            expect(getCustomFieldsNamesForChangedCustomFieldsWithDependent(changedFieldsNames, entityState, config, processId, 'userstory', cfValues, existingValues))
+                .to.be.eql(['xxx', 'yyy', 'zzz']);
 
         });
 

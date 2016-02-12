@@ -24,7 +24,8 @@ const getEntityFromChange = (sourceChange, changeValues) => {
                 return res.concat(v.value.map((vv) => ({
                     type: 'customfield',
                     customFieldName: vv.name,
-                    targetValue: vv.value
+                    targetValue: vv.value,
+                    checkDependent: true
                 })));
 
             }

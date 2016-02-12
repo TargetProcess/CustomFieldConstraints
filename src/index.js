@@ -43,6 +43,7 @@ const showPopupNew = ({entity, axes, replaceCustomFieldValueInChanges}, next) =>
                 mashupConfig={mashupConfig}
                 onAfterSave={handleAfterSave}
                 onCancel={handleCancel}
+                replaceCustomFieldValueInChanges={replaceCustomFieldValueInChanges}
             />
         ), holder);
 
