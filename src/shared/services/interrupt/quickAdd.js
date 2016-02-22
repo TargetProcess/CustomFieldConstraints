@@ -192,7 +192,7 @@ const getProcesses = (configurator) => {
 
 };
 
-const findCustomFieldElByName = ($el, name) => $el.find(`[data-iscf=true][data-fieldname=${name}]`);
+const findCustomFieldElByName = ($el, name) => $el.find(`[data-iscf=true][data-fieldname="${name}"]`);
 const hideCustomFieldEl = ($cfEl) => {
 
     $cfEl.parent().removeClass('show');
