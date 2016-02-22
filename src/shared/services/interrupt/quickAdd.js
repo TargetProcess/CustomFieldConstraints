@@ -1,5 +1,5 @@
 import $, {when, Deferred, whenList} from 'jquery';
-import {find, object, flatten, compose, constant, unique, map, last, without, memoize} from 'underscore';
+import {find, object, flatten, compose, constant, unique, map, last, without, memoize, reject} from 'underscore';
 
 import {addBusListener} from 'targetprocess-mashup-helper/lib/events';
 
@@ -59,7 +59,16 @@ const onDataBind = (componentBusName, cb) =>
 
         const next = (customFields = []) => {
 
-            customFields.forEach((v) => bindData.types[v.entityType.name].template.items.push(createTemplateItemFromCustomField(v)));
+            customFields.forEach((v) => {
+
+                let formItems = bindData.types[v.entityType.name].template.items;
+
+                formItems = reject(formItems, (vv) => vv.type === 'CustomField' && vv.caption === v.name);
+                formItems = formItems.concat(createTemplateItemFromCustomField(v));
+
+                bindData.types[v.entityType.name].template.items = formItems;
+
+            });
             e.before_dataBind.resumeMain();
 
         };
