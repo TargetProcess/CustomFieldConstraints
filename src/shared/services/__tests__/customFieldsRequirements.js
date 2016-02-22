@@ -701,6 +701,10 @@ describe('customFieldsRequirements', () => {
 
         });
 
+    });
+
+    describe('getCustomFieldsNamesForChangedCustomFieldsWithDependent()', () => {
+
         it('returns requirements when reset dependent field', () => {
 
             const config = [{
@@ -808,6 +812,36 @@ describe('customFieldsRequirements', () => {
 
             expect(getCustomFieldsNamesForChangedCustomFieldsWithDependent(changedFieldsNames, entityState, config, processId, 'userstory', cfValues, existingValues))
                 .to.be.eql(['xxx', 'yyy', 'zzz']);
+
+        });
+
+        it('not returns requirements if parent requirement is not set', () => {
+
+            const config = [{
+                processId: 13,
+                constraints: {
+                    userstory: {
+                        customFields: [{
+                            name: 'xxx',
+                            requiredCustomFields: ['yyy']
+                        }]
+                    }
+                }
+            }];
+
+            const processId = 13;
+            const changedFieldsNames = ['yyy'];
+
+            const cfValues = {};
+
+            const existingValues = {};
+
+            const entityState = {
+                name: 'Open'
+            };
+
+            expect(getCustomFieldsNamesForChangedCustomFieldsWithDependent(changedFieldsNames, entityState, config, processId, 'userstory', cfValues, existingValues))
+                .to.be.eql([]);
 
         });
 

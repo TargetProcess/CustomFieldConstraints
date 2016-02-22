@@ -203,6 +203,8 @@ export const getCustomFieldsNamesForChangedCustomFieldsWithDependent = (changedF
 
     const fieldsFromParentCustomFieldsConstraints = rootFields.reduce((res, field) => {
 
+        if (!initialCustomFieldsValues.hasOwnProperty(field.name)) return res;
+
         return res.concat(getCustomFieldsNamesForChangedCustomFields([field.name], config, processId, entityTypeName, initialCustomFieldsValues, currentCustomFieldsValues, options));
 
     }, []);
