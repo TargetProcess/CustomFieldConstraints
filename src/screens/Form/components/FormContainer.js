@@ -46,7 +46,7 @@ const loadFullEntity = (entity) => {
             ]
         });
 
-    } else if (isAssignable(entity)) {
+    } else if (isAssignable(entity) || equalIgnoreCase(entity.entityType.name, 'impediment')) {
 
         return store.get(entity.entityType.name, entity.id, {
             include: [

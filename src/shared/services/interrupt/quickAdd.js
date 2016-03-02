@@ -166,7 +166,11 @@ const getAxes = (initData, entityType) => {
 
     }, []);
 
-    if (isAssignable({entityType})) return unique(axes.concat(defaultAssignableAxes), (v) => v.type);
+    if (isAssignable({entityType}) || equalIgnoreCase(entityType.name, 'impediment')) {
+
+        return unique(axes.concat(defaultAssignableAxes), (v) => v.type);
+
+    }
     else return axes;
 
 };
