@@ -1,5 +1,5 @@
 import $, {when, Deferred, whenList} from 'jquery';
-import {find, object, flatten, compose, constant, unique, map, last, without, memoize, reject} from 'underscore';
+import {find, object, flatten, compose, constant, unique, map, last, without, memoize, reject, keys} from 'underscore';
 
 import {addBusListener} from 'targetprocess-mashup-helper/lib/events';
 
@@ -51,11 +51,16 @@ const events = ['afterInit:last', 'before_dataBind'];
 const onDataBind = (componentBusName, cb) =>
     addBusListener(componentBusName, events.join(' + '), (e) => {
 
-        e.before_dataBind.suspendMain();
-
         const initData = e.afterInit.data;
         const bindData = e.before_dataBind.data;
         const settingsData = e['settings.ready'] ? e['settings.ready'].data : void 0;
+
+        const types = keys(bindData.types);
+
+        // looks like some sort of race conditions which breaks form with this entity types
+        if (inValues(types, ['UserProjectAllocation', 'TeamProjectAllocation'])) return;
+
+        e.before_dataBind.suspendMain();
 
         const next = (customFields = []) => {
 
@@ -229,7 +234,8 @@ const findFormByEntityType = ($el, entityType) =>
     $($el.find('.tau-control-set').toArray().filter((v) => equalIgnoreCase($(v).data('type'), entityType.name)));
 
 const onCustomFieldsChange = ($el, customFields, handler) =>
-    customFields.map((v) => findCustomFieldElByName($el, v.name).on('change, input', compose(handler, constant(void 0))));
+    customFields.map((v) =>
+        findCustomFieldElByName($el, v.name).on('change, input', compose(handler, constant(void 0))));
 
 const getProcessValue = ($el) => {
 
