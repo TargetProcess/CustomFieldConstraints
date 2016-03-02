@@ -316,7 +316,7 @@ const listenQuickAddComponentBusForEntityType = (configurator, busName, config, 
 
         });
 
-        onProcessChange($el, (processData) => handler([processData], actualValues));
+        onProcessChange($el, (processData) => handler(processData, actualValues));
 
     });
 
