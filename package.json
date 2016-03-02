@@ -12,7 +12,8 @@
     "lint": "eslint --quiet .",
     "test": "npm run lint && npm run test:coverage",
     "test:coverage": "karma start --single-run --reporters spec,coverage --browsers PhantomJS",
-    "test:watch": "karma start --reporters spec,notify --browsers PhantomJS"
+    "test:watch": "karma start --reporters spec,notify --browsers PhantomJS",
+    "commit": "npm test && npm run build:all && git add -A build && git commit -m 'Build' && git push origin HEAD"
   },
   "repository": {
     "type": "git",
