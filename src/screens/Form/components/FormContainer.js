@@ -18,7 +18,7 @@ import Form from 'services/Form';
 
 const getCustomFieldsByEntity = (processId, entity) => store2.get('CustomField', {
     take: 1000,
-    where: `process.id == ${processId || 'null'} and entityType.id == ${entity.entityType.id}`,
+    where: `process.id == ${processId || 'null'} and entityType.name == "${entity.entityType.name}"`,
     select: 'new(required, name, id, config, fieldType, value, entityType, process)'
 });
 
@@ -96,7 +96,7 @@ const loadFullEntity = (entity) => {
         }).then((res) => ({
             ...entity,
             name: `${res.firstName} ${res.lastName}`,
-            res
+            ...res
         }));
 
     }
