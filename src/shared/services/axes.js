@@ -39,7 +39,7 @@ const loadCustomFields = memoize((processId, entityType) => {
 
     }
 
-});
+}, (processId, entityType) => processId + entityType.name);
 
 const getRealCustomFields = (customFieldsNames, processId, entityType) => {
 
@@ -114,7 +114,7 @@ const loadTeamsData = memoize((entity) =>
                 }
             ]
         }]
-    }));
+    }), (entity) => entity.entityType.name + entity.id);
 
 const loadTeamProjects = memoize((ids) => {
 
