@@ -1,6 +1,6 @@
 tau.mashups.addModule("CustomFieldConstraints/config", [
     {
-        "processId": 4,
+        "process": "Kanban",
         "constraints": {
             "userstory": {
                 "entityStates": [
@@ -61,14 +61,6 @@ tau.mashups.addModule("CustomFieldConstraints/config", [
     {
         "constraints": {
             "user": {
-                "entityStates": [
-                    {
-                        "name": "Open",
-                        "requiredCustomFields": [
-                            "Age"
-                        ]
-                    }
-                ],
                 "customFields": [
                     {
                         "name": "Age",
