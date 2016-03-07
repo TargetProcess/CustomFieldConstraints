@@ -255,7 +255,7 @@ export default class FormContainer extends React.Component {
 
         const formValues = object(formValues_.map((v) => [v.name, v.value]));
 
-        const {entity, replaceCustomFieldValueInChanges} = this.props;
+        const {entity, replaceCustomFieldValueInChanges, onAfterSave} = this.props;
         const {entityCustomFields, existingCustomFieldsValues} = this.state;
         const customFields = entityCustomFields.filter((v) => formValues.hasOwnProperty(v.name));
 
@@ -285,7 +285,7 @@ export default class FormContainer extends React.Component {
                 ...this.state,
                 isSaving: false
             }))
-            .then(this.props.onAfterSave)
+            .then(() => setTimeout(onAfterSave, 500)) // comet race conditions :(
             .fail(({responseJSON}) => {
 
                 if (responseJSON && responseJSON.Message) {
