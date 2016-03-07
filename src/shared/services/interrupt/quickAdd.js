@@ -66,12 +66,17 @@ const onDataBind = (componentBusName, cb) =>
 
             customFields.forEach((v) => {
 
-                let formItems = bindData.types[v.entityType.name].template.items;
+                const injectedItem = createTemplateItemFromCustomField(v);
+                let existingItems = bindData.types[v.entityType.name].template.items;
 
-                formItems = reject(formItems, (vv) => vv.type === 'CustomField' && vv.caption === v.name);
-                formItems = formItems.concat(createTemplateItemFromCustomField(v));
+                existingItems = reject(existingItems, (existingItem) =>
+                    existingItem.type === 'CustomField' &&
+                    existingItem.caption === injectedItem.caption &&
+                    existingItem.processId === injectedItem.processId);
 
-                bindData.types[v.entityType.name].template.items = formItems;
+                existingItems = existingItems.concat(injectedItem);
+
+                bindData.types[v.entityType.name].template.items = existingItems;
 
             });
             e.before_dataBind.resumeMain();
@@ -201,7 +206,10 @@ const getProcesses = (configurator) => {
 
 };
 
-const findCustomFieldElByName = ($el, name) => $el.find(`[data-iscf=true][data-fieldname="${name}"]`);
+const findCustomFieldElByName = ($el, name, processId) =>
+    processId
+    ? $el.find(`.cf-process_${processId} > [data-iscf=true][data-fieldname="${name}"]`)
+    : $el.find(`[data-iscf=true][data-fieldname="${name}"]`);
 const hideCustomFieldEl = ($cfEl) => {
 
     $cfEl.parent().removeClass('show');
@@ -222,8 +230,8 @@ const showCustomFieldEl = ($cfEl) => {
 
 const applyActualCustomFields = ($el, allCustomFields, actualCustomFields) => {
 
-    allCustomFields.forEach((v) => hideCustomFieldEl(findCustomFieldElByName($el, v.name)));
-    actualCustomFields.forEach((v) => showCustomFieldEl(findCustomFieldElByName($el, v.name)));
+    allCustomFields.forEach((v) => hideCustomFieldEl(findCustomFieldElByName($el, v.name, v.process ? v.process.id : null)));
+    actualCustomFields.forEach((v) => showCustomFieldEl(findCustomFieldElByName($el, v.name, v.process ? v.process.id : null)));
 
 };
 
