@@ -209,16 +209,16 @@ const getCustomFieldsForAxis = (config, axis, processes, entity, values = {}, op
     const targetValue = axis.targetValue;
 
     return processes
-        .reduce((res, {id: processId}) =>
+        .reduce((res, process) =>
             res
-                .then(() => getRealTargetValue(axis, targetValue, processId, entity))
+                .then(() => getRealTargetValue(axis, targetValue, process.id, entity))
                 .then((realTargetValue) => {
 
                     if (!realTargetValue) return [];
 
                     if (isStateRelated(axis.type)) {
 
-                        return getCustomFieldsNamesForNewState(realTargetValue, config, processId, entity.entityType.name, values, initialValues, options);
+                        return getCustomFieldsNamesForNewState(realTargetValue, config, process, entity.entityType.name, values, initialValues, options);
 
                     }
 
@@ -228,7 +228,7 @@ const getCustomFieldsForAxis = (config, axis, processes, entity, values = {}, op
 
                             const fullValues = omit(values, realTargetValue.name);
 
-                            return getCustomFieldsNamesForChangedCustomFieldsWithDependent([realTargetValue.name], entity.entityState ? entity.entityState : null, config, processId, entity.entityType.name, fullValues, initialValues, options);
+                            return getCustomFieldsNamesForChangedCustomFieldsWithDependent([realTargetValue.name], entity.entityState ? entity.entityState : null, config, process, entity.entityType.name, fullValues, initialValues, options);
 
                         } else {
 
@@ -237,7 +237,7 @@ const getCustomFieldsForAxis = (config, axis, processes, entity, values = {}, op
                                 [realTargetValue.name]: targetValue
                             };
 
-                            return getCustomFieldsNamesForChangedCustomFields([realTargetValue.name], config, processId, entity.entityType.name, fullValues, initialValues, options);
+                            return getCustomFieldsNamesForChangedCustomFields([realTargetValue.name], config, process, entity.entityType.name, fullValues, initialValues, options);
 
                         }
 
@@ -246,7 +246,7 @@ const getCustomFieldsForAxis = (config, axis, processes, entity, values = {}, op
                     return [];
 
                 })
-                .then((customFieldsNames) => getRealCustomFields(customFieldsNames, processId, entity.entityType))
+                .then((customFieldsNames) => getRealCustomFields(customFieldsNames, process.id, entity.entityType))
                 .then((customFields) => {
 
                     cfs = cfs.concat(customFields);

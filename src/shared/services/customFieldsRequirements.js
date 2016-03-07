@@ -24,7 +24,14 @@ const equalByShortcut = (shortcut, entityState) => {
 
 };
 
-const getFlatStateConfig = (config, processId, entityTypeName, entityState_) => {
+const getProcessConfigs = (config, process) =>
+    config.filter((v) =>
+        (!v.processId && !v.process && !v.processName) ||
+        (v.processId && v.processId === process.id) ||
+        (v.process && v.process === process.name) ||
+        (v.processName && v.processName === process.name));
+
+const getFlatStateConfig = (config, process, entityTypeName, entityState_) => {
 
     let entityState = entityState_;
 
@@ -38,7 +45,7 @@ const getFlatStateConfig = (config, processId, entityTypeName, entityState_) => 
 
     const {name: entityStateName} = entityState;
 
-    const processConfigs = config.filter((v) => !v.processId || v.processId === processId);
+    const processConfigs = getProcessConfigs(config, process);
 
     return processConfigs.reduce((res, processConfig) => {
 
@@ -65,9 +72,9 @@ const getFlatStateConfig = (config, processId, entityTypeName, entityState_) => 
 
 };
 
-const getFlatCustomFieldsConfig = (config, processId, entityTypeName) => {
+const getFlatCustomFieldsConfig = (config, process, entityTypeName) => {
 
-    const processConfigs = config.filter((v) => !v.processId || v.processId === processId);
+    const processConfigs = getProcessConfigs(config, process);
 
     return processConfigs.reduce((res, processConfig) => {
 
@@ -166,11 +173,11 @@ const getConnectedCustomFields = (fields, customFieldsConfig, currentCustomField
 
 };
 
-export const getCustomFieldsNamesForNewState = (entityState, config, processId, entityTypeName,
+export const getCustomFieldsNamesForNewState = (entityState, config, process, entityTypeName,
     currentCustomFieldsValues = {}, initialCustomFieldsValues = {}, {skipValuesCheck} = {skipValuesCheck: false}) => {
 
-    const stateConfig = getFlatStateConfig(config, processId, entityTypeName, entityState);
-    const customFieldsConfig = processCustomFieldsConfig(getFlatCustomFieldsConfig(config, processId, entityTypeName));
+    const stateConfig = getFlatStateConfig(config, process, entityTypeName, entityState);
+    const customFieldsConfig = processCustomFieldsConfig(getFlatCustomFieldsConfig(config, process, entityTypeName));
 
     const rootFields = stateConfig.requiredCustomFields.map((v) => ({name: v}));
 
@@ -180,10 +187,10 @@ export const getCustomFieldsNamesForNewState = (entityState, config, processId, 
 
 };
 
-export const getCustomFieldsNamesForChangedCustomFields = (changedFieldsNames, config, processId, entityTypeName,
+export const getCustomFieldsNamesForChangedCustomFields = (changedFieldsNames, config, process, entityTypeName,
     currentCustomFieldsValues = {}, initialCustomFieldsValues = {}, {skipValuesCheck} = {skipValuesCheck: false}) => {
 
-    const customFieldsConfig = processCustomFieldsConfig(getFlatCustomFieldsConfig(config, processId, entityTypeName));
+    const customFieldsConfig = processCustomFieldsConfig(getFlatCustomFieldsConfig(config, process, entityTypeName));
 
     const rootFields = customFieldsConfig.filter((v) =>
         inValues(changedFieldsNames, v.name) && checkCustomFieldByValue(v, getValue(v, currentCustomFieldsValues)));
@@ -194,22 +201,22 @@ export const getCustomFieldsNamesForChangedCustomFields = (changedFieldsNames, c
 
 };
 
-export const getCustomFieldsNamesForChangedCustomFieldsWithDependent = (changedFieldsNames, entityState, config, processId, entityTypeName,
+export const getCustomFieldsNamesForChangedCustomFieldsWithDependent = (changedFieldsNames, entityState, config, process, entityTypeName,
     currentCustomFieldsValues = {}, initialCustomFieldsValues = {}, options = {}) => {
 
-    const ownFields = getCustomFieldsNamesForChangedCustomFields(changedFieldsNames, config, processId, entityTypeName, currentCustomFieldsValues, initialCustomFieldsValues, options);
+    const ownFields = getCustomFieldsNamesForChangedCustomFields(changedFieldsNames, config, process, entityTypeName, currentCustomFieldsValues, initialCustomFieldsValues, options);
 
-    const rootFields = processCustomFieldsConfig(getFlatCustomFieldsConfig(config, processId, entityTypeName));
+    const rootFields = processCustomFieldsConfig(getFlatCustomFieldsConfig(config, process, entityTypeName));
 
     const fieldsFromParentCustomFieldsConstraints = rootFields.reduce((res, field) => {
 
         if (!initialCustomFieldsValues.hasOwnProperty(field.name)) return res;
 
-        return res.concat(getCustomFieldsNamesForChangedCustomFields([field.name], config, processId, entityTypeName, initialCustomFieldsValues, currentCustomFieldsValues, options));
+        return res.concat(getCustomFieldsNamesForChangedCustomFields([field.name], config, process, entityTypeName, initialCustomFieldsValues, currentCustomFieldsValues, options));
 
     }, []);
 
-    const fieldsFromEntityStateConstraints = entityState ? getCustomFieldsNamesForNewState(entityState, config, processId, entityTypeName, {}, currentCustomFieldsValues, options) : [];
+    const fieldsFromEntityStateConstraints = entityState ? getCustomFieldsNamesForNewState(entityState, config, process, entityTypeName, {}, currentCustomFieldsValues, options) : [];
 
     const fieldsFromChanged = changedFieldsNames.filter((fieldName) => inValues(fieldsFromParentCustomFieldsConstraints, fieldName) || inValues(fieldsFromEntityStateConstraints, fieldName));
 

@@ -36,12 +36,12 @@ describe('customFieldsRequirements', () => {
                 }
             }];
 
-            const processId = 13;
+            const process = {id: 13};
             const entityStateName = 'open';
 
             const cfValues = {};
 
-            expect(getCustomFieldsNamesForNewState(entityStateName, config, processId, 'userstory', cfValues))
+            expect(getCustomFieldsNamesForNewState(entityStateName, config, process, 'userstory', cfValues))
                 .to.be.eql(['xxx', 'yyy']);
 
         });
@@ -65,12 +65,12 @@ describe('customFieldsRequirements', () => {
                 }
             }];
 
-            const processId = 13;
+            const process = {id: 13};
             const entityStateName = 'open';
 
             const cfValues = {};
 
-            expect(getCustomFieldsNamesForNewState(entityStateName, config, processId, 'userstory', cfValues))
+            expect(getCustomFieldsNamesForNewState(entityStateName, config, process, 'userstory', cfValues))
                 .to.be.eql(['xxx', 'yyy', 'zzz']);
 
         });
@@ -95,7 +95,7 @@ describe('customFieldsRequirements', () => {
                 }
             }];
 
-            const processId = 13;
+            const process = {id: 13};
             const entityStateName = 'open';
 
             const currentValues = {};
@@ -104,7 +104,7 @@ describe('customFieldsRequirements', () => {
                 ddd: 123123
             };
 
-            expect(getCustomFieldsNamesForNewState(entityStateName, config, processId, 'userstory', currentValues, initialValues))
+            expect(getCustomFieldsNamesForNewState(entityStateName, config, process, 'userstory', currentValues, initialValues))
                 .to.be.eql(['yyy', 'zzz']);
 
         });
@@ -134,12 +134,12 @@ describe('customFieldsRequirements', () => {
                 }
             }];
 
-            const processId = 13;
+            const process = {id: 13};
             const entityStateName = 'open';
 
             const cfValues = {};
 
-            expect(getCustomFieldsNamesForNewState(entityStateName, config, processId, 'userstory', cfValues))
+            expect(getCustomFieldsNamesForNewState(entityStateName, config, process, 'userstory', cfValues))
                 .to.be.eql(['xxx', 'yyy', 'zzz', 'aaa', 'bbb', 'ddd', 'ccc']);
 
         });
@@ -163,12 +163,12 @@ describe('customFieldsRequirements', () => {
                 }
             }];
 
-            const processId = 13;
+            const process = {id: 13};
             const entityStateName = 'open';
 
             const cfValues = {};
 
-            expect(getCustomFieldsNamesForNewState(entityStateName, config, processId, 'userstory', cfValues))
+            expect(getCustomFieldsNamesForNewState(entityStateName, config, process, 'userstory', cfValues))
                 .to.be.eql(['xxx']);
 
         });
@@ -195,12 +195,12 @@ describe('customFieldsRequirements', () => {
                 }
             }];
 
-            const processId = 13;
+            const process = {id: 13};
             const entityStateName = 'open';
 
             const cfValues = {};
 
-            expect(getCustomFieldsNamesForNewState(entityStateName, config, processId, 'userstory', cfValues))
+            expect(getCustomFieldsNamesForNewState(entityStateName, config, process, 'userstory', cfValues))
                 .to.be.eql(['xxx', 'yyy']);
 
         });
@@ -224,12 +224,12 @@ describe('customFieldsRequirements', () => {
                 }
             }];
 
-            const processId = 13;
+            const process = {id: 13};
             const entityStateName = 'open';
 
             const cfValues = {};
 
-            expect(getCustomFieldsNamesForNewState(entityStateName, config, processId, 'userstory', cfValues))
+            expect(getCustomFieldsNamesForNewState(entityStateName, config, process, 'userstory', cfValues))
                 .to.be.eql(['xxx', 'yyy']);
 
         });
@@ -258,7 +258,7 @@ describe('customFieldsRequirements', () => {
                 }
             }];
 
-            const processId = 13;
+            const process = {id: 13};
             const entityStateName = 'open';
 
             const cfValues = {
@@ -266,7 +266,7 @@ describe('customFieldsRequirements', () => {
                 yyy: 'baz'
             };
 
-            expect(getCustomFieldsNamesForNewState(entityStateName, config, processId, 'userstory', cfValues))
+            expect(getCustomFieldsNamesForNewState(entityStateName, config, process, 'userstory', cfValues))
                 .to.be.eql(['xxx', 'zzz', 'yyy', 'www']);
 
         });
@@ -295,7 +295,7 @@ describe('customFieldsRequirements', () => {
                 }
             }];
 
-            const processId = 13;
+            const process = {id: 13};
             const entityStateName = 'open';
 
             const cfValues = {
@@ -303,7 +303,7 @@ describe('customFieldsRequirements', () => {
                 yyy: 'bar'
             };
 
-            expect(getCustomFieldsNamesForNewState(entityStateName, config, processId, 'userstory', cfValues))
+            expect(getCustomFieldsNamesForNewState(entityStateName, config, process, 'userstory', cfValues))
                 .to.be.eql(['xxx', 'yyy']);
 
         });
@@ -329,14 +329,14 @@ describe('customFieldsRequirements', () => {
                 }
             }];
 
-            const processId = 13;
+            const process = {id: 13};
             const entityStateName = 'open';
 
             const cfValues = {
                 xxx: 'foo'
             };
 
-            expect(getCustomFieldsNamesForNewState(entityStateName, config, processId, 'userstory', cfValues))
+            expect(getCustomFieldsNamesForNewState(entityStateName, config, process, 'userstory', cfValues))
                 .to.be.eql(['xxx', 'yyy']);
 
             config = [{
@@ -358,7 +358,7 @@ describe('customFieldsRequirements', () => {
                 }
             }];
 
-            expect(getCustomFieldsNamesForNewState(entityStateName, config, processId, 'userstory', cfValues))
+            expect(getCustomFieldsNamesForNewState(entityStateName, config, process, 'userstory', cfValues))
                 .to.be.eql(['xxx']);
 
         });
@@ -403,7 +403,7 @@ describe('customFieldsRequirements', () => {
                 }
             }];
 
-            const processId = 13;
+            const process = {id: 13};
             const entityStateName = 'open';
 
             const cfValues = {
@@ -418,7 +418,7 @@ describe('customFieldsRequirements', () => {
                 money: '42'
             };
 
-            expect(getCustomFieldsNamesForNewState(entityStateName, config, processId, 'userstory', cfValues))
+            expect(getCustomFieldsNamesForNewState(entityStateName, config, process, 'userstory', cfValues))
                 .to.be.eql(['drop', 'yyy', 'multi', 'www', 'notdrop', 'fff', 'notmulti', 'url', 'money', 'iii']);
 
         });
@@ -444,25 +444,25 @@ describe('customFieldsRequirements', () => {
                 }
             }];
 
-            const processId = 13;
+            const process = {id: 13};
             const cfValues = {};
 
             expect(getCustomFieldsNamesForNewState({
                 name: 'uno',
                 isInitial: true
-            }, config, processId, 'userstory', cfValues))
+            }, config, process, 'userstory', cfValues))
                 .to.be.eql(['initial']);
 
             expect(getCustomFieldsNamesForNewState({
                 name: 'duo',
                 isFinal: true
-            }, config, processId, 'userstory', cfValues))
+            }, config, process, 'userstory', cfValues))
                 .to.be.eql(['final']);
 
             expect(getCustomFieldsNamesForNewState({
                 name: 'tre',
                 isPlanned: true
-            }, config, processId, 'userstory', cfValues))
+            }, config, process, 'userstory', cfValues))
                 .to.be.eql(['planned']);
 
         });
@@ -497,12 +497,12 @@ describe('customFieldsRequirements', () => {
                 }
             }];
 
-            const processId = 13;
+            const process = {id: 13};
             const changedFieldsNames = ['xxx'];
 
             const cfValues = {};
 
-            expect(getCustomFieldsNamesForChangedCustomFields(changedFieldsNames, config, processId, 'userstory', cfValues))
+            expect(getCustomFieldsNamesForChangedCustomFields(changedFieldsNames, config, process, 'userstory', cfValues))
                 .to.be.eql(['yyy', 'zzz']);
 
         });
@@ -528,12 +528,12 @@ describe('customFieldsRequirements', () => {
                 }
             }];
 
-            const processId = 13;
+            const process = {id: 13};
             const changedFieldsNames = ['xxx'];
 
             const cfValues = {};
 
-            expect(getCustomFieldsNamesForChangedCustomFields(changedFieldsNames, config, processId, 'userstory', cfValues))
+            expect(getCustomFieldsNamesForChangedCustomFields(changedFieldsNames, config, process, 'userstory', cfValues))
                 .to.be.eql(['yyy', 'www', 'zzz', 'vvv']);
 
         });
@@ -554,14 +554,14 @@ describe('customFieldsRequirements', () => {
                 }
             }];
 
-            const processId = 13;
+            const process = {id: 13};
             const changedFieldsNames = ['xxx'];
 
             const cfValues = {
                 xxx: 'food'
             };
 
-            expect(getCustomFieldsNamesForChangedCustomFields(changedFieldsNames, config, processId, 'userstory', cfValues))
+            expect(getCustomFieldsNamesForChangedCustomFields(changedFieldsNames, config, process, 'userstory', cfValues))
                 .to.be.eql([]);
 
         });
@@ -589,7 +589,7 @@ describe('customFieldsRequirements', () => {
                 }
             }];
 
-            const processId = 13;
+            const process = {id: 13};
             const changedFieldsNames = ['xxx'];
 
             const cfValues = {
@@ -598,7 +598,7 @@ describe('customFieldsRequirements', () => {
                 zzz: 'bar'
             };
 
-            expect(getCustomFieldsNamesForChangedCustomFields(changedFieldsNames, config, processId, 'userstory', cfValues))
+            expect(getCustomFieldsNamesForChangedCustomFields(changedFieldsNames, config, process, 'userstory', cfValues))
                 .to.be.eql(['yyy', 'zzz', 'vvv']);
 
         });
@@ -621,7 +621,7 @@ describe('customFieldsRequirements', () => {
                 }
             }];
 
-            const processId = 13;
+            const process = {id: 13};
             const changedFieldsNames = ['xxx'];
 
             const cfValues = {
@@ -633,7 +633,7 @@ describe('customFieldsRequirements', () => {
                 xxx: 1442
             };
 
-            expect(getCustomFieldsNamesForChangedCustomFields(changedFieldsNames, config, processId, 'userstory', cfValues, existingValues))
+            expect(getCustomFieldsNamesForChangedCustomFields(changedFieldsNames, config, process, 'userstory', cfValues, existingValues))
                 .to.be.eql(['yyy']);
 
         });
@@ -656,7 +656,7 @@ describe('customFieldsRequirements', () => {
                 }
             }];
 
-            const processId = 13;
+            const process = {id: 13};
             const changedFieldsNames = ['xxx'];
 
             const cfValues = {
@@ -668,7 +668,7 @@ describe('customFieldsRequirements', () => {
                 xxx: 1442
             };
 
-            expect(getCustomFieldsNamesForChangedCustomFields(changedFieldsNames, config, processId, 'userstory', cfValues, existingValues))
+            expect(getCustomFieldsNamesForChangedCustomFields(changedFieldsNames, config, process, 'userstory', cfValues, existingValues))
                 .to.be.eql([]);
 
         });
@@ -687,7 +687,7 @@ describe('customFieldsRequirements', () => {
                 }
             }];
 
-            const processId = 13;
+            const process = {id: 13};
             const changedFieldsNames = ['xxx'];
 
             const cfValues = {
@@ -696,7 +696,7 @@ describe('customFieldsRequirements', () => {
 
             const existingValues = {};
 
-            expect(getCustomFieldsNamesForChangedCustomFields(changedFieldsNames, config, processId, 'userstory', cfValues, existingValues))
+            expect(getCustomFieldsNamesForChangedCustomFields(changedFieldsNames, config, process, 'userstory', cfValues, existingValues))
                 .to.be.eql(['yyy']);
 
         });
@@ -722,7 +722,7 @@ describe('customFieldsRequirements', () => {
                 }
             }];
 
-            const processId = 13;
+            const process = {id: 13};
             const changedFieldsNames = ['yyy'];
 
             const cfValues = {};
@@ -735,7 +735,7 @@ describe('customFieldsRequirements', () => {
                 name: 'Open'
             };
 
-            expect(getCustomFieldsNamesForChangedCustomFieldsWithDependent(changedFieldsNames, entityState, config, processId, 'userstory', cfValues, existingValues))
+            expect(getCustomFieldsNamesForChangedCustomFieldsWithDependent(changedFieldsNames, entityState, config, process, 'userstory', cfValues, existingValues))
                 .to.be.eql(['yyy', 'zzz']);
 
         });
@@ -757,7 +757,7 @@ describe('customFieldsRequirements', () => {
                 }
             }];
 
-            const processId = 13;
+            const process = {id: 13};
             const changedFieldsNames = ['yyy'];
 
             const cfValues = {
@@ -772,7 +772,7 @@ describe('customFieldsRequirements', () => {
                 name: 'Open'
             };
 
-            expect(getCustomFieldsNamesForChangedCustomFieldsWithDependent(changedFieldsNames, entityState, config, processId, 'userstory', cfValues, existingValues))
+            expect(getCustomFieldsNamesForChangedCustomFieldsWithDependent(changedFieldsNames, entityState, config, process, 'userstory', cfValues, existingValues))
                 .to.be.eql(['zzz']);
 
         });
@@ -798,7 +798,7 @@ describe('customFieldsRequirements', () => {
                 }
             }];
 
-            const processId = 13;
+            const process = {id: 13};
             const changedFieldsNames = ['xxx'];
 
             const cfValues = {};
@@ -810,7 +810,7 @@ describe('customFieldsRequirements', () => {
                 name: 'Open'
             };
 
-            expect(getCustomFieldsNamesForChangedCustomFieldsWithDependent(changedFieldsNames, entityState, config, processId, 'userstory', cfValues, existingValues))
+            expect(getCustomFieldsNamesForChangedCustomFieldsWithDependent(changedFieldsNames, entityState, config, process, 'userstory', cfValues, existingValues))
                 .to.be.eql(['xxx', 'yyy', 'zzz']);
 
         });
@@ -829,7 +829,7 @@ describe('customFieldsRequirements', () => {
                 }
             }];
 
-            const processId = 13;
+            const process = {id: 13};
             const changedFieldsNames = ['yyy'];
 
             const cfValues = {};
@@ -840,7 +840,7 @@ describe('customFieldsRequirements', () => {
                 name: 'Open'
             };
 
-            expect(getCustomFieldsNamesForChangedCustomFieldsWithDependent(changedFieldsNames, entityState, config, processId, 'userstory', cfValues, existingValues))
+            expect(getCustomFieldsNamesForChangedCustomFieldsWithDependent(changedFieldsNames, entityState, config, process, 'userstory', cfValues, existingValues))
                 .to.be.eql([]);
 
         });

@@ -10,10 +10,10 @@ import store from 'services/store';
 
 import {getCustomFieldsForAxes} from 'services/axes';
 
-const loadProject = (projectId) =>
+const loadProject = memoize((projectId) =>
     store.get('Projects', projectId, {
         include: ['Process']
-    });
+    }));
 
 const onRender = (configurator, componentBusName, cb) => {
 
@@ -237,23 +237,42 @@ const onCustomFieldsChange = ($el, customFields, handler) =>
     customFields.map((v) =>
         findCustomFieldElByName($el, v.name).on('change, input', compose(handler, constant(void 0))));
 
-const getProcessValue = ($el) => {
+const getProjectValue = ($el) => {
 
     const $select = $el.find('.project');
 
     if (!$select.length) return null;
 
-    const value = $select.val();
-    const processId = parseInt($select.children().filter(`[value=${value}]`).data('option').processId, 10);
-
-    return {id: processId};
+    return parseInt($select.val(), 10);
 
 };
 
-const onProcessChange = ($el, handler) =>
+const getActiveProcess = ($el, axes) => {
+
+    let projectId = getProjectValue($el);
+
+    if (!projectId) {
+
+        const projectAxis = find(axes, (v) => v.type === 'project');
+
+        projectId = projectAxis.targetValue;
+
+    }
+
+    if (!projectId) return null;
+
+    return when(loadProject(projectId))
+        .then((project) => project.process)
+        .fail(() => null);
+
+};
+
+const onProcessChange = ($el, axes, handler) =>
     $el.find('.project').on('change, input', () => {
 
-        setTimeout(() => handler(getProcessValue($el)), 1);
+        setTimeout(() =>
+            when(getActiveProcess($el, axes))
+                .then(handler), 1); // some quick add magic
 
     });
 
@@ -268,30 +287,9 @@ const listenQuickAddComponentBusForEntityType = (configurator, busName, config, 
         const $el = findFormByEntityType($elCommon, entityType);
         const adjust = () => componentBus.fire('adjustPosition');
 
-        const getActiveProcess = memoize(() => {
-
-            const val = getProcessValue($el);
-
-            if (val !== null) return val;
-
-            const projectAxis = find(axes, (v) => v.type === 'project');
-
-            if (!projectAxis) return null;
-
-            return when(loadProject(projectAxis.targetValue))
-                .then((project) => project.process)
-                .fail(() => null);
-
-        });
-
         const handler = (actualProcess, values = {}) => {
 
-            if (!actualProcess) {
-
-                return when(applyActualCustomFields($el, allCustomFields, []))
-                    .then(adjust);
-
-            }
+            if (!actualProcess) return when(applyActualCustomFields($el, allCustomFields, [])).then(adjust);
 
             return when(getCustomFieldsForAxes(config, axes, [actualProcess], {entityType}, values, {skipValuesCheck: false}))
                 .then((customFieldsToShow) => {
@@ -305,18 +303,18 @@ const listenQuickAddComponentBusForEntityType = (configurator, busName, config, 
         };
 
         setTimeout(() =>
-            when(getActiveProcess())
+            when(getActiveProcess($el, axes))
                 .then(handler), 1); // some quick add magic
 
         onCustomFieldsChange($el, allCustomFields, () => {
 
             actualValues = collectValues($el, activeCustomFields);
-            when(getActiveProcess())
+            when(getActiveProcess($el, axes))
                 .then((process) => handler(process, actualValues));
 
         });
 
-        onProcessChange($el, (processData) => handler(processData, actualValues));
+        onProcessChange($el, axes, (process) => handler(process, actualValues));
 
     });
 

@@ -40,7 +40,7 @@ const loadFullEntity = (entity) => {
                     ]
                 },
                 {
-                    Process: ['Id']
+                    Process: ['Id', 'Name']
                 },
                 'CustomFields'
             ]
@@ -63,7 +63,7 @@ const loadFullEntity = (entity) => {
                 },
                 {
                     Project: [{
-                        Process: ['Id']
+                        Process: ['Id', 'Name']
                     }]
                 },
                 'CustomFields'
@@ -78,7 +78,7 @@ const loadFullEntity = (entity) => {
                 'EntityType',
                 {
                     Project: [{
-                        Process: ['Id']
+                        Process: ['Id', 'Name']
                     }]
                 },
                 'CustomFields'
@@ -103,15 +103,17 @@ const loadFullEntity = (entity) => {
 
 };
 
-const getProcessId = (entity) => {
+const nullProcess = {id: null};
 
-    if (entity.process) return entity.process.id;
-    else if (entity.project) return entity.project.process.id;
-    else return null;
+const getProcess = (entity) => {
+
+    if (entity.process) return entity.process;
+    else if (entity.project) return entity.project.process;
+    else return nullProcess;
 
 };
 
-const getOutputCustomFields = (mashupConfig, changes, processId, entity, entityCustomFields = [], existingCustomFieldsValues = [], formValues = {}) => {
+const getOutputCustomFields = (mashupConfig, changes, process, entity, entityCustomFields = [], existingCustomFieldsValues = [], formValues = {}) => {
 
     const existingValuesNormalized = object(existingCustomFieldsValues.filter((v) => !v.isEmpty).map((v) => [v.name, v.value]));
 
@@ -125,7 +127,7 @@ const getOutputCustomFields = (mashupConfig, changes, processId, entity, entityC
         ...formCustomFieldsValuesNormalized
     };
 
-    const processes = [{id: processId}];
+    const processes = [process];
 
     return when(getCustomFieldsForAxes(mashupConfig, changes, processes, entity, currentValuesNormalized, {}, existingValuesNormalized))
         .then((serverCustomFields) => {
@@ -174,12 +176,12 @@ export default class FormContainer extends React.Component {
         when(loadFullEntity(entity))
         .then((fullEntity) => {
 
-            const processId = getProcessId(fullEntity);
+            const process = getProcess(fullEntity);
 
-            return when(getCustomFieldsByEntity(processId, fullEntity), fullEntity, processId);
+            return when(getCustomFieldsByEntity(process.id, fullEntity), fullEntity, process);
 
         })
-        .then((serverCustomFields, fullEntity, processId) => {
+        .then((serverCustomFields, fullEntity, process) => {
 
             const entityCustomFields = serverCustomFields.map((serverCustomField) => CustomField(serverCustomField));
 
@@ -187,13 +189,13 @@ export default class FormContainer extends React.Component {
                 CustomFieldValue.fromServerValue(customField, find(fullEntity.customFields, (v) => v.name === customField.name).value));
 
             this.setState({
-                processId,
+                process,
                 entityCustomFields,
                 entity: fullEntity,
                 existingCustomFieldsValues
             });
 
-            return getOutputCustomFields(mashupConfig, changes, processId, fullEntity, entityCustomFields, existingCustomFieldsValues, formValues);
+            return getOutputCustomFields(mashupConfig, changes, process, fullEntity, entityCustomFields, existingCustomFieldsValues, formValues);
 
         })
         .then((outputCustomFields) => {
@@ -313,9 +315,9 @@ export default class FormContainer extends React.Component {
         const formValues = {...this.state.formValues, [field.name]: value};
 
         const {mashupConfig, changes} = this.props;
-        const {entity, processId, entityCustomFields, existingCustomFieldsValues} = this.state;
+        const {entity, process, entityCustomFields, existingCustomFieldsValues} = this.state;
 
-        when(getOutputCustomFields(mashupConfig, changes, processId, entity, entityCustomFields, existingCustomFieldsValues, formValues))
+        when(getOutputCustomFields(mashupConfig, changes, process, entity, entityCustomFields, existingCustomFieldsValues, formValues))
         .then((outputCustomFields) => {
 
             this.setState({
