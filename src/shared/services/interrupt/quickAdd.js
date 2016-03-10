@@ -236,7 +236,7 @@ const applyActualCustomFields = ($el, allCustomFields, actualCustomFields) => {
 };
 
 const collectValues = ($el, customFields) =>
-    object(customFields.map((v) => [v.name, findCustomFieldElByName($el, v.name).val()]));
+    object(customFields.map((v) => [v.name, findCustomFieldElByName($el, v.name, v.process ? v.process.id : null).val()]));
 
 const findFormByEntityType = ($el, entityType) =>
     $($el.find('.tau-control-set').toArray().filter((v) => equalIgnoreCase($(v).data('type'), entityType.name)));
@@ -255,23 +255,31 @@ const getProjectValue = ($el) => {
 
 };
 
-const getActiveProcess = ($el, axes) => {
+const getProjectAxis = (axes) => find(axes, (v) => v.type === 'project');
 
-    let projectId = getProjectValue($el);
-
-    if (!projectId) {
-
-        const projectAxis = find(axes, (v) => v.type === 'project');
-
-        projectId = projectAxis.targetValue;
-
-    }
-
-    if (!projectId) return null;
-
-    return when(loadProject(projectId))
+const loadProcessByProject = (projectId) =>
+    when(loadProject(projectId))
         .then((project) => project.process)
         .fail(() => null);
+
+const getProcessByProjectAxis = (axes) => {
+
+    const projectAxis = getProjectAxis(axes);
+
+    if (!projectAxis) return null;
+
+    const projectId = projectAxis.targetValue;
+
+    return loadProcessByProject(projectId);
+
+};
+
+const getActiveProcess = ($el, axes) => {
+
+    const projectId = getProjectValue($el);
+
+    if (!projectId) return getProcessByProjectAxis(axes);
+    else return loadProcessByProject(projectId);
 
 };
 
@@ -326,7 +334,8 @@ const listenQuickAddComponentBusForEntityType = (configurator, busName, config, 
 
     });
 
-    when(getCustomFieldsForAxes(config, axes, processes, {entityType}, {}, {skipValuesCheck: true}))
+    when(getProcessByProjectAxis(axes))
+    .then((process) => getCustomFieldsForAxes(config, axes, process ? [process] : processes, {entityType}, {}, {skipValuesCheck: true}))
     .then((customFields) => {
 
         allCustomFields = customFields;
