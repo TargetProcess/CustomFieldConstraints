@@ -102,7 +102,8 @@ var makeWebpackConfig = function(opts_) {
             useConfig: true
         }),
         new webpack.DefinePlugin({
-            __DEV__: !opts.production
+            __DEV__: !opts.production,
+            'process.env.NODE_ENV': opts.production ? '"production"' : '"development"'
         }),
         new webpack.BannerPlugin(`v${pkg.version} Build ${String(new Date())}`, {
             entryOnly: true
@@ -152,7 +153,7 @@ var makeWebpackConfig = function(opts_) {
     config.externals = [{
         jquery: 'jQuery',
         underscore: 'Underscore'
-    }, 'jQuery', 'Underscore', 'react', /^tp3\//, /^tau\//, /^tp\//];
+    }, 'jQuery', 'Underscore', /^tp3\//, /^tau\//, /^tp\//];
 
     return config;
 
