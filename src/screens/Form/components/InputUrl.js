@@ -1,7 +1,7 @@
 import React, {findDOMNode} from 'react';
 import cx from 'classnames';
 
-import {block, row, label, labeltext} from './InputUrl.css';
+import S from './InputUrl.css';
 
 export default class InputUrl extends React.Component {
 
@@ -10,17 +10,17 @@ export default class InputUrl extends React.Component {
             url: void 0,
             label: void 0
         }
-    }
+    };
 
     render() {
 
         const {value} = this.props;
 
         return (
-            <div className={block}>
-                <div className={row}>
-                    <label className={label}>
-                        <span className={labeltext}>{'Url'}</span>
+            <div className={S.block}>
+                <div className={S.row}>
+                    <label className={S.label}>
+                        <span className={S.labeltext}>{'Url'}</span>
                         <input
                             {...this.props}
                             className={cx('tau-in-text', {'tau-error': this.props.isInvalid})}
@@ -31,9 +31,9 @@ export default class InputUrl extends React.Component {
                     </label>
                 </div>
 
-                <div className={row}>
-                    <label className={label}>
-                        <span className={labeltext}>{'Description'}</span>
+                <div className={S.row}>
+                    <label className={S.label}>
+                        <span className={S.labeltext}>{'Description'}</span>
                         <input
                             {...this.props}
                             className={cx('tau-in-text', {'tau-error': this.props.isInvalid})}

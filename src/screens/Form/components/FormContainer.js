@@ -1,88 +1,149 @@
 import React, {PropTypes as T} from 'react';
-import {find, object, has, partial, pluck, noop} from 'underscore';
+import {find, object, noop, map} from 'underscore';
+import {when} from 'jquery';
 
 import Overlay from 'components/Overlay';
 import store from 'services/store';
 import store2 from 'services/store2';
-import {
-    transformFromServerFieldValue,
-    transformFieldFromServer,
-    transformToServerFieldValue,
-    sanitizeFieldValue,
-    validateFieldValue,
-    isEmptyInitialValue
-} from 'services/form';
 
-import Form from './Form';
-import TargetprocessLinkentity from './TargetprocessLinkentity';
+import {getCustomFieldsForAxes} from 'services/axes';
 
-import {header, note, error as errorStyle} from './FormContainer.css';
+import {isUser, isGeneral, isAssignable, equalIgnoreCase} from 'utils';
 
-import {
-    getCustomFieldsNamesForNewState,
-    getCustomFieldsNamesForChangedCustomFields
-} from 'services/customFieldsRequirements';
+import FormComponent from './Form';
+
+import CustomField from 'services/CustomField';
+import * as CustomFieldValue from 'services/CustomFieldValue';
+import Form from 'services/Form';
 
 const getCustomFieldsByEntity = (processId, entity) => store2.get('CustomField', {
     take: 1000,
-    where: `process.id == ${processId} and entityType.id == ${entity.entityType.id}`,
+    where: `process.id == ${processId || 'null'} and entityType.name == "${entity.entityType.name}"`,
     select: 'new(required, name, id, config, fieldType, value, entityType, process)'
 });
 
-const getEntityCustomFieldValue = ({customFields: entityCustomFields}, field) => {
+const loadFullEntity = (entity) => {
 
-    const entityCustomField = find(entityCustomFields, (entityField) =>
-        entityField.name.toLowerCase() === field.name.toLowerCase());
+    if (equalIgnoreCase(entity.entityType.name, 'project')) {
 
-    return entityCustomField ? transformFromServerFieldValue(field, entityCustomField.value) : null;
+        return store.get('Project', entity.id, {
+            include: [
+                'Name',
+                'EntityType',
+                {
+                    EntityState: [
+                        'Id',
+                        'Name',
+                        'isInitial',
+                        'isFinal',
+                        'isPlanned'
+                    ]
+                },
+                {
+                    Process: ['Id', 'Name']
+                },
+                'CustomFields'
+            ]
+        });
+
+    } else if (isAssignable(entity) || equalIgnoreCase(entity.entityType.name, 'impediment')) {
+
+        return store.get(entity.entityType.name, entity.id, {
+            include: [
+                'Name',
+                'EntityType',
+                {
+                    EntityState: [
+                        'Id',
+                        'Name',
+                        'isInitial',
+                        'isFinal',
+                        'isPlanned'
+                    ]
+                },
+                {
+                    Project: [{
+                        Process: ['Id', 'Name']
+                    }]
+                },
+                'CustomFields'
+            ]
+        });
+
+    } else if (isGeneral(entity)) {
+
+        return store.get(entity.entityType.name, entity.id, {
+            include: [
+                'Name',
+                'EntityType',
+                {
+                    Project: [{
+                        Process: ['Id', 'Name']
+                    }]
+                },
+                'CustomFields'
+            ]
+        });
+
+    } else if (isUser(entity)) {
+
+        return store.get('User', entity.id, {
+            include: [
+                'FirstName',
+                'LastName',
+                'CustomFields'
+            ]
+        }).then((res) => ({
+            ...entity,
+            name: `${res.firstName} ${res.lastName}`,
+            ...res
+        }));
+
+    }
 
 };
 
-const getCustomFieldsFromAllByNames = (customFields, fieldsNames) => {
+const nullProcess = {id: null};
 
-    const customFieldsHash = object(customFields.map((v) => [v.name.toLowerCase(), v]));
+const getProcess = (entity) => {
 
-    return fieldsNames.reduce((res, fieldName) =>
-        customFieldsHash[fieldName.toLowerCase()] ?
-        res.concat(customFieldsHash[fieldName.toLowerCase()]) :
-        res,
-    []);
+    if (entity.process) return entity.process;
+    else if (entity.project) return entity.project.process;
+    else return nullProcess;
 
 };
 
-const getInitialCustomFieldValue = (entity, field) => {
+const getOutputCustomFields = (mashupConfig, changes, process, entity, entityCustomFields = [], existingCustomFieldsValues = [], formValues = {}) => {
 
-    const value = getEntityCustomFieldValue(entity, field);
+    const existingValuesNormalized = object(existingCustomFieldsValues.filter((v) => !v.isEmpty).map((v) => [v.name, v.value]));
 
-    return isEmptyInitialValue(field, value) ? field.config.defaultValue : value;
+    const defaultValuesNormalized = object(entityCustomFields.filter((v) => !v.isEmptyDefaultValue).map((v) => [v.name, v.defaultValue]));
 
-};
+    const formCustomFieldsValues = map(formValues, (value, name) => CustomFieldValue.fromInputValue(find(entityCustomFields, (cf) => cf.name === name), value));
+    const formCustomFieldsValuesNormalized = object(formCustomFieldsValues.map((v) => [v.name, v.value]));
 
-const prepareFieldForForm = (entity, values, field) => {
-
-    const {name} = field;
-    const initialValue = getInitialCustomFieldValue(entity, field);
-    const hasDirtyValue = has(values, field.name);
-    const dirtyValue = values[field.name];
-    const currentValue = hasDirtyValue ? dirtyValue : initialValue;
-
-    const validationErrors = validateFieldValue(field, currentValue);
-    const hasErrors = Boolean(validationErrors.length);
-
-    return {
-        name,
-        field,
-        hasDirtyValue,
-        hasErrors,
-        validationErrors,
-        value: currentValue
+    const currentValuesNormalized = {
+        ...defaultValuesNormalized,
+        ...formCustomFieldsValuesNormalized
     };
+
+    const processes = [process];
+
+    return when(getCustomFieldsForAxes(mashupConfig, changes, processes, entity, currentValuesNormalized, {}, existingValuesNormalized))
+        .then((serverCustomFields) => {
+
+            const customFields = serverCustomFields.map((v) => CustomField(v));
+
+            return customFields;
+
+        });
 
 };
 
 export default class FormContainer extends React.Component {
 
     static propTypes = {
+        changes: T.array.isRequired,
         entity: T.shape({
             id: T.number.isRequired,
             entityType: T.shape({
@@ -91,71 +152,96 @@ export default class FormContainer extends React.Component {
         }).isRequired,
         mashupConfig: T.array,
         onAfterSave: T.func,
-        onCancel: T.func,
-        processId: T.number.isRequired,
-        requirementsData: T.object.isRequired
-    }
+        onCancel: T.func
+    };
 
     state = {
-        defaultValues: {},
         isLoading: true,
         onAfterSave: noop,
         onCancel: noop,
-        values: {}
-    }
+        entityCustomFields: [],
+        outputCustomFields: [],
+        formValues: {}
+    };
 
     componentDidMount() {
 
-        const {processId, entity} = this.props;
+        getCustomFieldsForAxes.resetCache();
 
-        getCustomFieldsByEntity(processId, entity)
-            .then((allEntityCustomFields) => {
+        const {entity, changes, mashupConfig} = this.props;
+        const {formValues} = this.state;
 
-                const processedFields = allEntityCustomFields.map((field) =>
-                    transformFieldFromServer(field));
+        if (!changes.length) return null;
 
-                const defaultValues = object(processedFields.map((v) => [v.name, v.config.defaultValue]));
+        when(loadFullEntity(entity))
+        .then((fullEntity) => {
+
+            const process = getProcess(fullEntity);
+
+            return when(getCustomFieldsByEntity(process.id, fullEntity), fullEntity, process);
+
+        })
+        .then((serverCustomFields, fullEntity, process) => {
+
+            const entityCustomFields = serverCustomFields.map((serverCustomField) => CustomField(serverCustomField));
+
+            const existingCustomFieldsValues = entityCustomFields.map((customField) =>
+                CustomFieldValue.fromServerValue(customField, find(fullEntity.customFields, (v) => v.name === customField.name).value));
+
+            this.setState({
+                process,
+                entityCustomFields,
+                entity: fullEntity,
+                existingCustomFieldsValues
+            });
+
+            return getOutputCustomFields(mashupConfig, changes, process, fullEntity, entityCustomFields, existingCustomFieldsValues, formValues);
+
+        })
+        .then((outputCustomFields) => {
+
+            if (!outputCustomFields.length) this.props.onAfterSave();
+            else {
 
                 this.setState({
-                    isLoading: false,
-                    allEntityCustomFields: processedFields,
-                    defaultValues
+                    outputCustomFields,
+                    isLoading: false
                 });
 
-            });
+            }
+
+        });
 
     }
 
     render() {
 
-        const {isLoading, globalError, isSaving} = this.state;
+        const {changes} = this.props;
 
+        const {
+            isLoading,
+            isSaving,
+            globalError,
+
+            outputCustomFields,
+            entity
+        } = this.state;
+
+        if (!changes.length) return null;
         if (isLoading) return null;
+        if (!outputCustomFields.length) return null;
 
-        const {entity} = this.props;
+        const {formValues, existingCustomFieldsValues} = this.state;
 
-        const realCustomFields = this.getCustomFields();
-
-        if (!realCustomFields.length) {
-
-            setTimeout(() => this.props.onAfterSave(), 100);
-
-            return null;
-
-        }
+        const form = Form(outputCustomFields, formValues, existingCustomFieldsValues);
+        const fields = form.fields;
 
         return (
             <Overlay onClose={this.props.onCancel}>
-
-                <TargetprocessLinkentity className={header} entity={entity} />
-
-                <div className={note}>{'Please specify the following custom fields'}</div>
-                {globalError ? (
-                    <div className={errorStyle}>{globalError}</div>
-                ) : null}
-                <Form
+                <FormComponent
                     entity={entity}
-                    fields={realCustomFields}
+                    fields={fields}
+                    globalError={globalError}
                     onChange={this.handleChange}
                     onSubmit={this.handleSubmit}
                     showProgress={isSaving}
@@ -165,20 +251,25 @@ export default class FormContainer extends React.Component {
 
     }
 
-    handleSubmit = (savedFields) => {
+    handleSubmit = (formValues_) => {
 
-        const {entity} = this.props;
+        const formValues = object(formValues_.map((v) => [v.name, v.value]));
 
-        const isAllFieldsValid = savedFields
-            .every(({field, value}) => !validateFieldValue(field, sanitizeFieldValue(field, value)).length);
+        const {entity, replaceCustomFieldValueInChanges, onAfterSave} = this.props;
+        const {entityCustomFields, existingCustomFieldsValues} = this.state;
+        const customFields = entityCustomFields.filter((v) => formValues.hasOwnProperty(v.name));
 
-        if (!isAllFieldsValid) return;
+        const form = Form(customFields, formValues, existingCustomFieldsValues);
+
+        if (!form.isValid) return;
+
+        const customFieldValues = form.fields.map((v) => v.customFieldValue);
 
         const dataToSave = {
-            customFields: savedFields
-                .map(({field, value, name}) => ({
+            customFields: customFieldValues
+                .map(({name, serverValue}) => ({
                     name,
-                    value: transformToServerFieldValue(field, sanitizeFieldValue(field, value))
+                    value: serverValue
                 }))
         };
 
@@ -187,12 +278,14 @@ export default class FormContainer extends React.Component {
             isSaving: true
         });
 
+        customFieldValues.forEach(({name, serverValue}) => replaceCustomFieldValueInChanges(name, serverValue));
+
         store.save(entity.entityType.name, entity.id, dataToSave)
             .then(() => this.setState({
                 ...this.state,
                 isSaving: false
             }))
-            .then(this.props.onAfterSave)
+            .then(() => setTimeout(onAfterSave, 500)) // comet race conditions :(
             .fail(({responseJSON}) => {
 
                 if (responseJSON && responseJSON.Message) {
@@ -215,72 +308,25 @@ export default class FormContainer extends React.Component {
 
             });
 
-    }
+    };
 
     handleChange = (field, value) => {
 
-        const valuesHash = {...this.state.values, [field.name]: value};
+        const formValues = {...this.state.formValues, [field.name]: value};
 
-        this.setState({...this.state, values: valuesHash});
+        const {mashupConfig, changes} = this.props;
+        const {entity, process, entityCustomFields, existingCustomFieldsValues} = this.state;
 
-    }
+        when(getOutputCustomFields(mashupConfig, changes, process, entity, entityCustomFields, existingCustomFieldsValues, formValues))
+        .then((outputCustomFields) => {
 
-    getCustomFields() {
+            this.setState({
+                outputCustomFields,
+                formValues
+            });
 
-        const {entity, requirementsData, mashupConfig, processId} = this.props;
-        const {newState, changedCFs = []} = requirementsData;
+        });
 
-        if (!newState && !changedCFs.length) return [];
-
-        const {values, defaultValues, allEntityCustomFields} = this.state;
-
-        const existingValues = object(allEntityCustomFields
-            .map((field) => [
-                field,
-                transformFromServerFieldValue(field, getEntityCustomFieldValue(entity, field))
-            ])
-            .filter(([field, value]) => !isEmptyInitialValue(field, value))
-            .map(([field, value]) => [field.name, value]));
-
-        let fieldsNames = [];
-
-        if (newState) {
-
-            const allValues = {
-                ...defaultValues,
-                ...values
-            };
-
-            const allValuesSanitized = object(allEntityCustomFields.map((v) =>
-                [v.name, sanitizeFieldValue(v, allValues[v.name])]));
-
-            fieldsNames = getCustomFieldsNamesForNewState(newState,
-                mashupConfig, processId, entity.entityType.name,
-                allValuesSanitized, existingValues);
-
-        } else if (changedCFs.length) {
-
-            const changedFieldsNames = pluck(changedCFs, 'name');
-
-            const allValues = {
-                ...defaultValues,
-                ...values,
-                ...object(changedCFs.map((v) => [v.name, v.value]))
-            };
-
-            const allValuesSanitized = object(allEntityCustomFields.map((v) =>
-                [v.name, sanitizeFieldValue(v, allValues[v.name])]));
-
-            fieldsNames = getCustomFieldsNamesForChangedCustomFields(changedFieldsNames,
-                mashupConfig, processId, entity.entityType.name,
-                allValuesSanitized, existingValues);
-
-        }
-
-        const fields = getCustomFieldsFromAllByNames(allEntityCustomFields, fieldsNames);
-
-        return fields.map(partial(prepareFieldForForm, entity, values));
-
-    }
+    };
 
 }

@@ -8,11 +8,11 @@ export default class InputEntity extends React.Component {
 
     static propTypes = {
         value: T.object
-    }
+    };
 
     static defaultProps = {
         value: void 0
-    }
+    };
 
     render() {
 

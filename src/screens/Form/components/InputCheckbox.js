@@ -7,7 +7,7 @@ export default class InputCheckbox extends React.Component {
             name: T.string
         }).isRequired,
         value: T.any
-    }
+    };
 
     render() {
 

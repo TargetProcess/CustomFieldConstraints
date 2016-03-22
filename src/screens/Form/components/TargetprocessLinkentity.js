@@ -1,9 +1,25 @@
-import React from 'react';
+import React, {PropTypes as T} from 'react';
 import cx from 'classnames';
 
-import {block} from './TargetprocessLinkentity.css';
+import S from './TargetprocessLinkentity.css';
 
 export default class TargetprocessLinkentity extends React.Component {
+
+    static propTypes = {
+        className: T.string,
+        entity: T.shape({
+            id: T.number.isRequired,
+            name: T.string,
+            entityType: T.shape({
+                name: T.string.isRequired
+            }).isRequired
+        }).isRequired,
+        short: T.bool
+    };
+
+    static defaultProps = {
+        short: false
+    };
 
     render() {
 
@@ -12,7 +28,7 @@ export default class TargetprocessLinkentity extends React.Component {
         return (
             <span
                 {...this.props}
-                className={cx('tau-linkentity', block, className)}
+                className={cx('tau-linkentity', S.block, className)}
                 title={short ? entity.name : null}
             >
                 <em

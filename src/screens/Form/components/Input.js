@@ -17,17 +17,20 @@ export default class Input extends React.Component {
 
     static propTypes = {
         field: T.shape({
-            type: T.string
-        }).isRequired,
+            type: T.string.isRequired
+        }),
         isInvalid: T.bool,
         onChange: T.func,
         value: T.any
-    }
+    };
 
     static defaultProps = {
         onChange: noop,
-        specificProps: {}
-    }
+        specificProps: {},
+        field: {
+            type: 'text'
+        }
+    };
 
     render() {
 
@@ -63,13 +66,13 @@ export default class Input extends React.Component {
 
         this.props.onChange(this.props.field, this.value);
 
-    }
+    };
 
     handleBlur = () => {
 
         this.props.onChange(this.props.field, this.value);
 
-    }
+    };
 
     get value() {
 

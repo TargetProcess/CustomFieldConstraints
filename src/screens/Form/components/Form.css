@@ -1,3 +1,22 @@
+:local(.header) {
+    margin-bottom: 10px;
+    font-size: 14px;
+}
+
+:local(.note) {
+    color: #606B73;
+    padding: 10px 10px;
+    background-color: #FFFFE1;
+    margin-bottom: 5px;
+}
+
+:local(.error) {
+    color: #f66;
+    padding: 10px 10px;
+    background-color: #FFFFE1;
+    margin-bottom: 5px;
+}
+
 :local(.buttons) {
     margin-left: 8px;
     margin-top: 10px;

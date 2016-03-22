@@ -95,18 +95,12 @@ var processResult = function(result) {
     }
 };
 
-var processOpts = function(options, defaultOpts) {
+var processOpts = function(options = {}, defaultOpts = {take: 1000}) {
 
-    var opts = {};
-
-    if (!options) return opts;
+    var opts = {...defaultOpts, ...options};
 
     if (options.include && typeof options.include !== 'string') {
         opts.include = '[' + stringify(options.include) + ']'
-    }
-
-    if (!options.take && defaultOpts && defaultOpts.take) {
-        opts.take = defaultOpts.take
     }
 
     return opts;

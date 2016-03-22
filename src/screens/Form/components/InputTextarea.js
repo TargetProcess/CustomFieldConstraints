@@ -1,19 +1,19 @@
 import React, {findDOMNode} from 'react';
 import cx from 'classnames';
 
-import {block, textarea} from './InputTextarea.css';
+import S from './InputTextarea.css';
 
 export default class InputTextarea extends React.Component {
 
     render() {
 
         return (
-            <div className={cx(block, {'tau-error': this.props.isInvalid}, this.props.className)}>
+            <div className={cx(S.block, {'tau-error': this.props.isInvalid}, this.props.className)}>
                 <textarea
                     placeholder=" "
                     ref="input"
                     {...this.props}
-                    className={cx('tau-in-text', textarea, {'tau-error': this.props.isInvalid})}
+                    className={cx('tau-in-text', S.textarea, {'tau-error': this.props.isInvalid})}
                 />
             </div>
         );
