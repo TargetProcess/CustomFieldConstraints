@@ -165,7 +165,7 @@ const getRealEntityStateByTeam = (targetValue, processId, entity) => {
 
                 if (!teamProject) return res;
 
-                const workflow = teamProject.workflows.items.find((vv) =>
+                const workflow = find(teamProject.workflows.items, (vv) =>
                     equalIgnoreCase(vv.entityType.name, entity.entityType.name));
 
                 return workflow ? res.concat(workflow) : res;
@@ -174,7 +174,7 @@ const getRealEntityStateByTeam = (targetValue, processId, entity) => {
 
             const workflowIds = pluck(workflows, 'id');
 
-            return entityStates.find((v) =>
+            return find(entityStates, (v) =>
                 inValues(workflowIds, v.workflow.id) && matchEntityStateHeirarchy(targetValue, entityType, v));
 
         });
