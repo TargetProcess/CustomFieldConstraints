@@ -5,15 +5,16 @@
   "author": "Aliaksei Shytkin <shitkin@targetprocess.com>",
   "scripts": {
     "start": "outputPath=$TARGETPROCESS_MASHUPS_PATH/$npm_package_name; rm -rf $outputPath && NODE_ENV=development webpack --watch --output-path $outputPath",
-    "build": "webpack",
-    "build:production": "webpack --output-path build --config webpack-production.config.js && mv build/index.js build/release.js",
+    "build:manager": "webpack --output-path build/manager --config webpack-production.config.js",
     "build:library": "rm -rf build/library && webpack --output-path build/library --config webpack-library.config.js && cp docs/README.md build/library/README.mkd && cp docs/*.png build/library",
-    "build:all": "npm run build:production && npm run build:library",
+    "build:all": "npm run build:manager && npm run build:library",
     "lint": "eslint --quiet .",
     "test": "npm run lint && npm run test:coverage",
     "test:coverage": "karma start --single-run --reporters spec,coverage --browsers PhantomJS",
     "test:watch": "karma start --reporters spec,notify --browsers PhantomJS",
-    "commit": "npm test && npm run build:all && git add -A build && git commit -m 'Build' && git push origin HEAD"
+    "preversion": "npm test",
+    "version": "npm run build:all && git add -A build",
+    "postversion": "git push && git push --tags"
   },
   "repository": {
     "type": "git",
