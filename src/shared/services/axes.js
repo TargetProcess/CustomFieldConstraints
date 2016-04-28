@@ -21,9 +21,11 @@ const findInRealCustomFields = (customFieldsNames, realCustomFields) =>
 
 const loadCustomFields = memoize((processId, entityType) => {
 
+    let fields;
+
     if (isGeneral({entityType})) {
 
-        return store2.get('CustomField', {
+        fields = store2.get('CustomField', {
             take: 1000,
             where: `process.id == ${processId} and entityType.name == "${entityType.name}"`,
             select: 'new(required, name, id, config, fieldType, value, entityType, process)'
@@ -31,13 +33,15 @@ const loadCustomFields = memoize((processId, entityType) => {
 
     } else {
 
-        return store2.get('CustomField', {
+        fields = store2.get('CustomField', {
             take: 1000,
             where: `process.id == null and entityType.name == "${entityType.name}"`,
             select: 'new(required, name, id, config, fieldType, value, entityType, process)'
         });
 
     }
+
+    return fields.then((items) => items.filter((v) => v.config ? !v.config.calculationModel : true));
 
 }, (processId, entityType) => processId + entityType.name);
 

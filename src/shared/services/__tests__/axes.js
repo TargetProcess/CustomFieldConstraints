@@ -249,6 +249,36 @@ describe('axes', () => {
 
             });
 
+            it('skips calculated custom fields', () => {
+
+                const axes = [{
+                    type: 'customfield',
+                    customFieldName: 'cf1',
+                    targetValue: '42'
+                }];
+
+                $ajax.onCall(0).returns(when({
+                    items: [{
+                        name: 'Cf1',
+                        entityType: {
+                            name: 'Bug'
+                        }
+                    }, {
+                        name: 'Cf2',
+                        entityType: {
+                            name: 'Bug'
+                        },
+                        config: {
+                            calculationModel: 42
+                        }
+                    }]
+                }));
+
+                return getCustomFieldsForAxes(config, axes, processes, entity).then((res) => expect(res)
+                    .to.be.eql([]));
+
+            });
+
         });
 
         describe('merges axes custom fields', () => {
