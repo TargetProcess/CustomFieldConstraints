@@ -1,5 +1,7 @@
 import $, {when, Deferred, whenList} from 'jquery';
-import {find, object, flatten, compose, constant, unique, map, last, without, memoize, reject, keys} from 'underscore';
+import {
+    find, object, flatten, compose, constant, unique, map, last, without, memoize, reject, keys, isString
+} from 'underscore';
 
 import {addBusListener} from 'targetprocess-mashup-helper/lib/events';
 
@@ -141,7 +143,9 @@ const getAxes = (initData, entityType) => {
 
         if (!axisDefinition) return res;
 
-        if (inValues(axisDefinition.types, 'entitystate')) {
+        const axisTypes = isString(axisDefinition) ? [axisDefinition] : axisDefinition.types;
+
+        if (inValues(axisTypes, 'entitystate')) {
 
             return res.concat({
                 type: 'entitystate',
@@ -151,7 +155,7 @@ const getAxes = (initData, entityType) => {
         }
 
         // to get process if one of axis is project
-        if (inValues(axisDefinition.types, 'project')) {
+        if (inValues(axisTypes, 'project')) {
 
             return res.concat({
                 type: 'project',
@@ -160,7 +164,7 @@ const getAxes = (initData, entityType) => {
 
         }
 
-        const customFieldName = find(axisDefinition.types, (v) => v.match(SLICE_CUSTOMFIELD_PREFIX));
+        const customFieldName = find(axisTypes, (v) => v.match(SLICE_CUSTOMFIELD_PREFIX));
 
         if (customFieldName) {
 
