@@ -8,7 +8,7 @@ import store2 from 'services/store2';
 
 import {getCustomFieldsForAxes} from 'services/axes';
 
-import {isUser, isGeneral, isAssignable, equalIgnoreCase} from 'utils';
+import {isUser, isGeneral, isAssignable, isRequester, equalIgnoreCase} from 'utils';
 
 import FormComponent from './Form';
 
@@ -87,7 +87,7 @@ const loadFullEntity = (entity) => {
 
     } else if (isUser(entity)) {
 
-        return store.get('User', entity.id, {
+        return store.get(isRequester(entity) ? 'Requester' : 'User', entity.id, {
             include: [
                 'FirstName',
                 'LastName',

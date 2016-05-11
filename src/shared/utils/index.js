@@ -60,6 +60,10 @@ export const isAssignable = (entity) => inValues([
     'Request'
 ], entity.entityType.name);
 
+export const isRequester = (entity) => inValues([
+    'Requester'
+], entity.entityType.name);
+
 export const isUser = (entity) => inValues([
     'GeneralUser',
     'User',
