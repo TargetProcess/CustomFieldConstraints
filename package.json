@@ -14,7 +14,8 @@
     "test:watch": "karma start --reporters spec,notify --browsers PhantomJS",
     "preversion": "npm test",
     "version": "npm run build:all && git add -A build",
-    "postversion": "git push && git push --tags"
+    "postversion": "git push && git push --tags",
+    "remove": "rm -rf $TARGETPROCESS_MASHUPS_PATH/$npm_package_name;"
   },
   "repository": {
     "type": "git",
