@@ -1,7 +1,8 @@
 tau.mashups.addModule("CustomFieldConstraints/config", [
     {
+        "process": "Kanban",
         "constraints": {
-            "requester": {
+            "userStory": {
                 "customFields": [
                     {
                         "name": "Age",
