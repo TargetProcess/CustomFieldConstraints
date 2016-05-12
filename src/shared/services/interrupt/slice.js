@@ -22,7 +22,7 @@ const getEntityFromChange = (sourceChange, changeValues) => {
         },
         axes: changeValues.reduce((res, v) => {
 
-            if (v.name.match(SLICE_CUSTOMFIELD_PREFIX)) {
+            if (v.name && v.name.match(SLICE_CUSTOMFIELD_PREFIX)) {
 
                 return res.concat({
                     type: 'customfield',
