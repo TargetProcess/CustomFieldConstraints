@@ -1,6 +1,6 @@
 {
   "name": "CustomFieldConstraints",
-  "version": "1.2.0",
+  "version": "1.2.1",
   "description": "This mashup allows a custom field to be required when an entity is moved to a specific state or a specific value is selected in another custom field.",
   "author": "Aliaksei Shytkin <shitkin@targetprocess.com>",
   "scripts": {
