@@ -1,6 +1,6 @@
 import $, {when, Deferred, whenList} from 'jquery';
 import {
-    find, object, flatten, compose, constant, unique, map, last, without, memoize, reject, keys, isString
+    find, object, flatten, compose, constant, unique, map, last, without, memoize, reject, keys, isString, some
 } from 'underscore';
 
 import {addBusListener} from 'targetprocess-mashup-helper/lib/events';
@@ -48,6 +48,27 @@ const createTemplateItemFromCustomField = (customField) => ({
     }
 });
 
+const getCustomFieldProcessId = (customField) => customField.process ? customField.process.id : null;
+
+const isTemplateForCustomField = (customField, template) => {
+
+    const projectTemplate = find(template.items, (item) => item.id === 'Project');
+    const processId = String(getCustomFieldProcessId(customField));
+
+    return !projectTemplate ||
+        some(projectTemplate.options.values, (project) => project.processId === processId);
+
+};
+
+const getCustomFieldTemplate = (customField, types) => {
+
+    const typeOrTypes = types[customField.entityType.name];
+
+    return typeOrTypes.template ||
+        find(map(typeOrTypes, (type) => type.template), (template) => isTemplateForCustomField(customField, template));
+
+};
+
 const events = ['afterInit:last', 'before_dataBind'];
 
 const onDataBind = (componentBusName, cb) =>
@@ -69,7 +90,8 @@ const onDataBind = (componentBusName, cb) =>
             customFields.forEach((v) => {
 
                 const injectedItem = createTemplateItemFromCustomField(v);
-                let existingItems = bindData.types[v.entityType.name].template.items;
+                const template = getCustomFieldTemplate(v, bindData.types);
+                let existingItems = template.items;
 
                 existingItems = reject(existingItems, (existingItem) =>
                     existingItem.type === 'CustomField' &&
@@ -78,7 +100,7 @@ const onDataBind = (componentBusName, cb) =>
 
                 existingItems = existingItems.concat(injectedItem);
 
-                bindData.types[v.entityType.name].template.items = existingItems;
+                template.items = existingItems;
 
             });
             e.before_dataBind.resumeMain();
@@ -96,19 +118,30 @@ const getSliceDefinition = ({config}) =>
 const getTargetValue = ({config}, axisName) =>
     decodeSliceValue(config.options.action ? config.options.action[axisName] : last(config.options.path));
 
+const makeEntityType = (type) => ({
+    name: type.name, title: type.title
+});
+
+const getEntityTypeOrTypes = (typeData, selector) => {
+
+    const entityType = selector(typeData);
+
+    return entityType ? [makeEntityType(entityType)] : map(typeData, (type) => makeEntityType(selector(type)));
+
+};
+
+const convertEntityTypes = (types, selector) =>
+    flatten(map(types, (v) => getEntityTypeOrTypes(v, selector)));
+
 const getEntityTypes = (initData, bindData) => {
 
     if (bindData.types) {
 
-        return map(bindData.types, (v) => ({
-            name: v.entityType.name
-        }));
+        return convertEntityTypes(bindData.types, (v) => v.entityType);
 
     } else if (initData.addAction) {
 
-        return initData.addAction.data.types.map((v) => ({
-            name: v.name
-        }));
+        return convertEntityTypes(initData.addAction.data.types, (v) => ({name: v.name}));
 
     } else {
 
@@ -116,9 +149,7 @@ const getEntityTypes = (initData, bindData) => {
 
         if (sliceDefinition) {
 
-            return sliceDefinition.cells.types.map((v) => ({
-                name: v.type
-            }));
+            return convertEntityTypes(sliceDefinition.cells.types, (v) => ({name: v.type}));
 
         }
 
@@ -242,8 +273,20 @@ const applyActualCustomFields = ($el, allCustomFields, actualCustomFields) => {
 const collectValues = ($el, customFields) =>
     object(customFields.map((v) => [v.name, findCustomFieldElByName($el, v.name, v.process ? v.process.id : null).val()]));
 
+// TODO(anybody): Remove old after all users switch to TP > 3.9.0. Even better, add mashup versioning.
+const oldIsSameEntityType = (v, entityType) => equalIgnoreCase($(v).data('type'), entityType.name);
+const isSameEntityType = (v, entityType) => {
+
+    const $v = $(v);
+
+    return equalIgnoreCase($v.data('type-name'), entityType.name) &&
+        equalIgnoreCase($v.data('type-title'), entityType.title);
+
+};
+
 const findFormByEntityType = ($el, entityType) =>
-    $($el.find('.tau-control-set').toArray().filter((v) => equalIgnoreCase($(v).data('type'), entityType.name)));
+    $($el.find('.tau-control-set').toArray().filter((v) =>
+        oldIsSameEntityType(v, entityType) || isSameEntityType(v, entityType)));
 
 const onCustomFieldsChange = ($el, customFields, handler) =>
     customFields.map((v) =>
@@ -370,8 +413,15 @@ const applyToComponent = (config, {busName}) =>
 
                 return def.promise();
 
-            }))
-            .then((...args) => next(flatten(args))))
+            })))
+        .then((...args) => {
+
+            const nonUniqueCustomFields = flatten(args);
+            const customFields = unique(nonUniqueCustomFields, (customField) => customField.id);
+
+            return next(customFields);
+
+        })
         .fail(() => next());
 
     });

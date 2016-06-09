@@ -35,7 +35,7 @@ const decodeBase64 = function(s) {
 
 export default (value) => {
 
-    if (value.indexOf('b64_') !== 0) return value;
+    if (!value || value.indexOf('b64_') !== 0) return value;
 
     var encoded = value;
     encoded = encoded.replace(/_0/g, '+');
