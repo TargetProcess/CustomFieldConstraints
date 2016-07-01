@@ -247,7 +247,7 @@ const findFormByEntityType = ($el, entityType) =>
 
 const onCustomFieldsChange = ($el, customFields, handler) =>
     customFields.map((v) =>
-        findCustomFieldElByName($el, v.name).on('change, input', compose(handler, constant(void 0))));
+        findCustomFieldElByName($el, v.name).on('change input', compose(handler, constant(void 0))));
 
 const getProjectValue = ($el) => {
 
@@ -288,7 +288,7 @@ const getActiveProcess = ($el, axes) => {
 };
 
 const onProcessChange = ($el, axes, handler) =>
-    $el.find('.project').on('change, input', () => {
+    $el.find('.project').on('change input', () => {
 
         setTimeout(() =>
             when(getActiveProcess($el, axes))
