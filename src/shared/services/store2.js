@@ -29,8 +29,7 @@ var load = function(resource, params) {
 
         return request('get', url, params)
             .then(function(res) {
-                var items = res.items;
-                return items;
+                return res.items;
             });
     };
 
@@ -60,7 +59,7 @@ var processResult = function(result) {
 var processOpts = function(options) {
 
     return options;
-}
+};
 
 module.exports = {
 

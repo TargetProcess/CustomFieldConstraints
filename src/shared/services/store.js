@@ -104,7 +104,7 @@ var processOpts = function(options = {}, defaultOpts = {take: 1000}) {
     }
 
     return opts;
-}
+};
 
 module.exports = {
 
