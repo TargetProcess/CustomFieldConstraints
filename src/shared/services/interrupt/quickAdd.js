@@ -1,6 +1,7 @@
 import $, {when, Deferred, whenList} from 'jquery';
 import {
-    find, object, flatten, compose, constant, unique, map, last, without, memoize, reject, keys, isString, some
+    find, findLastIndex, object, flatten, compose, constant, unique,
+    map, last, without, memoize, reject, keys, isString, some
 } from 'underscore';
 
 import {addBusListener} from 'targetprocess-mashup-helper/lib/events';
@@ -75,6 +76,22 @@ const getCustomFieldTemplate = (customField, types) => {
 
 const events = ['afterInit:last', 'before_dataBind'];
 
+const injectCustomFieldTemplateItem = (items, injectedItem) => {
+
+    const updatedItems = reject(items, (item) =>
+        item.type === 'CustomField' &&
+        item.caption === injectedItem.caption &&
+        item.processId === injectedItem.processId);
+    const relationsItemIndex = findLastIndex(updatedItems, (item) =>
+        item.id === 'SlaveRelations:RelationType' || item.id === 'MasterRelations:RelationType');
+    const injectedItemIndex = relationsItemIndex === -1 ? updatedItems.length : relationsItemIndex;
+
+    updatedItems.splice(injectedItemIndex, 0, injectedItem);
+
+    return updatedItems;
+
+};
+
 const onDataBind = (componentBusName, cb) =>
     addBusListener(componentBusName, events.join(' + '), (e) => {
 
@@ -95,16 +112,8 @@ const onDataBind = (componentBusName, cb) =>
 
                 const injectedItem = createTemplateItemFromCustomField(v);
                 const template = getCustomFieldTemplate(v, bindData.types);
-                let existingItems = template.items;
 
-                existingItems = reject(existingItems, (existingItem) =>
-                    existingItem.type === 'CustomField' &&
-                    existingItem.caption === injectedItem.caption &&
-                    existingItem.processId === injectedItem.processId);
-
-                existingItems = existingItems.concat(injectedItem);
-
-                template.items = existingItems;
+                template.items = injectCustomFieldTemplateItem(template.items, injectedItem);
 
             });
             e.before_dataBind.resumeMain();
