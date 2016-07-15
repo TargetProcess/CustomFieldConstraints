@@ -1,11 +1,11 @@
-// TODO(anybody): Remove V121 after all users switch to TP > 3.9.0. Even better, add mashup versioning.
+// TODO(anybody): Remove V121 after all users switch to TP > 3.9.2. Even better, add mashup versioning.
 
 import $, {when} from 'jquery';
-import {isFunction, flatten, map} from 'underscore';
+import {isFunction, flatten, map, some} from 'underscore';
 
 const appConfigurator = require('tau/configurator');
 
-import busNames from 'services/busNames';
+import {isGlobalOrRelationsBus} from 'services/busNames';
 import {equalIgnoreCase} from 'utils';
 
 const isApiVersionLessOrEqualV121 = !isFunction(appConfigurator.getSliceFactory().create().cellActionsV3);
@@ -93,8 +93,20 @@ const getStoredAcid = (configurator) => {
 
 const getGlobalAcid = () => when({acid: null}).promise();
 
-const needGlobalAcid = (busName) =>
-    busName === busNames.TOP_LEFT_ADD_BUTTON_COMPONENT_BUS_NAME && !isApiVersionLessOrEqualV121;
+const isProjectsSlice = (sliceDefinition) =>
+    sliceDefinition && some(sliceDefinition.cells.types, (t) => equalIgnoreCase(t.type, 'project'));
 
-export const getAcid = (configurator, busName) =>
-    needGlobalAcid(busName) ? getGlobalAcid() : getStoredAcid(configurator);
+// Global and relations quick adds do not depend on context (↑V122). Also, projects slice is not depend on context.
+const needGlobalAcid = (busName, sliceDefinition) =>
+    isProjectsSlice(sliceDefinition) || (isGlobalOrRelationsBus(busName) && !isApiVersionLessOrEqualV121);
+
+export const getAcid = (configurator, busName, sliceDefinition) =>
+    needGlobalAcid(busName, sliceDefinition) ? getGlobalAcid() : getStoredAcid(configurator);
+
+// Global and relations quick adds do not depend on axes.
+const shouldIgnoreAxesV122 = (busName) => isGlobalOrRelationsBus(busName);
+
+const shouldIgnoreAxesV121 = (/* busName */) => false;
+
+export const shouldIgnoreAxes = !isApiVersionLessOrEqualV121 ?
+    shouldIgnoreAxesV122 : shouldIgnoreAxesV121;

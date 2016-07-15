@@ -1,4 +1,4 @@
-export default {
+export const busNames = {
 
     TOP_LEFT_ADD_BUTTON_COMPONENT_BUS_NAME: 'board plus quick add general',
 
@@ -13,3 +13,8 @@ export default {
     RELATIONS_SLAVE_TAB_COMPONENT_BUS_NAME: 'relations-quick-add-general-slave'
 
 };
+
+export const isGlobalOrRelationsBus = (busName) =>
+    busName === busNames.TOP_LEFT_ADD_BUTTON_COMPONENT_BUS_NAME ||
+    busName === busNames.RELATIONS_MASTER_TAB_COMPONENT_BUS_NAME ||
+    busName === busNames.RELATIONS_SLAVE_TAB_COMPONENT_BUS_NAME;

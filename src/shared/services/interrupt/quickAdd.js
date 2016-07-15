@@ -7,20 +7,15 @@ import {
 import {addBusListener} from 'targetprocess-mashup-helper/lib/events';
 
 import {
-    isSameEntityType, getAcid, getEntityTypes, getSliceDefinition
+    isSameEntityType, getAcid, getEntityTypes, getSliceDefinition, shouldIgnoreAxes
 } from 'services/apiCompatibility';
 import decodeSliceValue from 'utils/decodeSliceValue';
 import {inValues, equalIgnoreCase, isAssignable, SLICE_CUSTOMFIELD_PREFIX} from 'utils';
-import busNames from 'services/busNames';
+import {busNames} from 'services/busNames';
 
 import store from 'services/store';
 
 import {getCustomFieldsForAxes} from 'services/axes';
-
-const loadProject = memoize((projectId) =>
-    store.get('Projects', projectId, {
-        include: ['Process']
-    }));
 
 const onRender = (configurator, componentBusName, cb) => {
 
@@ -128,24 +123,26 @@ const onDataBind = (componentBusName, cb) =>
 const getTargetValue = ({config}, axisName) =>
     decodeSliceValue(config.options.action ? config.options.action[axisName] : last(config.options.path));
 
-const getAxes = (initData, entityType) => {
+const removeUnknownAxes = (axes) => reject(axes, (axis) => axis.targetValue === void 0);
 
-    const defaultAssignableAxes = [{
-        type: 'entitystate',
-        targetValue: '_Initial'
-    }];
+const useDefaultAxis = ({entityType}) =>
+    isAssignable({entityType}) ||
+    equalIgnoreCase(entityType.name, 'impediment') ||
+    equalIgnoreCase(entityType.name, 'project');
+
+const getCustomAxes = (initData) => {
 
     const sliceDefinition = getSliceDefinition(initData);
 
-    const axes = ['x', 'y'].reduce((res, axisName) => {
+    return ['x', 'y'].reduce((res, axisName) => {
 
         const axisDefinition = sliceDefinition ? sliceDefinition[axisName] : null;
 
-        // for axis quick add we can't determine state, since slice has no info about
-        if (!axisDefinition || initData.config.options.viewMode === 'axis') return res;
+        if (!axisDefinition) return res;
 
         const axisTypes = isString(axisDefinition) ? [axisDefinition] : axisDefinition.types;
 
+        // to check entity state is the same as in config.
         if (inValues(axisTypes, 'entitystate')) {
 
             return res.concat({
@@ -160,6 +157,16 @@ const getAxes = (initData, entityType) => {
 
             return res.concat({
                 type: 'project',
+                targetValue: getTargetValue(initData, axisName)
+            });
+
+        }
+
+        // to get process if one of axis is process.
+        if (inValues(axisTypes, 'process')) {
+
+            return res.concat({
+                type: 'process',
                 targetValue: getTargetValue(initData, axisName)
             });
 
@@ -181,9 +188,20 @@ const getAxes = (initData, entityType) => {
 
     }, []);
 
-    if (isAssignable({entityType}) || equalIgnoreCase(entityType.name, 'impediment')) {
+};
 
-        return unique(axes.concat(defaultAssignableAxes), (v) => v.type);
+const getAxes = (busName, initData, entityType) => {
+
+    const defaultAxes = [{
+        type: 'entitystate',
+        targetValue: '_Initial'
+    }];
+
+    const axes = shouldIgnoreAxes(busName) ? [] : removeUnknownAxes(getCustomAxes(initData));
+
+    if (useDefaultAxis({entityType})) {
+
+        return unique(axes.concat(defaultAxes), (v) => v.type);
 
     }
     else return axes;
@@ -201,9 +219,11 @@ const getApplicationContext = (configurator, params) => {
 
 };
 
-const getProcesses = (configurator, busName) => {
+const getProcesses = (configurator, busName, initData) => {
 
-    return getAcid(configurator, busName)
+    const sliceDefinition = getSliceDefinition(initData);
+
+    return getAcid(configurator, busName, sliceDefinition)
         .then(({acid}) => getApplicationContext(configurator, {acid}))
         .then(({processes}) => processes);
 
@@ -250,9 +270,9 @@ const onCustomFieldsChange = ($el, customFields, handler) =>
     customFields.map((v) =>
         findCustomFieldElByName($el, v.name).on('change input', compose(handler, constant(void 0))));
 
-const getProjectValue = ($el) => {
+const getSelectValue = ($el, selector) => {
 
-    const $select = $el.find('.project');
+    const $select = $el.find(selector);
 
     if (!$select.length) return null;
 
@@ -260,36 +280,81 @@ const getProjectValue = ($el) => {
 
 };
 
-const getProjectAxis = (axes) => find(axes, (v) => v.type === 'project');
+const getProcessValue = ($el) => {
+
+    return getSelectValue($el, '.process');
+
+};
+
+const getProjectValue = ($el) => {
+
+    return getSelectValue($el, '.project');
+
+};
+
+const getAxis = (axes, axisType) => find(axes, (v) => v.type === axisType);
+
+const loadProject = memoize((projectId) =>
+    store.get('Projects', projectId, {
+        include: ['Process']
+    }));
 
 const loadProcessByProject = (projectId) =>
     when(loadProject(projectId))
         .then((project) => project.process)
         .fail(() => null);
 
+const loadProcess = memoize((processId) =>
+    store.get('Processes', processId, {}));
+
+const loadProcessDirect = (processId) =>
+    when(loadProcess(processId))
+        .then((process) => process)
+        .fail(() => null);
+
+const getProcessByAxis = (axes, {type, loader}) => {
+
+    const axis = getAxis(axes, type);
+
+    if (!axis) return null;
+
+    const axisValue = axis.targetValue;
+
+    return loader(axisValue);
+
+};
+
 const getProcessByProjectAxis = (axes) => {
 
-    const projectAxis = getProjectAxis(axes);
+    return getProcessByAxis(axes, {type: 'project', loader: loadProcessByProject});
 
-    if (!projectAxis) return null;
+};
 
-    const projectId = projectAxis.targetValue;
+const getProcessByProcessAxis = (axes) => {
 
-    return loadProcessByProject(projectId);
+    return getProcessByAxis(axes, {type: 'process', loader: loadProcessDirect});
 
 };
 
 const getActiveProcess = ($el, axes) => {
 
+    const processId = getProcessValue($el);
+
+    if (processId) return loadProcessDirect(processId);
+
+    const promise = getProcessByProcessAxis(axes);
+
+    if (promise) return promise;
+
     const projectId = getProjectValue($el);
 
-    if (!projectId) return getProcessByProjectAxis(axes);
-    else return loadProcessByProject(projectId);
+    if (projectId) return loadProcessByProject(projectId);
+    else return getProcessByProjectAxis(axes);
 
 };
 
 const onProcessChange = ($el, axes, handler) =>
-    $el.find('.project').on('change input', () => {
+    $el.find('.project, .process').on('change input', () => {
 
         setTimeout(() =>
             when(getActiveProcess($el, axes))
@@ -358,13 +423,13 @@ const applyToComponent = (config, {busName}) =>
 
         const entityTypes = getEntityTypes(initData, bindData);
 
-        when(getProcesses(configurator, busName))
+        when(getProcesses(configurator, busName, initData))
         .then((processes) =>
             whenList(entityTypes.map((entityType) => {
 
                 const def = new Deferred();
 
-                const axes = getAxes(initData, entityType);
+                const axes = getAxes(busName, initData, entityType);
 
                 if (axes.length) listenQuickAddComponentBusForEntityType(configurator, busName, config, axes, processes, entityType, def.resolve);
                 else def.resolve([]);
