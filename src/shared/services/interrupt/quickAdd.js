@@ -1,21 +1,21 @@
 import $, {when, Deferred, whenList} from 'jquery';
 import {
-    find, object, flatten, compose, constant, unique, map, last, without, memoize, reject, keys, isString
+    find, findLastIndex, object, flatten, compose, constant, unique,
+    map, last, without, memoize, reject, keys, isString, some
 } from 'underscore';
 
 import {addBusListener} from 'targetprocess-mashup-helper/lib/events';
 
+import {
+    isSameEntityType, getAcid, getEntityTypes, getSliceDefinition, shouldIgnoreAxes
+} from 'services/apiCompatibility';
 import decodeSliceValue from 'utils/decodeSliceValue';
 import {inValues, equalIgnoreCase, isAssignable, SLICE_CUSTOMFIELD_PREFIX} from 'utils';
+import {busNames} from 'services/busNames';
 
 import store from 'services/store';
 
 import {getCustomFieldsForAxes} from 'services/axes';
-
-const loadProject = memoize((projectId) =>
-    store.get('Projects', projectId, {
-        include: ['Process']
-    }));
 
 const onRender = (configurator, componentBusName, cb) => {
 
@@ -48,7 +48,44 @@ const createTemplateItemFromCustomField = (customField) => ({
     }
 });
 
+const getCustomFieldProcessId = (customField) => customField.process ? customField.process.id : null;
+
+const isTemplateForCustomField = (customField, template) => {
+
+    const projectTemplate = find(template.items, (item) => item.id === 'Project');
+    const processId = String(getCustomFieldProcessId(customField));
+
+    return !projectTemplate ||
+        some(projectTemplate.options.values, (project) => project.processId === processId);
+
+};
+
+const getCustomFieldTemplate = (customField, types) => {
+
+    const typeOrTypes = types[customField.entityType.name];
+
+    return typeOrTypes.template ||
+        find(map(typeOrTypes, (type) => type.template), (template) => isTemplateForCustomField(customField, template));
+
+};
+
 const events = ['afterInit:last', 'before_dataBind'];
+
+const injectCustomFieldTemplateItem = (items, injectedItem) => {
+
+    const updatedItems = reject(items, (item) =>
+        item.type === 'CustomField' &&
+        item.caption === injectedItem.caption &&
+        item.processId === injectedItem.processId);
+    const relationsItemIndex = findLastIndex(updatedItems, (item) =>
+        item.id === 'SlaveRelations:RelationType' || item.id === 'MasterRelations:RelationType');
+    const injectedItemIndex = relationsItemIndex === -1 ? updatedItems.length : relationsItemIndex;
+
+    updatedItems.splice(injectedItemIndex, 0, injectedItem);
+
+    return updatedItems;
+
+};
 
 const onDataBind = (componentBusName, cb) =>
     addBusListener(componentBusName, events.join(' + '), (e) => {
@@ -69,16 +106,9 @@ const onDataBind = (componentBusName, cb) =>
             customFields.forEach((v) => {
 
                 const injectedItem = createTemplateItemFromCustomField(v);
-                let existingItems = bindData.types[v.entityType.name].template.items;
+                const template = getCustomFieldTemplate(v, bindData.types);
 
-                existingItems = reject(existingItems, (existingItem) =>
-                    existingItem.type === 'CustomField' &&
-                    existingItem.caption === injectedItem.caption &&
-                    existingItem.processId === injectedItem.processId);
-
-                existingItems = existingItems.concat(injectedItem);
-
-                bindData.types[v.entityType.name].template.items = existingItems;
+                template.items = injectCustomFieldTemplateItem(template.items, injectedItem);
 
             });
             e.before_dataBind.resumeMain();
@@ -90,54 +120,21 @@ const onDataBind = (componentBusName, cb) =>
 
     });
 
-const getSliceDefinition = ({config}) =>
-    (config.options && config.options.slice) ? config.options.slice.config.definition : null;
-
 const getTargetValue = ({config}, axisName) =>
     decodeSliceValue(config.options.action ? config.options.action[axisName] : last(config.options.path));
 
-const getEntityTypes = (initData, bindData) => {
+const removeUnknownAxes = (axes) => reject(axes, (axis) => axis.targetValue === void 0);
 
-    if (bindData.types) {
+const useDefaultAxis = ({entityType}) =>
+    isAssignable({entityType}) ||
+    equalIgnoreCase(entityType.name, 'impediment') ||
+    equalIgnoreCase(entityType.name, 'project');
 
-        return map(bindData.types, (v) => ({
-            name: v.entityType.name
-        }));
-
-    } else if (initData.addAction) {
-
-        return initData.addAction.data.types.map((v) => ({
-            name: v.name
-        }));
-
-    } else {
-
-        const sliceDefinition = getSliceDefinition(initData);
-
-        if (sliceDefinition) {
-
-            return sliceDefinition.cells.types.map((v) => ({
-                name: v.type
-            }));
-
-        }
-
-    }
-
-    return [];
-
-};
-
-const getAxes = (initData, entityType) => {
-
-    const defaultAssignableAxes = [{
-        type: 'entitystate',
-        targetValue: '_Initial'
-    }];
+const getCustomAxes = (initData) => {
 
     const sliceDefinition = getSliceDefinition(initData);
 
-    const axes = ['x', 'y'].reduce((res, axisName) => {
+    return ['x', 'y'].reduce((res, axisName) => {
 
         const axisDefinition = sliceDefinition ? sliceDefinition[axisName] : null;
 
@@ -145,6 +142,7 @@ const getAxes = (initData, entityType) => {
 
         const axisTypes = isString(axisDefinition) ? [axisDefinition] : axisDefinition.types;
 
+        // to check entity state is the same as in config.
         if (inValues(axisTypes, 'entitystate')) {
 
             return res.concat({
@@ -154,11 +152,21 @@ const getAxes = (initData, entityType) => {
 
         }
 
-        // to get process if one of axis is project
+        // to get process if one of axis is project.
         if (inValues(axisTypes, 'project')) {
 
             return res.concat({
                 type: 'project',
+                targetValue: getTargetValue(initData, axisName)
+            });
+
+        }
+
+        // to get process if one of axis is process.
+        if (inValues(axisTypes, 'process')) {
+
+            return res.concat({
+                type: 'process',
                 targetValue: getTargetValue(initData, axisName)
             });
 
@@ -180,9 +188,20 @@ const getAxes = (initData, entityType) => {
 
     }, []);
 
-    if (isAssignable({entityType}) || equalIgnoreCase(entityType.name, 'impediment')) {
+};
 
-        return unique(axes.concat(defaultAssignableAxes), (v) => v.type);
+const getAxes = (busName, initData, entityType) => {
+
+    const defaultAxes = [{
+        type: 'entitystate',
+        targetValue: '_Initial'
+    }];
+
+    const axes = shouldIgnoreAxes(busName) ? [] : removeUnknownAxes(getCustomAxes(initData));
+
+    if (useDefaultAxis({entityType})) {
+
+        return unique(axes.concat(defaultAxes), (v) => v.type);
 
     }
     else return axes;
@@ -200,11 +219,11 @@ const getApplicationContext = (configurator, params) => {
 
 };
 
-const getProcesses = (configurator) => {
+const getProcesses = (configurator, busName, initData) => {
 
-    const applicationStore = configurator.getAppStateStore();
+    const sliceDefinition = getSliceDefinition(initData);
 
-    return when(applicationStore.get({fields: ['acid']}))
+    return getAcid(configurator, busName, sliceDefinition)
         .then(({acid}) => getApplicationContext(configurator, {acid}))
         .then(({processes}) => processes);
 
@@ -216,18 +235,20 @@ const findCustomFieldElByName = ($el, name, processId) =>
     : $el.find(`[data-iscf=true][data-fieldname="${name}"]`);
 const hideCustomFieldEl = ($cfEl) => {
 
-    $cfEl.parent().removeClass('show');
-    $cfEl.parent().addClass('hide');
-    $cfEl.parent().find('input, select').toArray().forEach((v) =>
+    const $cfParent = $cfEl.parent();
+
+    $cfParent.removeClass('show').addClass('hide');
+    $cfParent.find('input, select').toArray().forEach((v) =>
         $(v).data('validate').rules = without($(v).data('validate').rules, 'required'));
 
 };
 
 const showCustomFieldEl = ($cfEl) => {
 
-    $cfEl.parent().addClass('show');
-    $cfEl.parent().removeClass('hide');
-    $cfEl.parent().find('input, select').toArray().forEach((v) =>
+    const $cfParent = $cfEl.parent();
+
+    $cfParent.addClass('show').removeClass('hide');
+    $cfParent.find('input, select').toArray().forEach((v) =>
         $(v).data('validate').rules = $(v).data('validate').rules.concat('required'));
 
 };
@@ -243,15 +264,15 @@ const collectValues = ($el, customFields) =>
     object(customFields.map((v) => [v.name, findCustomFieldElByName($el, v.name, v.process ? v.process.id : null).val()]));
 
 const findFormByEntityType = ($el, entityType) =>
-    $($el.find('.tau-control-set').toArray().filter((v) => equalIgnoreCase($(v).data('type'), entityType.name)));
+    $($el.find('.tau-control-set').toArray().filter((v) => isSameEntityType(v, entityType)));
 
 const onCustomFieldsChange = ($el, customFields, handler) =>
     customFields.map((v) =>
-        findCustomFieldElByName($el, v.name).on('change, input', compose(handler, constant(void 0))));
+        findCustomFieldElByName($el, v.name).on('change input', compose(handler, constant(void 0))));
 
-const getProjectValue = ($el) => {
+const getSelectValue = ($el, selector) => {
 
-    const $select = $el.find('.project');
+    const $select = $el.find(selector);
 
     if (!$select.length) return null;
 
@@ -259,36 +280,81 @@ const getProjectValue = ($el) => {
 
 };
 
-const getProjectAxis = (axes) => find(axes, (v) => v.type === 'project');
+const getProcessValue = ($el) => {
+
+    return getSelectValue($el, '.process');
+
+};
+
+const getProjectValue = ($el) => {
+
+    return getSelectValue($el, '.project');
+
+};
+
+const getAxis = (axes, axisType) => find(axes, (v) => v.type === axisType);
+
+const loadProject = memoize((projectId) =>
+    store.get('Projects', projectId, {
+        include: ['Process']
+    }));
 
 const loadProcessByProject = (projectId) =>
     when(loadProject(projectId))
         .then((project) => project.process)
         .fail(() => null);
 
+const loadProcess = memoize((processId) =>
+    store.get('Processes', processId, {}));
+
+const loadProcessDirect = (processId) =>
+    when(loadProcess(processId))
+        .then((process) => process)
+        .fail(() => null);
+
+const getProcessByAxis = (axes, {type, loader}) => {
+
+    const axis = getAxis(axes, type);
+
+    if (!axis) return null;
+
+    const axisValue = axis.targetValue;
+
+    return loader(axisValue);
+
+};
+
 const getProcessByProjectAxis = (axes) => {
 
-    const projectAxis = getProjectAxis(axes);
+    return getProcessByAxis(axes, {type: 'project', loader: loadProcessByProject});
 
-    if (!projectAxis) return null;
+};
 
-    const projectId = projectAxis.targetValue;
+const getProcessByProcessAxis = (axes) => {
 
-    return loadProcessByProject(projectId);
+    return getProcessByAxis(axes, {type: 'process', loader: loadProcessDirect});
 
 };
 
 const getActiveProcess = ($el, axes) => {
 
+    const processId = getProcessValue($el);
+
+    if (processId) return loadProcessDirect(processId);
+
+    const promise = getProcessByProcessAxis(axes);
+
+    if (promise) return promise;
+
     const projectId = getProjectValue($el);
 
-    if (!projectId) return getProcessByProjectAxis(axes);
-    else return loadProcessByProject(projectId);
+    if (projectId) return loadProcessByProject(projectId);
+    else return getProcessByProjectAxis(axes);
 
 };
 
 const onProcessChange = ($el, axes, handler) =>
-    $el.find('.project').on('change, input', () => {
+    $el.find('.project, .process').on('change input', () => {
 
         setTimeout(() =>
             when(getActiveProcess($el, axes))
@@ -357,65 +423,65 @@ const applyToComponent = (config, {busName}) =>
 
         const entityTypes = getEntityTypes(initData, bindData);
 
-        when(getProcesses(configurator))
+        when(getProcesses(configurator, busName, initData))
         .then((processes) =>
             whenList(entityTypes.map((entityType) => {
 
                 const def = new Deferred();
 
-                const axes = getAxes(initData, entityType);
+                const axes = getAxes(busName, initData, entityType);
 
                 if (axes.length) listenQuickAddComponentBusForEntityType(configurator, busName, config, axes, processes, entityType, def.resolve);
                 else def.resolve([]);
 
                 return def.promise();
 
-            }))
-            .then((...args) => next(flatten(args))))
+            })))
+        .then((...args) => {
+
+            const nonUniqueCustomFields = flatten(args);
+            const customFields = unique(nonUniqueCustomFields, (customField) => customField.id);
+
+            return next(customFields);
+
+        })
         .fail(() => next());
 
     });
 
 export default (mashupConfig) => {
 
-    const topLeftAddButtonComponentBusName = 'board plus quick add general';
-
-    const viewBoardAndOnebyoneAndTimelineButtonInsideCellComponentBusName = 'board plus quick add cells';
-    const viewBoardAndTimelineButtonInsideAxesComponentBusName = 'board axis quick add';
-
-    const viewListButtonComponentBusName = 'board.cell.quick.add';
-
-    const relationsTabComponentBusName = 'relations-quick-add-general';
-
-    const entityTabsQuickAddBusName = 'entity quick add';
-
     const componentsConfig = [
         {
-            busName: topLeftAddButtonComponentBusName
+            busName: busNames.TOP_LEFT_ADD_BUTTON_COMPONENT_BUS_NAME
         },
         {
-            busName: viewBoardAndOnebyoneAndTimelineButtonInsideCellComponentBusName
+            busName: busNames.VIEWBOARD_AND_ONE_BY_ONE_AND_TIMELINE_BUTTON_INSIDE_CELL_COMPONENT_BUS_NAME
         },
         {
-            busName: viewBoardAndTimelineButtonInsideAxesComponentBusName
-        },
-
-        {
-            busName: viewListButtonComponentBusName
+            busName: busNames.VIEWBOARD_AND_TIMELINE_BUTTON_INSIDE_AXES_COMPONENT_BUS_NAME
         },
 
         {
-            busName: relationsTabComponentBusName
+            busName: busNames.VIEWLIST_BUTTON_COMPONENT_BUS_NAME
+        },
+
+        {
+            busName: busNames.ENTITY_TABS_QUICK_ADD_BUS_NAME
         },
         {
-            busName: entityTabsQuickAddBusName
+            busName: busNames.RELATIONS_MASTER_TAB_COMPONENT_BUS_NAME
+        },
+        {
+            busName: busNames.RELATIONS_SLAVE_TAB_COMPONENT_BUS_NAME
         }
     ];
 
-    componentsConfig.forEach((componentConfig) => {
+    componentsConfig
+        .forEach((componentConfig) => {
 
-        applyToComponent(mashupConfig, componentConfig);
+            applyToComponent(mashupConfig, componentConfig);
 
-    });
+        });
 
 };
