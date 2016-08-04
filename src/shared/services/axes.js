@@ -1,5 +1,5 @@
 import {when, whenList} from 'jquery';
-import {find, flatten, unique, memoize, pluck, partial, omit} from 'underscore';
+import {isObject, find, first, flatten, unique, memoize, pluck, partial, omit, some} from 'underscore';
 
 import {inValues, equalByShortcut, equalIgnoreCase, isGeneral, isAssignable, isStateRelated} from 'utils';
 import store from 'services/store';
@@ -54,36 +54,58 @@ const getRealCustomFields = (customFieldsNames, processId, entityType) => {
 
 };
 
+const getEntityStatesIncludes = () =>
+    [{
+        workflow: ['id']
+    }, {
+        process: ['id']
+    }, {
+        entityType: ['name']
+    }, {
+        parentEntityState: ['id']
+    },
+        'name',
+        'isInitial',
+        'isFinal',
+        'isPlanned', {
+            subEntityStates: [
+                'id',
+                'name', {
+                    workflow: ['id']
+                },
+                'isInitial',
+                'isFinal',
+                'isPlanned'
+            ]
+        }
+    ];
+
+const loadEntityState = memoize((entityStateId) =>
+    store.get('EntityStates', {
+        include: getEntityStatesIncludes(),
+        where: `id eq ${entityStateId}`
+    })
+    .then((entityStates) => first(entityStates))
+    .fail(() => null));
+
 const loadEntityStates = memoize((processId) =>
     store.get('EntityStates', {
-        include: [{
-            workflow: ['id']
-        }, {
-            process: ['id']
-        }, {
-            entityType: ['name']
-        },
-            'name',
-            'isInitial',
-            'isFinal',
-            'isPlanned', {
-                subEntityStates: [
-                    'id',
-                    'name', {
-                        workflow: ['id']
-                    },
-                    'isInitial',
-                    'isFinal',
-                    'isPlanned'
-                ]
-            }
-        ],
-        where: `Process.Id in (${processId})`
+        include: getEntityStatesIncludes(),
+        where: `Workflow.Process.id in (${processId})`
     }));
 
-const matchEntityStateFlat = (valueToMatch, entityType, entityState) =>
-    equalIgnoreCase(entityState.entityType.name, entityType.name) &&
-        (equalIgnoreCase(valueToMatch, entityState.name) || equalByShortcut(valueToMatch, entityState));
+const matchTeamWorkflowEntityStateFlat = (valueToMatch, entityState) =>
+    some(pluck(valueToMatch, 'entityState'), (v) => v && v.id === entityState.id);
+
+const matchEntityStateFlat = (valueToMatch, entityType, entityState) => {
+
+    const isTeamWorkflowEntityState = isObject(valueToMatch);
+
+    return isTeamWorkflowEntityState ?
+        matchTeamWorkflowEntityStateFlat(valueToMatch, entityState) :
+        equalIgnoreCase(valueToMatch, entityState.name) || equalByShortcut(valueToMatch, entityState);
+
+};
 
 const matchEntityStateHeirarchy = (valueToMatch, entityType, entityState) => {
 
@@ -180,6 +202,16 @@ const getRealEntityStateByTeam = (targetValue, processId, entity) => {
 
             return find(entityStates, (v) =>
                 inValues(workflowIds, v.workflow.id) && matchEntityStateHeirarchy(targetValue, entityType, v));
+
+        })
+        .then((entityState) => {
+
+            const parentEntityState = entityState ?
+                entityState.parentEntityState : null;
+
+            // We've configured mashup for parent workflow entity state.
+            return parentEntityState === null ?
+                entityState : loadEntityState(parentEntityState.id);
 
         });
 
