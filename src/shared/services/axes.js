@@ -163,6 +163,16 @@ const loadTeamProjects = memoize((ids) => {
 
 });
 
+const getRootEntityState = (entityState) => {
+
+    const parentEntityState = entityState ?
+        entityState.parentEntityState : null;
+
+    return parentEntityState === null ?
+        entityState : loadEntityState(parentEntityState.id);
+
+};
+
 const getRealEntityStateByTeam = (targetValue, processId, entity) => {
 
     if (targetValue.id) return getRealEntityState(targetValue, processId, entity.entityType);
@@ -170,8 +180,10 @@ const getRealEntityStateByTeam = (targetValue, processId, entity) => {
     if (!isAssignable(entity)) return null;
 
     const entityType = entity.entityType;
+    const canLoadTeamsData = entity.id !== void 0;
 
-    return when(loadEntityStates(processId), loadTeamsData(entity))
+    const entityStatePromise = canLoadTeamsData ?
+        when(loadEntityStates(processId), loadTeamsData(entity))
         .then((entityStates, fullEntity) => {
 
             const teamProjects = fullEntity.project ? fullEntity.project.teamProjects.items : [];
@@ -203,17 +215,10 @@ const getRealEntityStateByTeam = (targetValue, processId, entity) => {
             return find(entityStates, (v) =>
                 inValues(workflowIds, v.workflow.id) && matchEntityStateHeirarchy(targetValue, entityType, v));
 
-        })
-        .then((entityState) => {
+        }) : getRealEntityState(targetValue, processId, entity.entityType);
 
-            const parentEntityState = entityState ?
-                entityState.parentEntityState : null;
-
-            // We've configured mashup for parent workflow entity state.
-            return parentEntityState === null ?
-                entityState : loadEntityState(parentEntityState.id);
-
-        });
+    // Mashup is configured for parent workflow entity state.
+    return entityStatePromise.then((entityState) => getRootEntityState(entityState));
 
 };
 

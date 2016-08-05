@@ -125,7 +125,10 @@ const getTargetValue = ({config}, axisName) =>
 
 const removeUnknownAxes = (axes) => reject(axes, (axis) => axis.targetValue === void 0);
 
-const useDefaultAxis = ({entityType}) =>
+const isTeamEntityStateAxis = (axes) =>
+    some(axes, (a) => a.type === 'teamentitystate');
+
+const useNewEntityStateAxis = ({entityType}) =>
     isAssignable({entityType}) ||
     equalIgnoreCase(entityType.name, 'impediment') ||
     equalIgnoreCase(entityType.name, 'project');
@@ -147,6 +150,16 @@ const getCustomAxes = (initData) => {
 
             return res.concat({
                 type: 'entitystate',
+                targetValue: getTargetValue(initData, axisName)
+            });
+
+        }
+
+        // to check team entity state is the same as in config.
+        if (inValues(axisTypes, 'teamentitystate')) {
+
+            return res.concat({
+                type: 'teamentitystate',
                 targetValue: getTargetValue(initData, axisName)
             });
 
@@ -192,16 +205,16 @@ const getCustomAxes = (initData) => {
 
 const getAxes = (busName, initData, entityType) => {
 
-    const defaultAxes = [{
+    const newEntityStateAxes = [{
         type: 'entitystate',
         targetValue: '_Initial'
     }];
 
     const axes = shouldIgnoreAxes(busName) ? [] : removeUnknownAxes(getCustomAxes(initData));
 
-    if (useDefaultAxis({entityType})) {
+    if (useNewEntityStateAxis({entityType}) && !isTeamEntityStateAxis(axes)) {
 
-        return unique(axes.concat(defaultAxes), (v) => v.type);
+        return unique(axes.concat(newEntityStateAxes), (v) => v.type);
 
     }
     else return axes;
