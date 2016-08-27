@@ -10,7 +10,7 @@ export const equalByShortcut = (shortcut, entityState) => {
         _initial: entityState.isInitial,
         _final: entityState.isFinal,
         _planned: entityState.isPlanned
-    })[lc(shortcut)] || false;
+    })[lc(String(shortcut))] || false;
 
 };
 
