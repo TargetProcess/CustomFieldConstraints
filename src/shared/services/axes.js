@@ -1,5 +1,5 @@
 import {when, whenList} from 'jquery';
-import {isObject, find, first, flatten, unique, memoize, pluck, partial, omit, some} from 'underscore';
+import {isObject, find, flatten, unique, memoize, pluck, partial, omit, some} from 'underscore';
 
 import {inValues, equalByShortcut, equalIgnoreCase, isGeneral, isAssignable, isStateRelated} from 'utils';
 import store from 'services/store';
@@ -54,15 +54,13 @@ const getRealCustomFields = (customFieldsNames, processId, entityType) => {
 
 };
 
-const getEntityStatesIncludes = () =>
+const getDirectEntityStatesIncludes = () =>
     [{
         workflow: ['id']
     }, {
         process: ['id']
     }, {
         entityType: ['name']
-    }, {
-        parentEntityState: ['id']
     },
         'name',
         'isInitial',
@@ -80,19 +78,21 @@ const getEntityStatesIncludes = () =>
         }
     ];
 
-const loadEntityState = memoize((entityStateId) =>
-    store.get('EntityStates', {
-        include: getEntityStatesIncludes(),
-        where: `id eq ${entityStateId}`
-    })
-    .then((entityStates) => first(entityStates))
-    .fail(() => null));
+const getEntityStatesIncludes = (withParent) => {
 
-const loadEntityStates = memoize((processId) =>
+    const includes = getDirectEntityStatesIncludes();
+
+    return !withParent ? includes : includes.concat({
+        parentEntityState: getDirectEntityStatesIncludes()
+    });
+
+};
+
+const loadEntityStates = memoize((processId, withParent) =>
     store.get('EntityStates', {
-        include: getEntityStatesIncludes(),
+        include: getEntityStatesIncludes(withParent),
         where: `Workflow.Process.id in (${processId})`
-    }));
+    }), (processId, withParent) => `${processId}|${withParent}`);
 
 const matchTeamWorkflowEntityStateFlat = (valueToMatch, entityState) =>
     some(pluck(valueToMatch, 'entityState'), (v) => v && v.id === entityState.id);
@@ -169,7 +169,7 @@ const getRootEntityState = (entityState) => {
         entityState.parentEntityState : null;
 
     return parentEntityState === null ?
-        entityState : loadEntityState(parentEntityState.id);
+        entityState : parentEntityState;
 
 };
 
@@ -183,7 +183,7 @@ const getRealEntityStateByTeam = (targetValue, processId, entity) => {
     const canLoadTeamsData = entity.id !== void 0;
 
     const entityStatePromise = canLoadTeamsData ?
-        when(loadEntityStates(processId), loadTeamsData(entity))
+        when(loadEntityStates(processId, true), loadTeamsData(entity))
         .then((entityStates, fullEntity) => {
 
             const teamProjects = fullEntity.project ? fullEntity.project.teamProjects.items : [];
