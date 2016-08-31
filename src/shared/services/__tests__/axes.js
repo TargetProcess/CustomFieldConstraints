@@ -79,12 +79,22 @@ describe('axes', () => {
                         name: 'Open',
                         entityType: {
                             name: 'Bug'
+                        },
+                        workflow: {
+                            process: {
+                                id: 777
+                            }
                         }
                     }, {
                         id: 43,
                         name: 'Open',
                         entityType: {
                             name: 'Bug'
+                        },
+                        workflow: {
+                            process: {
+                                id: 777
+                            }
                         }
                     }]
                 }));
@@ -95,10 +105,12 @@ describe('axes', () => {
                     }]
                 }));
 
-                return getCustomFieldsForAxes(config, axes, processes, entity).then((res) => expect(res)
-                    .to.be.eql([{
-                        name: 'Cf1'
-                    }]));
+                return getCustomFieldsForAxes.preloadEntityStates(processes)
+                    .then(() => getCustomFieldsForAxes(config, axes, processes, entity))
+                    .then((res) => expect(res)
+                        .to.be.eql([{
+                            name: 'Cf1'
+                        }]));
 
             });
 
@@ -114,11 +126,21 @@ describe('axes', () => {
                         name: 'Open',
                         entityType: {
                             name: 'Bug'
+                        },
+                        workflow: {
+                            process: {
+                                id: 777
+                            }
                         }
                     }, {
                         name: 'Open',
                         entityType: {
                             name: 'UserStory'
+                        },
+                        workflow: {
+                            process: {
+                                id: 777
+                            }
                         }
                     }]
                 }));
@@ -129,10 +151,12 @@ describe('axes', () => {
                     }]
                 }));
 
-                return getCustomFieldsForAxes(config, axes, processes, entity).then((res) => expect(res)
-                    .to.be.eql([{
-                        name: 'Cf1'
-                    }]));
+                return getCustomFieldsForAxes.preloadEntityStates(processes)
+                    .then(() => getCustomFieldsForAxes(config, axes, processes, entity))
+                    .then((res) => expect(res)
+                        .to.be.eql([{
+                            name: 'Cf1'
+                        }]));
 
             });
 
@@ -149,6 +173,11 @@ describe('axes', () => {
                         isFinal: true,
                         entityType: {
                             name: 'Bug'
+                        },
+                        workflow: {
+                            process: {
+                                id: 777
+                            }
                         }
                     }]
                 }));
@@ -159,10 +188,12 @@ describe('axes', () => {
                     }]
                 }));
 
-                return getCustomFieldsForAxes(config, axes, processes, entity).then((res) => expect(res)
-                    .to.be.eql([{
-                        name: 'Cf1'
-                    }]));
+                return getCustomFieldsForAxes.preloadEntityStates(processes)
+                    .then(() => getCustomFieldsForAxes(config, axes, processes, entity))
+                    .then((res) => expect(res)
+                        .to.be.eql([{
+                            name: 'Cf1'
+                        }]));
 
             });
 
@@ -178,6 +209,11 @@ describe('axes', () => {
                         name: 'Open',
                         entityType: {
                             name: 'Bug'
+                        },
+                        workflow: {
+                            process: {
+                                id: 777
+                            }
                         }
                     }]
                 }));
@@ -188,12 +224,14 @@ describe('axes', () => {
                     }]
                 }));
 
-                return getCustomFieldsForAxes(config, axes, processes, entity).then((res) => {
+                return getCustomFieldsForAxes.preloadEntityStates(processes)
+                    .then(() => getCustomFieldsForAxes(config, axes, processes, entity))
+                    .then((res) => {
 
-                    expect(res).to.be.eql([]);
-                    expect($ajax).to.be.calledOnce;
+                        expect(res).to.be.eql([]);
+                        expect($ajax).to.be.calledOnce;
 
-                });
+                    });
 
             });
 
@@ -322,6 +360,11 @@ describe('axes', () => {
                         name: 'Open',
                         entityType: {
                             name: 'Bug'
+                        },
+                        workflow: {
+                            process: {
+                                id: 777
+                            }
                         }
                     }]
                 }));
@@ -338,14 +381,16 @@ describe('axes', () => {
                     }]
                 }));
 
-                return getCustomFieldsForAxes(config, axes, processes, entity).then((res) => expect(res)
-                    .to.be.eql([{
-                        name: 'Cf0'
-                    }, {
-                        name: 'Cf2'
-                    }, {
-                        name: 'Cf3'
-                    }]));
+                return getCustomFieldsForAxes.preloadEntityStates(processes)
+                    .then(() => getCustomFieldsForAxes(config, axes, processes, entity))
+                    .then((res) => expect(res)
+                        .to.be.eql([{
+                            name: 'Cf0'
+                        }, {
+                            name: 'Cf2'
+                        }, {
+                            name: 'Cf3'
+                        }]));
 
             });
 

@@ -4,9 +4,9 @@ import {when} from 'jquery';
 
 import Overlay from 'components/Overlay';
 import store from 'services/store';
-import store2 from 'services/store2';
 
 import {getCustomFieldsForAxes} from 'services/axes';
+import {getCustomFields} from 'services/loaders';
 
 import {isUser, isGeneral, isAssignable, isRequester, equalIgnoreCase} from 'utils';
 
@@ -15,12 +15,6 @@ import FormComponent from './Form';
 import CustomField from 'services/CustomField';
 import * as CustomFieldValue from 'services/CustomFieldValue';
 import Form from 'services/Form';
-
-const getCustomFieldsByEntity = (processId, entity) => store2.get('CustomField', {
-    take: 1000,
-    where: `process.id == ${processId || 'null'} and entityType.name == "${entity.entityType.name}"`,
-    select: 'new(required, name, id, config, fieldType, value, entityType, process)'
-});
 
 const loadFullEntity = (entity) => {
 
@@ -177,8 +171,9 @@ export default class FormContainer extends React.Component {
         .then((fullEntity) => {
 
             const process = getProcess(fullEntity);
+            const entityStates = getCustomFieldsForAxes.preloadEntityStates([process]);
 
-            return when(getCustomFieldsByEntity(process.id, fullEntity), fullEntity, process);
+            return when(getCustomFields(process.id, fullEntity.entityType), fullEntity, process, entityStates);
 
         })
         .then((serverCustomFields, fullEntity, process) => {

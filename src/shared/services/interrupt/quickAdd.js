@@ -6,15 +6,14 @@ import {
 
 import {addBusListener} from 'targetprocess-mashup-helper/lib/events';
 
+import decodeSliceValue from 'utils/decodeSliceValue';
+import {inValues, equalIgnoreCase, isAssignable, SLICE_CUSTOMFIELD_PREFIX} from 'utils';
+
 import {
     isSameEntityType, getAcid, getEntityTypes, getSliceDefinition, shouldIgnoreAxes
 } from 'services/apiCompatibility';
-import decodeSliceValue from 'utils/decodeSliceValue';
-import {inValues, equalIgnoreCase, isAssignable, SLICE_CUSTOMFIELD_PREFIX} from 'utils';
 import {busNames} from 'services/busNames';
-
 import store from 'services/store';
-
 import {getCustomFieldsForAxes} from 'services/axes';
 
 const onRender = (configurator, componentBusName, cb) => {
@@ -246,6 +245,7 @@ const findCustomFieldElByName = ($el, name, processId) =>
     processId
     ? $el.find(`.cf-process_${processId} > [data-iscf=true][data-fieldname="${name}"]`)
     : $el.find(`[data-iscf=true][data-fieldname="${name}"]`);
+
 const hideCustomFieldEl = ($cfEl) => {
 
     const $cfParent = $cfEl.parent();
@@ -355,9 +355,9 @@ const getActiveProcess = ($el, axes) => {
 
     if (processId) return loadProcessDirect(processId);
 
-    const promise = getProcessByProcessAxis(axes);
+    const process = getProcessByProcessAxis(axes);
 
-    if (promise) return promise;
+    if (process) return process;
 
     const projectId = getProjectValue($el);
 
@@ -437,6 +437,8 @@ const applyToComponent = (config, {busName}) =>
         const entityTypes = getEntityTypes(initData, bindData);
 
         when(getProcesses(configurator, busName, initData))
+        .then((processes) =>
+            when(processes, getCustomFieldsForAxes.preloadEntityStates(processes)))
         .then((processes) =>
             whenList(entityTypes.map((entityType) => {
 

@@ -1,9 +1,15 @@
 import {when, whenList} from 'jquery';
-import {isObject, find, flatten, unique, memoize, pluck, partial, omit, some} from 'underscore';
+import {isObject, find, flatten, unique, pluck, partial, omit, some} from 'underscore';
 
-import {inValues, equalByShortcut, equalIgnoreCase, isGeneral, isAssignable, isStateRelated} from 'utils';
-import store from 'services/store';
-import store2 from 'services/store2';
+import {inValues, equalByShortcut, equalIgnoreCase, isAssignable, isStateRelated} from 'utils';
+import {
+    loadCustomFields,
+    preloadEntityStates,
+    loadEntityStates,
+    loadTeamsData,
+    loadTeamProjects,
+    resetLoadersCache
+} from 'services/loaders';
 import {
     getCustomFieldsNamesForNewState,
     getCustomFieldsNamesForChangedCustomFields,
@@ -19,32 +25,6 @@ const findInRealCustomFields = (customFieldsNames, realCustomFields) =>
 
     }, []);
 
-const loadCustomFields = memoize((processId, entityType) => {
-
-    let fields;
-
-    if (isGeneral({entityType})) {
-
-        fields = store2.get('CustomField', {
-            take: 1000,
-            where: `process.id == ${processId} and entityType.name == "${entityType.name}"`,
-            select: 'new(required, name, id, config, fieldType, value, entityType, process)'
-        });
-
-    } else {
-
-        fields = store2.get('CustomField', {
-            take: 1000,
-            where: `process.id == null and entityType.name == "${entityType.name}"`,
-            select: 'new(required, name, id, config, fieldType, value, entityType, process)'
-        });
-
-    }
-
-    return fields.then((items) => items.filter((v) => v.config ? !v.config.calculationModel : true));
-
-}, (processId, entityType) => processId + entityType.name);
-
 const getRealCustomFields = (customFieldsNames, processId, entityType) => {
 
     if (!customFieldsNames.length) return [];
@@ -53,46 +33,6 @@ const getRealCustomFields = (customFieldsNames, processId, entityType) => {
     .then((realCustomFields) => findInRealCustomFields(customFieldsNames, realCustomFields));
 
 };
-
-const getDirectEntityStatesIncludes = () =>
-    [{
-        workflow: ['id']
-    }, {
-        process: ['id']
-    }, {
-        entityType: ['name']
-    },
-        'name',
-        'isInitial',
-        'isFinal',
-        'isPlanned', {
-            subEntityStates: [
-                'id',
-                'name', {
-                    workflow: ['id']
-                },
-                'isInitial',
-                'isFinal',
-                'isPlanned'
-            ]
-        }
-    ];
-
-const getEntityStatesIncludes = (withParent) => {
-
-    const includes = getDirectEntityStatesIncludes();
-
-    return !withParent ? includes : includes.concat({
-        parentEntityState: getDirectEntityStatesIncludes()
-    });
-
-};
-
-const loadEntityStates = memoize((processId, withParent) =>
-    store.get('EntityStates', {
-        include: getEntityStatesIncludes(withParent),
-        where: `Workflow.Process.id in (${processId})`
-    }), (processId, withParent) => `${processId}|${withParent}`);
 
 const matchTeamWorkflowEntityStateFlat = (valueToMatch, entityState) =>
     some(pluck(valueToMatch, 'entityState'), (v) => v && v.id === entityState.id);
@@ -115,54 +55,7 @@ const matchEntityStateHeirarchy = (valueToMatch, entityType, entityState) => {
 
 };
 
-const getRealEntityState = (targetValue, processId, entityType) =>
-    when(loadEntityStates(processId))
-    .then((items) =>
-        targetValue.id ?
-        find(items, (v) => v.id === targetValue.id) :
-        find(items, (v) => matchEntityStateFlat(targetValue, entityType, v)));
-
-const getRealCustomField = (customFieldName, processId, entityType) =>
-    when(getRealCustomFields([customFieldName], processId, entityType))
-        .then((items) => items.length ? items[0] : null);
-
-const loadTeamsData = memoize((entity) =>
-    store.get(entity.entityType.name, entity.id, {
-        include: [{
-            project: {
-                process: ['id'],
-                teamProjects: ['id']
-            },
-            assignedTeams: [
-                'id',
-                {
-                    team: ['id']
-                }
-            ]
-        }]
-    }), (entity) => entity.entityType.name + entity.id);
-
-const loadTeamProjects = memoize((ids) => {
-
-    if (!ids.length) return [];
-
-    return store.get('TeamProjects', {
-        include: [{
-            team: ['id']
-        }, {
-            project: ['id']
-        }, {
-            workflows: ['id', 'name', {
-                entityType: ['name']
-            }, {
-                parentWorkflow: ['id']
-            }]
-        }],
-        where: `id in (${ids.join(',')})`
-    });
-
-});
-
+// Mashup is configured for parent workflow entity state.
 const getRootEntityState = (entityState) => {
 
     const parentEntityState = entityState ?
@@ -173,6 +66,17 @@ const getRootEntityState = (entityState) => {
 
 };
 
+const getRealEntityState = (targetValue, processId, entityType) =>
+    when(loadEntityStates(processId))
+    .then((items) =>
+        targetValue.id ?
+        find(items, (v) => v.id === targetValue.id) :
+        getRootEntityState(find(items, (v) => matchEntityStateFlat(targetValue, entityType, v))));
+
+const getRealCustomField = (customFieldName, processId, entityType) =>
+    when(getRealCustomFields([customFieldName], processId, entityType))
+        .then((items) => items.length ? items[0] : null);
+
 const getRealEntityStateByTeam = (targetValue, processId, entity) => {
 
     if (targetValue.id) return getRealEntityState(targetValue, processId, entity.entityType);
@@ -182,8 +86,8 @@ const getRealEntityStateByTeam = (targetValue, processId, entity) => {
     const entityType = entity.entityType;
     const canLoadTeamsData = entity.id !== void 0;
 
-    const entityStatePromise = canLoadTeamsData ?
-        when(loadEntityStates(processId, true), loadTeamsData(entity))
+    return canLoadTeamsData ?
+        when(loadEntityStates(processId), loadTeamsData(entity))
         .then((entityStates, fullEntity) => {
 
             const teamProjects = fullEntity.project ? fullEntity.project.teamProjects.items : [];
@@ -211,14 +115,12 @@ const getRealEntityStateByTeam = (targetValue, processId, entity) => {
             }, []);
 
             const workflowIds = pluck(workflows, 'id');
-
-            return find(entityStates, (v) =>
+            const entityState = find(entityStates, (v) =>
                 inValues(workflowIds, v.workflow.id) && matchEntityStateHeirarchy(targetValue, entityType, v));
 
-        }) : getRealEntityState(targetValue, processId, entity.entityType);
+            return getRootEntityState(entityState);
 
-    // Mashup is configured for parent workflow entity state.
-    return entityStatePromise.then((entityState) => getRootEntityState(entityState));
+        }) : getRealEntityState(targetValue, processId, entity.entityType);
 
 };
 
@@ -317,11 +219,6 @@ export const getCustomFieldsForAxes = (config, axes, processes, entity, values =
 
         });
 
-getCustomFieldsForAxes.resetCache = () => {
+getCustomFieldsForAxes.resetCache = () => resetLoadersCache();
 
-    loadCustomFields.cache = [];
-    loadEntityStates.cache = [];
-    loadTeamsData.cache = [];
-    loadTeamProjects.cache = [];
-
-};
+getCustomFieldsForAxes.preloadEntityStates = (processes) => preloadEntityStates(processes);
