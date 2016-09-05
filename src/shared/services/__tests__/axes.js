@@ -101,7 +101,8 @@ describe('axes', () => {
 
                 $ajax.onCall(1).returns(when({
                     items: [{
-                        name: 'Cf1'
+                        name: 'Cf1',
+                        id: 1
                     }]
                 }));
 
@@ -109,7 +110,8 @@ describe('axes', () => {
                     .then(() => getCustomFieldsForAxes(config, axes, processes, entity))
                     .then((res) => expect(res)
                         .to.be.eql([{
-                            name: 'Cf1'
+                            name: 'Cf1',
+                            id: 1
                         }]));
 
             });
@@ -147,7 +149,8 @@ describe('axes', () => {
 
                 $ajax.onCall(1).returns(when({
                     items: [{
-                        name: 'Cf1'
+                        name: 'Cf1',
+                        id: 1
                     }]
                 }));
 
@@ -155,7 +158,8 @@ describe('axes', () => {
                     .then(() => getCustomFieldsForAxes(config, axes, processes, entity))
                     .then((res) => expect(res)
                         .to.be.eql([{
-                            name: 'Cf1'
+                            name: 'Cf1',
+                            id: 1
                         }]));
 
             });
@@ -184,7 +188,8 @@ describe('axes', () => {
 
                 $ajax.onCall(1).returns(when({
                     items: [{
-                        name: 'Cf1'
+                        name: 'Cf1',
+                        id: 1
                     }]
                 }));
 
@@ -192,7 +197,8 @@ describe('axes', () => {
                     .then(() => getCustomFieldsForAxes(config, axes, processes, entity))
                     .then((res) => expect(res)
                         .to.be.eql([{
-                            name: 'Cf1'
+                            name: 'Cf1',
+                            id: 1
                         }]));
 
             });
@@ -220,7 +226,8 @@ describe('axes', () => {
 
                 $ajax.onCall(1).returns(when({
                     items: [{
-                        name: 'Cf1'
+                        name: 'Cf1',
+                        id: 1
                     }]
                 }));
 
@@ -371,13 +378,17 @@ describe('axes', () => {
 
                 $ajax.onCall(1).returns(when({
                     items: [{
-                        name: 'Cf1'
+                        name: 'Cf1',
+                        id: 1
                     }, {
-                        name: 'Cf2'
+                        name: 'Cf2',
+                        id: 2
                     }, {
-                        name: 'Cf3'
+                        name: 'Cf3',
+                        id: 3
                     }, {
-                        name: 'Cf0'
+                        name: 'Cf0',
+                        id: 0
                     }]
                 }));
 
@@ -385,11 +396,14 @@ describe('axes', () => {
                     .then(() => getCustomFieldsForAxes(config, axes, processes, entity))
                     .then((res) => expect(res)
                         .to.be.eql([{
-                            name: 'Cf0'
+                            name: 'Cf0',
+                            id: 0
                         }, {
-                            name: 'Cf2'
+                            name: 'Cf2',
+                            id: 2
                         }, {
-                            name: 'Cf3'
+                            name: 'Cf3',
+                            id: 3
                         }]));
 
             });

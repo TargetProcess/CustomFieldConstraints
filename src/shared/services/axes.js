@@ -1,5 +1,5 @@
 import {when, whenList} from 'jquery';
-import {isObject, find, flatten, unique, pluck, partial, omit, some} from 'underscore';
+import {isObject, find, flatten, pluck, partial, omit, some, unique} from 'underscore';
 
 import {inValues, equalByShortcut, equalIgnoreCase, isAssignable, isStateRelated} from 'utils';
 import {
@@ -61,17 +61,33 @@ const getRootEntityState = (entityState) => {
     const parentEntityState = entityState ?
         entityState.parentEntityState : null;
 
-    return parentEntityState === null ?
+    return !parentEntityState ?
         entityState : parentEntityState;
 
 };
 
 const getRealEntityState = (targetValue, processId, entityType) =>
     when(loadEntityStates(processId))
-    .then((items) =>
-        targetValue.id ?
-        find(items, (v) => v.id === targetValue.id) :
-        getRootEntityState(find(items, (v) => matchEntityStateFlat(targetValue, entityType, v))));
+    .then((states) => {
+
+        const entityStateFinder = targetValue.id ?
+            (v) => v.id === targetValue.id :
+            (v) => matchEntityStateFlat(targetValue, entityType, getRootEntityState(v));
+        const entityState = find(states, entityStateFinder);
+
+        return getRootEntityState(entityState);
+
+    });
+
+const getRealEntityStateByWorkflow = (targetValue, entityStates, entityType, workflows) => {
+
+    const workflowIds = pluck(workflows, 'id');
+    const entityState = find(entityStates, (v) =>
+        inValues(workflowIds, v.workflow.id) && matchEntityStateHeirarchy(targetValue, entityType, v));
+
+    return getRootEntityState(entityState);
+
+};
 
 const getRealCustomField = (customFieldName, processId, entityType) =>
     when(getRealCustomFields([customFieldName], processId, entityType))
@@ -114,13 +130,9 @@ const getRealEntityStateByTeam = (targetValue, processId, entity) => {
 
             }, []);
 
-            const workflowIds = pluck(workflows, 'id');
-            const entityState = find(entityStates, (v) =>
-                inValues(workflowIds, v.workflow.id) && matchEntityStateHeirarchy(targetValue, entityType, v));
+            return getRealEntityStateByWorkflow(targetValue, entityStates, entityType, workflows);
 
-            return getRootEntityState(entityState);
-
-        }) : getRealEntityState(targetValue, processId, entity.entityType);
+        }) : getRealEntityState(targetValue, processId, entityType);
 
 };
 
@@ -206,7 +218,7 @@ export const getCustomFieldsForAxes = (config, axes, processes, entity, values =
         .then((...args) => flatten(args))
         .then((customFields) => {
 
-            const allCustomFields = unique(customFields, (v) => v.name);
+            const allCustomFields = unique(customFields, (customField) => customField.id);
 
             // e.g. if we have state and cf axes and state axes requires same cf
             if (axes.length > 1) {

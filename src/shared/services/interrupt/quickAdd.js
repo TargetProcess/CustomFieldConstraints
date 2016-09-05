@@ -70,19 +70,29 @@ const getCustomFieldTemplate = (customField, types) => {
 
 const events = ['afterInit:last', 'before_dataBind'];
 
-const injectCustomFieldTemplateItem = (items, injectedItem) => {
+const findNewCustomFieldIndex = (items) => {
 
-    const updatedItems = reject(items, (item) =>
+    const relationsItemIndex = findLastIndex(items, (item) =>
+        item.id === 'SlaveRelations:RelationType' || item.id === 'MasterRelations:RelationType');
+
+    return relationsItemIndex === -1 ? items.length : relationsItemIndex;
+
+};
+
+const removeAlreadyInjectedCustomField = (items, injectedItem) =>
+    reject(items, (item) =>
         item.type === 'CustomField' &&
         item.caption === injectedItem.caption &&
         item.processId === injectedItem.processId);
-    const relationsItemIndex = findLastIndex(updatedItems, (item) =>
-        item.id === 'SlaveRelations:RelationType' || item.id === 'MasterRelations:RelationType');
-    const injectedItemIndex = relationsItemIndex === -1 ? updatedItems.length : relationsItemIndex;
 
-    updatedItems.splice(injectedItemIndex, 0, injectedItem);
+const injectCustomFieldTemplateItem = (items, injectedItem) => {
 
-    return updatedItems;
+    const newItems = removeAlreadyInjectedCustomField(items, injectedItem);
+    const injectedIndex = findNewCustomFieldIndex(newItems);
+
+    newItems.splice(injectedIndex, 0, injectedItem);
+
+    return newItems;
 
 };
 
@@ -164,7 +174,7 @@ const getCustomAxes = (initData) => {
 
         }
 
-        // to get process if one of axis is project.
+        // to get process if one of axes is project.
         if (inValues(axisTypes, 'project')) {
 
             return res.concat({
@@ -174,7 +184,7 @@ const getCustomAxes = (initData) => {
 
         }
 
-        // to get process if one of axis is process.
+        // to get process if one of axes is process.
         if (inValues(axisTypes, 'process')) {
 
             return res.concat({
