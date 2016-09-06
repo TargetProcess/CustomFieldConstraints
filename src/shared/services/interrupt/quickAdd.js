@@ -389,7 +389,7 @@ const listenQuickAddComponentBusForEntityType = (configurator, busName, config, 
 
     let allCustomFields = [];
     let activeCustomFields = [];
-    let actualValues = {};
+    const actualValues = {};
 
     onRender(configurator, busName, ($elCommon, componentBus) => {
 
@@ -417,13 +417,19 @@ const listenQuickAddComponentBusForEntityType = (configurator, busName, config, 
 
         onCustomFieldsChange($el, allCustomFields, () => {
 
-            actualValues = collectValues($el, activeCustomFields);
+            const activeValues = collectValues($el, activeCustomFields);
+
             when(getActiveProcess($el, axes))
-                .then((process) => handler(process, actualValues));
+                .then((process) => {
+
+                    actualValues[process.id] = activeValues;
+                    handler(process, activeValues);
+
+                });
 
         });
 
-        onProcessChange($el, axes, (process) => handler(process, actualValues));
+        onProcessChange($el, axes, (process) => handler(process, actualValues[process.id]));
 
     });
 
