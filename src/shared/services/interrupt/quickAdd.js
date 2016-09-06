@@ -422,7 +422,12 @@ const listenQuickAddComponentBusForEntityType = (configurator, busName, config, 
             when(getActiveProcess($el, axes))
                 .then((process) => {
 
-                    actualValues[process.id] = activeValues;
+                    if (process) {
+
+                        actualValues[process.id] = activeValues;
+
+                    }
+
                     handler(process, activeValues);
 
                 });

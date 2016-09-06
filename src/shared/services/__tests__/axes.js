@@ -116,6 +116,70 @@ describe('axes', () => {
 
             });
 
+            it('returns custom fields of parent entity state for entity state id', () => {
+
+                const axes = [{
+                    type: 'entitystate',
+                    targetValue: {
+                        id: 42
+                    }
+                }];
+
+                $ajax.onCall(0).returns(when({
+                    Items: [{
+                        id: 42,
+                        name: 'Opened (Open)',
+                        entityType: {
+                            name: 'Bug'
+                        },
+                        parentEntityState: {
+                            id: 10,
+                            name: 'Open',
+                            entityType: {
+                                name: 'Bug'
+                            },
+                            workflow: {
+                                process: {
+                                    id: 777
+                                }
+                            }
+                        },
+                        workflow: {
+                            process: {
+                                id: 777
+                            }
+                        }
+                    }, {
+                        id: 43,
+                        name: 'Ready',
+                        entityType: {
+                            name: 'Bug'
+                        },
+                        workflow: {
+                            process: {
+                                id: 777
+                            }
+                        }
+                    }]
+                }));
+
+                $ajax.onCall(1).returns(when({
+                    items: [{
+                        name: 'Cf1',
+                        id: 1
+                    }]
+                }));
+
+                return getCustomFieldsForAxes.preloadEntityStates(processes)
+                    .then(() => getCustomFieldsForAxes(config, axes, processes, entity))
+                    .then((res) => expect(res)
+                        .to.be.eql([{
+                            name: 'Cf1',
+                            id: 1
+                        }]));
+
+            });
+
             it('returns custom fields for entity state name', () => {
 
                 const axes = [{
@@ -128,6 +192,65 @@ describe('axes', () => {
                         name: 'Open',
                         entityType: {
                             name: 'Bug'
+                        },
+                        workflow: {
+                            process: {
+                                id: 777
+                            }
+                        }
+                    }, {
+                        name: 'Open',
+                        entityType: {
+                            name: 'UserStory'
+                        },
+                        workflow: {
+                            process: {
+                                id: 777
+                            }
+                        }
+                    }]
+                }));
+
+                $ajax.onCall(1).returns(when({
+                    items: [{
+                        name: 'Cf1',
+                        id: 1
+                    }]
+                }));
+
+                return getCustomFieldsForAxes.preloadEntityStates(processes)
+                    .then(() => getCustomFieldsForAxes(config, axes, processes, entity))
+                    .then((res) => expect(res)
+                        .to.be.eql([{
+                            name: 'Cf1',
+                            id: 1
+                        }]));
+
+            });
+
+            it('returns custom fields of parent entity state for entity state name', () => {
+
+                const axes = [{
+                    type: 'entitystate',
+                    targetValue: 'open'
+                }];
+
+                $ajax.onCall(0).returns(when({
+                    Items: [{
+                        name: 'Opened (Open)',
+                        entityType: {
+                            name: 'Bug'
+                        },
+                        parentEntityState: {
+                            name: 'Open',
+                            entityType: {
+                                name: 'Bug'
+                            },
+                            workflow: {
+                                process: {
+                                    id: 777
+                                }
+                            }
                         },
                         workflow: {
                             process: {
@@ -203,6 +326,57 @@ describe('axes', () => {
 
             });
 
+            it('returns custom fields of parent entity name for entity state shortcut', () => {
+
+                const axes = [{
+                    type: 'entitystate',
+                    targetValue: '_final'
+                }];
+
+                $ajax.onCall(0).returns(when({
+                    Items: [{
+                        name: 'Ready to do (Open)',
+                        isFinal: false,
+                        parentEntityState: {
+                            name: 'Open',
+                            isFinal: true,
+                            entityType: {
+                                name: 'Bug'
+                            },
+                            workflow: {
+                                process: {
+                                    id: 777
+                                }
+                            }
+                        },
+                        entityType: {
+                            name: 'Bug'
+                        },
+                        workflow: {
+                            process: {
+                                id: 777
+                            }
+                        }
+                    }]
+                }));
+
+                $ajax.onCall(1).returns(when({
+                    items: [{
+                        name: 'Cf1',
+                        id: 1
+                    }]
+                }));
+
+                return getCustomFieldsForAxes.preloadEntityStates(processes)
+                    .then(() => getCustomFieldsForAxes(config, axes, processes, entity))
+                    .then((res) => expect(res)
+                        .to.be.eql([{
+                            name: 'Cf1',
+                            id: 1
+                        }]));
+
+            });
+
             it('returns none if entity state is not found', () => {
 
                 const axes = [{
@@ -215,6 +389,58 @@ describe('axes', () => {
                         name: 'Open',
                         entityType: {
                             name: 'Bug'
+                        },
+                        workflow: {
+                            process: {
+                                id: 777
+                            }
+                        }
+                    }]
+                }));
+
+                $ajax.onCall(1).returns(when({
+                    items: [{
+                        name: 'Cf1',
+                        id: 1
+                    }]
+                }));
+
+                return getCustomFieldsForAxes.preloadEntityStates(processes)
+                    .then(() => getCustomFieldsForAxes(config, axes, processes, entity))
+                    .then((res) => {
+
+                        expect(res).to.be.eql([]);
+                        expect($ajax).to.be.calledOnce;
+
+                    });
+
+            });
+
+            it('returns none if entity state is found but parent entity state is not', () => {
+
+                const axes = [{
+                    type: 'entitystate',
+                    targetValue: '_final'
+                }];
+
+                $ajax.onCall(0).returns(when({
+                    Items: [{
+                        name: 'Rejected (In Progress)',
+                        entityType: {
+                            name: 'Bug'
+                        },
+                        isFinal: true,
+                        parentEnityState: {
+                            name: 'In Progress',
+                            entityType: {
+                                name: 'Bug'
+                            },
+                            isFinal: false,
+                            workflow: {
+                                process: {
+                                    id: 777
+                                }
+                            }
                         },
                         workflow: {
                             process: {
