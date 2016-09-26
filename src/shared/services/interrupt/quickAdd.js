@@ -6,15 +6,14 @@ import {
 
 import {addBusListener} from 'targetprocess-mashup-helper/lib/events';
 
+import decodeSliceValue from 'utils/decodeSliceValue';
+import {inValues, equalIgnoreCase, isAssignable, SLICE_CUSTOMFIELD_PREFIX} from 'utils';
+
 import {
     isSameEntityType, getAcid, getEntityTypes, getSliceDefinition, shouldIgnoreAxes
 } from 'services/apiCompatibility';
-import decodeSliceValue from 'utils/decodeSliceValue';
-import {inValues, equalIgnoreCase, isAssignable, SLICE_CUSTOMFIELD_PREFIX} from 'utils';
 import {busNames} from 'services/busNames';
-
 import store from 'services/store';
-
 import {getCustomFieldsForAxes} from 'services/axes';
 
 const onRender = (configurator, componentBusName, cb) => {
@@ -71,19 +70,29 @@ const getCustomFieldTemplate = (customField, types) => {
 
 const events = ['afterInit:last', 'before_dataBind'];
 
-const injectCustomFieldTemplateItem = (items, injectedItem) => {
+const findNewCustomFieldIndex = (items) => {
 
-    const updatedItems = reject(items, (item) =>
+    const relationsItemIndex = findLastIndex(items, (item) =>
+        item.id === 'SlaveRelations:RelationType' || item.id === 'MasterRelations:RelationType');
+
+    return relationsItemIndex === -1 ? items.length : relationsItemIndex;
+
+};
+
+const removeAlreadyInjectedCustomField = (items, injectedItem) =>
+    reject(items, (item) =>
         item.type === 'CustomField' &&
         item.caption === injectedItem.caption &&
         item.processId === injectedItem.processId);
-    const relationsItemIndex = findLastIndex(updatedItems, (item) =>
-        item.id === 'SlaveRelations:RelationType' || item.id === 'MasterRelations:RelationType');
-    const injectedItemIndex = relationsItemIndex === -1 ? updatedItems.length : relationsItemIndex;
 
-    updatedItems.splice(injectedItemIndex, 0, injectedItem);
+const injectCustomFieldTemplateItem = (items, injectedItem) => {
 
-    return updatedItems;
+    const newItems = removeAlreadyInjectedCustomField(items, injectedItem);
+    const injectedIndex = findNewCustomFieldIndex(newItems);
+
+    newItems.splice(injectedIndex, 0, injectedItem);
+
+    return newItems;
 
 };
 
@@ -125,7 +134,10 @@ const getTargetValue = ({config}, axisName) =>
 
 const removeUnknownAxes = (axes) => reject(axes, (axis) => axis.targetValue === void 0);
 
-const useDefaultAxis = ({entityType}) =>
+const isTeamEntityStateAxis = (axes) =>
+    some(axes, (a) => a.type === 'teamentitystate');
+
+const useNewEntityStateAxis = ({entityType}) =>
     isAssignable({entityType}) ||
     equalIgnoreCase(entityType.name, 'impediment') ||
     equalIgnoreCase(entityType.name, 'project');
@@ -152,7 +164,17 @@ const getCustomAxes = (initData) => {
 
         }
 
-        // to get process if one of axis is project.
+        // to check team entity state is the same as in config.
+        if (inValues(axisTypes, 'teamentitystate')) {
+
+            return res.concat({
+                type: 'teamentitystate',
+                targetValue: getTargetValue(initData, axisName)
+            });
+
+        }
+
+        // to get process if one of axes is project.
         if (inValues(axisTypes, 'project')) {
 
             return res.concat({
@@ -162,7 +184,7 @@ const getCustomAxes = (initData) => {
 
         }
 
-        // to get process if one of axis is process.
+        // to get process if one of axes is process.
         if (inValues(axisTypes, 'process')) {
 
             return res.concat({
@@ -192,16 +214,16 @@ const getCustomAxes = (initData) => {
 
 const getAxes = (busName, initData, entityType) => {
 
-    const defaultAxes = [{
+    const newEntityStateAxes = [{
         type: 'entitystate',
         targetValue: '_Initial'
     }];
 
     const axes = shouldIgnoreAxes(busName) ? [] : removeUnknownAxes(getCustomAxes(initData));
 
-    if (useDefaultAxis({entityType})) {
+    if (useNewEntityStateAxis({entityType}) && !isTeamEntityStateAxis(axes)) {
 
-        return unique(axes.concat(defaultAxes), (v) => v.type);
+        return unique(axes.concat(newEntityStateAxes), (v) => v.type);
 
     }
     else return axes;
@@ -233,6 +255,7 @@ const findCustomFieldElByName = ($el, name, processId) =>
     processId
     ? $el.find(`.cf-process_${processId} > [data-iscf=true][data-fieldname="${name}"]`)
     : $el.find(`[data-iscf=true][data-fieldname="${name}"]`);
+
 const hideCustomFieldEl = ($cfEl) => {
 
     const $cfParent = $cfEl.parent();
@@ -342,9 +365,9 @@ const getActiveProcess = ($el, axes) => {
 
     if (processId) return loadProcessDirect(processId);
 
-    const promise = getProcessByProcessAxis(axes);
+    const process = getProcessByProcessAxis(axes);
 
-    if (promise) return promise;
+    if (process) return process;
 
     const projectId = getProjectValue($el);
 
@@ -366,7 +389,7 @@ const listenQuickAddComponentBusForEntityType = (configurator, busName, config, 
 
     let allCustomFields = [];
     let activeCustomFields = [];
-    let actualValues = {};
+    const actualValues = {};
 
     onRender(configurator, busName, ($elCommon, componentBus) => {
 
@@ -394,13 +417,24 @@ const listenQuickAddComponentBusForEntityType = (configurator, busName, config, 
 
         onCustomFieldsChange($el, allCustomFields, () => {
 
-            actualValues = collectValues($el, activeCustomFields);
+            const activeValues = collectValues($el, activeCustomFields);
+
             when(getActiveProcess($el, axes))
-                .then((process) => handler(process, actualValues));
+                .then((process) => {
+
+                    if (process) {
+
+                        actualValues[process.id] = activeValues;
+
+                    }
+
+                    handler(process, activeValues);
+
+                });
 
         });
 
-        onProcessChange($el, axes, (process) => handler(process, actualValues));
+        onProcessChange($el, axes, (process) => handler(process, actualValues[process.id]));
 
     });
 
@@ -424,6 +458,8 @@ const applyToComponent = (config, {busName}) =>
         const entityTypes = getEntityTypes(initData, bindData);
 
         when(getProcesses(configurator, busName, initData))
+        .then((processes) =>
+            when(processes, getCustomFieldsForAxes.preloadEntityStates(processes)))
         .then((processes) =>
             whenList(entityTypes.map((entityType) => {
 
