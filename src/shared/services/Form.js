@@ -26,7 +26,7 @@ const isEmptyValidator = (field, value) => {
         multipleentities: (val) => !val.length
     };
 
-    if ((validators[field.type] || validators.text)(value)) return new Error('Field is empty');
+    if ((validators[field.type] || validators.text)(value)) return new Error('This is a required field');
 
 };
 
