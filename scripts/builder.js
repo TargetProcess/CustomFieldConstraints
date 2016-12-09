@@ -23,11 +23,11 @@ const build = (path, config) => {
 
 };
 
-const watch = (path, port, config) => {
+const watch = (path, port, config, mode) => {
 
     shell.rm('-rf', path);
     shell.exec('cross-env NODE_ENV=development ' +
-               `webpack --progress --colors --config ${config} --watch --port ${port} --output-path ${path}`);
+               `webpack --progress --colors --config ${config} --watch --port ${port} --output-path ${path} ${mode}`);
 
 };
 

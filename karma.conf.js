@@ -1,8 +1,8 @@
-var webpack = require('webpack');
+const webpack = require('webpack');
 
-module.exports = function(config) {
+module.exports = (config) => {
 
-    var webpackConfig = {
+    const webpackConfig = {
         devtool: '#cheap-module-inline-source-map',
         module: {
             loaders: [{
@@ -43,7 +43,7 @@ module.exports = function(config) {
             exclude: /node_modules/,
             loader: 'babel'
         }, {
-            test: function(p) {
+            test: (p) => {
 
                 return Boolean(p.match(/\.js$/)) && !Boolean(p.match(/__tests__\/.*?\.js$/));
 

@@ -1,5 +1,6 @@
-var makeWebpackConfig = require('./make-webpack-config');
+const makeWebpackConfig = require('./make-webpack-config');
+const buildMode = require('./webpack-build.mode');
 
 module.exports = makeWebpackConfig({
-    production: true
+    production: buildMode.isProduction()
 });

@@ -1,14 +1,14 @@
-var path = require('path');
-var webpack = require('webpack');
+const path = require('path');
+const webpack = require('webpack');
 
-var pkg = require('./package.json');
+const pkg = require('./package.json');
 
-var TargetprocessMashupPlugin = require('targetprocess-mashup-webpack-plugin');
-var CombineAssetsPlugin = require('combine-assets-plugin');
+const TargetprocessMashupPlugin = require('targetprocess-mashup-webpack-plugin');
+const CombineAssetsPlugin = require('combine-assets-plugin');
 
-var makeWebpackConfig = function(opts_) {
+const makeWebpackConfig = (opts_) => {
 
-    var opts = opts_ || {};
+    const opts = opts_ || {};
 
     // mashup unique name
     opts.mashupName = opts.mashupName || __dirname.split(path.sep).pop();
@@ -19,13 +19,13 @@ var makeWebpackConfig = function(opts_) {
     // will mashup be used by paste to mashup manager or as bunch of files by library
     opts.mashupManager = opts.hasOwnProperty('mashupManager') ? opts.mashupManager : true;
 
-    var mashupName = opts.mashupName;
+    const mashupName = opts.mashupName;
 
     // you should use format <something>.config.js to allow Mashup Manager autodiscover
     // config file
-    var outputConfigFileName = './mashup.config.js';
+    const outputConfigFileName = './mashup.config.js';
 
-    var config = {};
+    const config = {};
 
     config.entry = {
         // process config js module from JSON file
@@ -110,8 +110,8 @@ var makeWebpackConfig = function(opts_) {
         })
     ];
 
-    var toConcat = {};
-    var toExclude = [
+    let toConcat = {};
+    let toExclude = [
         'configData.js',
         'ignoreData.js',
         'manifestData.js'
