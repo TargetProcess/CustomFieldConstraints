@@ -147,7 +147,7 @@ const makeWebpackConfig = (opts_) => {
                 warnings: false
             },
             output: {
-                keep_quoted_props: true
+                keep_quoted_props: true  // eslint-disable-line camelcase
             }
         }));
 
