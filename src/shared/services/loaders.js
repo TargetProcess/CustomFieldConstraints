@@ -110,17 +110,17 @@ export const preloadEntityStates = (processes) => {
         where: `Workflow.Process.id in (${processIds.join()})`
     }).then((entityStates) => {
 
-        preloadEntityStates.cache = [];
+        const cache = preloadEntityStates.cache = preloadEntityStates.cache || [];
 
         processIds.forEach((id) => {
 
             const states = filter(entityStates, (state) => state.workflow.process.id === id);
 
-            preloadEntityStates.cache[id] = states;
+            cache[id] = states;
 
         });
 
-        return preloadEntityStates.cache;
+        return cache;
 
     });
 
@@ -132,7 +132,8 @@ preloadEntityStates.getStates = (processId) => {
 
     if (entityStates === void 0) {
 
-        throw new Error(`Need to preload Entity States for process.id ${processId}.`);
+        // Rare case (process not in context), load & save missed entity state.
+        return preloadEntityStates([{id: processId}]).then((states) => states[processId]);
 
     }
 
