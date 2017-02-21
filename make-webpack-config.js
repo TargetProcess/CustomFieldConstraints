@@ -110,26 +110,25 @@ const makeWebpackConfig = (opts_) => {
         })
     ];
 
-    let toConcat = {};
-    let toExclude = [
-        'configData.js',
-        'ignoreData.js',
-        'manifestData.js'
-    ];
+    const assetsConfig = {
+        toConcat: {},
+        toExclude: [
+            'configData.js',
+            'ignoreData.js',
+            'manifestData.js'
+        ]
+    };
 
     if (opts.mashupManager) {
 
-        toConcat = {
+        assetsConfig.toConcat = {
             'index.js': [outputConfigFileName, 'index.js']
         };
-        toExclude = toExclude.concat(outputConfigFileName);
+        assetsConfig.toExclude = assetsConfig.toExclude.concat(outputConfigFileName);
 
     }
 
-    config.plugins = config.plugins.concat(new CombineAssetsPlugin({
-        toConcat: toConcat,
-        toExclude: toExclude
-    }));
+    config.plugins = config.plugins.concat(new CombineAssetsPlugin(assetsConfig));
 
     if (opts.mashupManager) {
 
@@ -144,7 +143,11 @@ const makeWebpackConfig = (opts_) => {
 
         config.plugins = config.plugins.concat(new webpack.optimize.UglifyJsPlugin({
             compress: {
+                properties: false,
                 warnings: false
+            },
+            output: {
+                keep_quoted_props: true
             }
         }));
 
