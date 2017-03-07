@@ -49,26 +49,6 @@ const transformFromServerDefaultValue = (serverCustomField) => {
 
     }
 
-    if (inValues(['multipleselectionlist', 'dropdown'], serverCustomField.fieldType) && isEmpty(defaultValue)) {
-
-        const {options} = transformFromServerConfig(serverCustomField);
-
-        if (options.length) {
-
-            if (lc(serverCustomField.fieldType) === 'multipleselectionlist') {
-
-                defaultValue = [options[0]];
-
-            } else {
-
-                defaultValue = options[0];
-
-            }
-
-        }
-
-    }
-
     return defaultValue;
 
 };

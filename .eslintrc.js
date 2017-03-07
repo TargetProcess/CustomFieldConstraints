@@ -1,4 +1,4 @@
-{
+module.exports = {
     "parser": "babel-eslint",
 
      "ecmaFeatures": {
@@ -68,7 +68,7 @@
         "no-loop-func": 2,
         "no-mixed-requires": 2,
         "no-mixed-spaces-and-tabs": [2, false],
-        "linebreak-style": [2, "unix"],
+        "linebreak-style": [2, process.platform === 'win32' ? "windows" : "unix"],
         "no-multi-spaces": 2,
         "no-multi-str": 2,
         "no-multiple-empty-lines": [2, {"max": 1}],
@@ -232,4 +232,4 @@
 
         "mocha/no-exclusive-tests": 2
     }
-}
+};
