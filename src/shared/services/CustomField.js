@@ -53,8 +53,7 @@ const transformFromServerDefaultValue = (serverCustomField) => {
 
 };
 
-const isEmptyDefaultValue = (customField) =>
-    isEmpty(customField.defaultValue);
+const isEmptyDefaultValue = (customField) => isEmpty(customField.defaultValue);
 
 export default (serverCustomField) => {
 

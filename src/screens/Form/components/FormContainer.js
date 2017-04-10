@@ -110,7 +110,6 @@ const getProcess = (entity) => {
 const getOutputCustomFields = (mashupConfig, changes, process, entity, entityCustomFields = [], existingCustomFieldsValues = [], formValues = {}) => {
 
     const existingValuesNormalized = object(existingCustomFieldsValues.filter((v) => !v.isEmpty).map((v) => [v.name, v.value]));
-
     const defaultValuesNormalized = object(entityCustomFields.filter((v) => !v.isEmptyDefaultValue).map((v) => [v.name, v.defaultValue]));
 
     const formCustomFieldsValues = map(formValues, (value, name) => CustomFieldValue.fromInputValue(find(entityCustomFields, (cf) => cf.name === name), value));
@@ -126,7 +125,8 @@ const getOutputCustomFields = (mashupConfig, changes, process, entity, entityCus
     return when(getCustomFieldsForAxes(mashupConfig, changes, processes, entity, currentValuesNormalized, {}, existingValuesNormalized))
         .then((serverCustomFields) => {
 
-            const customFields = serverCustomFields.map((v) => CustomField(v));
+            const customFields = serverCustomFields.sort((l, r) => l.numericPriority - r.numericPriority)
+                    .map((v) => CustomField(v));
 
             return customFields;
 
