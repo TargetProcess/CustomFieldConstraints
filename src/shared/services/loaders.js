@@ -9,7 +9,7 @@ export const getCustomFields = memoize((processId, entityType) =>
     store2.get('CustomField', {
         take: 1000,
         where: `process.id == ${processId || 'null'} and entityType.name == "${entityType.name}"`,
-        select: 'new(required, name, id, config, fieldType, value, entityType, process)'
+        select: 'new(required, name, id, config, fieldType, value, numericPriority, entityType, process)'
     }), (processId, entityType) => processId + entityType.name);
 
 export const loadCustomFields = memoize((processId, entityType) => {

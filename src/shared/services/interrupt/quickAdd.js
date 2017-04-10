@@ -1,7 +1,7 @@
 import $, {when, Deferred, whenList} from 'jquery';
 import {
-    find, findLastIndex, object, flatten, compose, constant, unique,
-    map, last, without, memoize, reject, keys, isString, some
+    find, findIndex, findLastIndex, object, flatten, compose, constant,
+    unique, map, last, without, memoize, reject, keys, isString, some
 } from 'underscore';
 
 import {addBusListener} from 'targetprocess-mashup-helper/lib/events';
@@ -41,6 +41,7 @@ const createTemplateItemFromCustomField = (customField) => ({
     caption: customField.name,
     fieldType: customField.fieldType,
     processId: customField.process ? customField.process.id : null,
+    numericPriority: customField.numericPriority,
     required: true,
     options: {
         ...customField
@@ -70,12 +71,20 @@ const getCustomFieldTemplate = (customField, types) => {
 
 const events = ['afterInit:last', 'before_dataBind'];
 
-const findNewCustomFieldIndex = (items) => {
+const findNewCustomFieldIndex = (items, newNumericPriority) => {
 
-    const relationsItemIndex = findLastIndex(items, (item) =>
-        item.id === 'SlaveRelations:RelationType' || item.id === 'MasterRelations:RelationType');
+    const nextItemIndex = findIndex(items, (item) => item.numericPriority > newNumericPriority);
 
-    return relationsItemIndex === -1 ? items.length : relationsItemIndex;
+    if (nextItemIndex === -1) {
+
+        const relationsItemIndex = findLastIndex(items, (item) =>
+            item.id === 'SlaveRelations:RelationType' || item.id === 'MasterRelations:RelationType');
+
+        return relationsItemIndex === -1 ? items.length : relationsItemIndex;
+
+    }
+
+    return nextItemIndex;
 
 };
 
@@ -88,7 +97,7 @@ const removeAlreadyInjectedCustomField = (items, injectedItem) =>
 const injectCustomFieldTemplateItem = (items, injectedItem) => {
 
     const newItems = removeAlreadyInjectedCustomField(items, injectedItem);
-    const injectedIndex = findNewCustomFieldIndex(newItems);
+    const injectedIndex = findNewCustomFieldIndex(newItems, injectedItem.numericPriority);
 
     newItems.splice(injectedIndex, 0, injectedItem);
 
