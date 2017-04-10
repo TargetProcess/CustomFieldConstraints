@@ -75,16 +75,16 @@ const findNewCustomFieldIndex = (items, newNumericPriority) => {
 
     const nextItemIndex = findIndex(items, (item) => item.numericPriority > newNumericPriority);
 
-    if (nextItemIndex === -1) {
+    if (nextItemIndex >= 0) {
 
-        const relationsItemIndex = findLastIndex(items, (item) =>
-            item.id === 'SlaveRelations:RelationType' || item.id === 'MasterRelations:RelationType');
-
-        return relationsItemIndex === -1 ? items.length : relationsItemIndex;
+        return nextItemIndex;
 
     }
 
-    return nextItemIndex;
+    const relationsItemIndex = findLastIndex(items, (item) =>
+        item.id === 'SlaveRelations:RelationType' || item.id === 'MasterRelations:RelationType');
+
+    return relationsItemIndex === -1 ? items.length : relationsItemIndex;
 
 };
 
