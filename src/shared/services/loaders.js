@@ -1,7 +1,6 @@
-import {filter, memoize, pluck} from 'underscore';
+import {filter, memoize, pluck, reject} from 'underscore';
 
 import {isGeneral} from 'utils';
-
 import store from 'services/store';
 import store2 from 'services/store2';
 
@@ -102,24 +101,26 @@ const getEntityStatesIncludes = () => {
 
 export const preloadEntityStates = (processes) => {
 
-    const processIds = pluck(processes, 'id');
+    const mayBeProcessIds = pluck(processes, 'id');
+    const processIds = reject(mayBeProcessIds, (mayBeId) => mayBeId === null);
 
-    return store.get('EntityStates', {
-        include: getEntityStatesIncludes(),
-        where: `Workflow.Process.id in (${processIds.join()})`
-    }).then((entityStates) => {
+    return processIds.length !== 0 ?
+        store.get('EntityStates', {
+            include: getEntityStatesIncludes(),
+            where: `Workflow.Process.id in (${processIds.join()})`
+        }).then((entityStates) => {
 
-        const cache = preloadEntityStates.cache = preloadEntityStates.cache || [];
+            const cache = preloadEntityStates.cache = preloadEntityStates.cache || [];
 
-        processIds.forEach((id) => {
+            processIds.forEach((id) => {
 
-            cache[id] = filter(entityStates, (state) => state.workflow.process.id === id);
+                cache[id] = filter(entityStates, (state) => state.workflow.process.id === id);
 
-        });
+            });
 
-        return cache;
+            return cache;
 
-    });
+        }) : [];
 
 };
 
