@@ -7,7 +7,6 @@ import store2 from 'services/store2';
 
 export const getCustomFields = memoize((processId, entityType) =>
     store2.get('CustomField', {
-        take: 1000,
         where: `process.id == ${processId || 'null'} and entityType.name == "${entityType.name}"`,
         select: 'new(required, name, id, config, fieldType, value, numericPriority, entityType, process)'
     }), (processId, entityType) => processId + entityType.name);
@@ -114,9 +113,7 @@ export const preloadEntityStates = (processes) => {
 
         processIds.forEach((id) => {
 
-            const states = filter(entityStates, (state) => state.workflow.process.id === id);
-
-            cache[id] = states;
+            cache[id] = filter(entityStates, (state) => state.workflow.process.id === id);
 
         });
 

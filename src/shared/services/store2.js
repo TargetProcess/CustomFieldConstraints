@@ -1,21 +1,18 @@
 /* eslint-disable */
-var $ = require('jquery');
-var _ = require('underscore');
+import {isArray, isObject, object, map} from 'underscore';
+import {ajax} from 'jquery';
+import configurator from 'tau/configurator';
 
-var configurator = require('tau/configurator');
+const types = configurator.getStore().getTypes().getDictionary();
+const appPath = configurator.getApplicationPath();
 
-var types = configurator.getStore().getTypes().getDictionary();
-var appPath = configurator.getApplicationPath();
+const getResource = (typeName) => types[typeName.toLowerCase()].resource;
 
-var getResource = function(typeName) {
-    return types[typeName.toLowerCase()].resource;
-};
+const request = (type, path, params) => {
 
-var request = function(type, path, params) {
-
-    return $.ajax({
+    return ajax({
         type: type,
-        url: appPath + '/api/v2/' + path,
+        url: path.absolute || `${appPath}/api/v2/${path}`,
         contentType: 'application/json; charset=utf-8',
         dataType: 'json',
         data: params
@@ -23,56 +20,60 @@ var request = function(type, path, params) {
 
 };
 
-var load = function(resource, params) {
+const load = (resource, params) => {
 
-    var loadPages = function loadPages(url, params) {
+    const loadPages = (url, params) => {
 
         return request('get', url, params)
-            .then(function(res) {
-                return res.items;
+            .then((res) =>  {
+                const items = res.items;
+                const next = res.next;
+
+                if (next) {
+                    return loadPages({absolute: next}).then(items.concat.bind(items));
+                }
+
+                return items;
             });
     };
 
     return loadPages(resource, params);
 };
 
-var processResult = function(result) {
+const processResult = (result) => {
 
-    if (_.isArray(result)) {
-        return result.map(function(v) {
-            return processResult(v);
-        });
-    } else if (_.isObject(result)) {
+    if (isArray(result)) {
+        return result.map((v) => processResult(v));
+    }
 
-        return _.object(_.map(result, function(v, k) {
-            var key = k[0].toLowerCase() + k.slice(1);
-            if (key === 'Items' && _.isArray(v)) {
+    if (isObject(result)) {
+        return object(map(result, (v, k) => {
+            const key = k[0].toLowerCase() + k.slice(1);
+
+            if (key === 'items' && isArray(v)) {
                 return processResult(v);
             }
+
             return [key, processResult(v)];
         }));
-    } else {
-        return result;
     }
+
+    return result;
 };
 
-var processOpts = function(options) {
-
-    return options;
-};
+const processOpts = (options = {}, defaultOpts = {take: 1000}) => ({...defaultOpts, ...options});
 
 module.exports = {
 
-    get: function() {
+    get() {
 
-        var args = Array.prototype.slice.call(arguments);
+        const args = Array.prototype.slice.call(arguments);
 
         if (args.length === 3) {
             return request('GET', getResource(args[0]) + '/' + args[1], processOpts(args[2])).then(processResult);
-        } else {
-            return load(args[0], processOpts(args[1])).then(processResult);
         }
 
+        return load(args[0], processOpts(args[1])).then(processResult);
     }
 
 };
