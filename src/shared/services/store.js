@@ -1,15 +1,14 @@
 /* eslint-disable */
-var $ = require('jquery');
-var _ = require('underscore');
+import {isArray, isObject, object, map} from 'underscore';
+import {ajax} from 'jquery';
+import configurator from 'tau/configurator';
 
-var configurator = require('tau/configurator');
+const types = configurator.getStore().getTypes().getDictionary();
+const appPath = configurator.getApplicationPath();
 
-var types = configurator.getStore().getTypes().getDictionary();
-var appPath = configurator.getApplicationPath();
+const stringify = (obj) => {
 
-var stringify = function(obj) {
-
-    var res = "";
+    let res = '';
 
     if (obj) {
         if (Array.isArray(obj)) {
@@ -17,9 +16,7 @@ var stringify = function(obj) {
             res = obj.map(stringify).join(",");
         } else if (typeof obj === "object") {
 
-            res = Object.keys(obj).map(function(key) {
-                return key + "[" + stringify(obj[key]) + "]";
-            }).join(",");
+            res = Object.keys(obj).map((key) => `${key}[${stringify(obj[key])}]`).join(',');
         } else if (typeof obj !== "function") {
 
             res = String(obj);
@@ -29,15 +26,14 @@ var stringify = function(obj) {
     return res;
 };
 
-var getResource = function(typeName) {
-    return types[typeName.toLowerCase()].resource;
-};
+const getResource = (typeName) => types[typeName.toLowerCase()].resource;
+const getResourceUrl = (path) => `${appPath}/api/v1/${path}`;
 
-var requestPost = function(type, path, params) {
+const requestPost = (type, url, params) => {
 
-    return $.ajax({
+    return ajax({
         type: type,
-        url: appPath + '/api/v1/' + path,
+        url: url,
         contentType: 'application/json; charset=utf-8',
         dataType: 'json',
         data: JSON.stringify(params)
@@ -45,11 +41,11 @@ var requestPost = function(type, path, params) {
 
 };
 
-var request = function(type, path, params) {
+const request = (type, url, params) => {
 
-    return $.ajax({
+    return ajax({
         type: type,
-        url: appPath + '/api/v1/' + path,
+        url: url,
         contentType: 'application/json; charset=utf-8',
         dataType: 'json',
         data: params
@@ -57,50 +53,53 @@ var request = function(type, path, params) {
 
 };
 
-var load = function(resource, params) {
+const load = (resource, params) => {
 
-    var loadPages = function loadPages(url, params) {
+    const loadPages = (url, params) => {
 
         return request('get', url, params)
-            .then(function(res) {
-                var items = res.Items;
-                if (res.Next) {
-                    return loadPages(res.Next).then(items.concat.bind(items));
-                } else {
-                    return items;
+            .then((res) => {
+                const items = res.Items;
+                const next = res.Next;
+
+                if (next) {
+                    return loadPages(next).then(items.concat.bind(items));
                 }
+
+                return items;
             });
     };
 
     return loadPages(resource, params);
 };
 
-var processResult = function(result) {
+const processResult = (result) => {
 
-    if (_.isArray(result)) {
-        return result.map(function(v) {
-            return processResult(v);
-        });
-    } else if (_.isObject(result)) {
+    if (isArray(result)) {
+        return result.map((v) => processResult(v));
+    }
 
-        return _.object(_.map(result, function(v, k) {
-            var key = k[0].toLowerCase() + k.slice(1);
-            if (key === 'Items' && _.isArray(v)) {
+    if (isObject(result)) {
+        return object(map(result, (v, k) => {
+            const key = k[0].toLowerCase() + k.slice(1);
+
+            if (key === 'Items' && isArray(v)) {
                 return processResult(v);
             }
+
             return [key, processResult(v)];
         }));
-    } else {
-        return result;
     }
+
+    return result;
 };
 
-var processOpts = function(options = {}, defaultOpts = {take: 1000}) {
+const processOpts = (options = {}, defaultOpts = {take: 1000}) => {
 
-    var opts = {...defaultOpts, ...options};
+    const opts = {...defaultOpts, ...options};
 
     if (options.include && typeof options.include !== 'string') {
-        opts.include = '[' + stringify(options.include) + ']'
+        opts.include = `[${stringify(options.include)}]`;
     }
 
     return opts;
@@ -108,30 +107,28 @@ var processOpts = function(options = {}, defaultOpts = {take: 1000}) {
 
 module.exports = {
 
-    get: function() {
+    get() {
 
-        var args = Array.prototype.slice.call(arguments);
+        const args = Array.prototype.slice.call(arguments);
 
         if (args.length === 3) {
-            return request('GET', getResource(args[0]) + '/' + args[1], processOpts(args[2])).then(processResult);
-        } else {
-            return load(args[0], processOpts(args[1], {
-                take: 1000
-            })).then(processResult);
+            return request('GET', getResourceUrl(getResource(args[0]) + '/' + args[1]), processOpts(args[2]))
+                .then(processResult);
         }
 
+        return load(getResourceUrl(args[0]), processOpts(args[1])).then(processResult);
     },
 
-    remove: function(collection, id) {
-        return request('DELETE', getResource(collection) + '/' + id);
+    remove(collection, id) {
+        return request('DELETE', getResourceUrl(getResource(collection) + '/' + id));
     },
 
-    create: function(collection, data) {
-        return requestPost('POST', getResource(collection), data);
+    create(collection, data) {
+        return requestPost('POST', getResourceUrl(getResource(collection)), data);
     },
 
-    save: function(collection, id, data) {
-        return requestPost('POST', getResource(collection) + '/' + id, data);
+    save(collection, id, data) {
+        return requestPost('POST', getResourceUrl(getResource(collection) + '/' + id), data);
     }
 
 };

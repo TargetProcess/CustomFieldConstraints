@@ -39,6 +39,12 @@ const matchTeamWorkflowEntityStateFlat = (valueToMatch, entityState) =>
 
 const matchEntityStateFlat = (valueToMatch, entityType, entityState) => {
 
+    if (!equalIgnoreCase(entityState.entityType.name, entityType.name)) {
+
+        return false;
+
+    }
+
     const isTeamWorkflowEntityState = isObject(valueToMatch);
 
     return isTeamWorkflowEntityState ?

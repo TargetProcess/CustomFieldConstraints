@@ -1,15 +1,13 @@
-import {filter, memoize, pluck} from 'underscore';
+import {filter, memoize, pluck, reject} from 'underscore';
 
 import {isGeneral} from 'utils';
-
 import store from 'services/store';
 import store2 from 'services/store2';
 
 export const getCustomFields = memoize((processId, entityType) =>
     store2.get('CustomField', {
-        take: 1000,
         where: `process.id == ${processId || 'null'} and entityType.name == "${entityType.name}"`,
-        select: 'new(required, name, id, config, fieldType, value, entityType, process)'
+        select: 'new(required, name, id, config, fieldType, value, numericPriority, entityType, process)'
     }), (processId, entityType) => processId + entityType.name);
 
 export const loadCustomFields = memoize((processId, entityType) => {
@@ -103,26 +101,26 @@ const getEntityStatesIncludes = () => {
 
 export const preloadEntityStates = (processes) => {
 
-    const processIds = pluck(processes, 'id');
+    const mayBeProcessIds = pluck(processes, 'id');
+    const processIds = reject(mayBeProcessIds, (mayBeId) => mayBeId === null);
 
-    return store.get('EntityStates', {
-        include: getEntityStatesIncludes(),
-        where: `Workflow.Process.id in (${processIds.join()})`
-    }).then((entityStates) => {
+    return processIds.length !== 0 ?
+        store.get('EntityStates', {
+            include: getEntityStatesIncludes(),
+            where: `Workflow.Process.id in (${processIds.join()})`
+        }).then((entityStates) => {
 
-        const cache = preloadEntityStates.cache = preloadEntityStates.cache || [];
+            const cache = preloadEntityStates.cache = preloadEntityStates.cache || [];
 
-        processIds.forEach((id) => {
+            processIds.forEach((id) => {
 
-            const states = filter(entityStates, (state) => state.workflow.process.id === id);
+                cache[id] = filter(entityStates, (state) => state.workflow.process.id === id);
 
-            cache[id] = states;
+            });
 
-        });
+            return cache;
 
-        return cache;
-
-    });
+        }) : [];
 
 };
 

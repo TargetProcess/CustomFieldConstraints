@@ -216,7 +216,7 @@ export const getCustomFieldsNamesForChangedCustomFieldsWithDependent = (changedF
 
     }, []);
 
-    const fieldsFromEntityStateConstraints = entityState ? getCustomFieldsNamesForNewState(entityState, config, process, entityTypeName, {}, currentCustomFieldsValues, options) : [];
+    const fieldsFromEntityStateConstraints = entityState ? getCustomFieldsNamesForNewState(entityState, config, process, entityTypeName, currentCustomFieldsValues, initialCustomFieldsValues, options) : [];
 
     const fieldsFromChanged = changedFieldsNames.filter((fieldName) => inValues(fieldsFromParentCustomFieldsConstraints, fieldName) || inValues(fieldsFromEntityStateConstraints, fieldName));
 

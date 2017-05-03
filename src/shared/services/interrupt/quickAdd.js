@@ -1,7 +1,7 @@
 import $, {when, Deferred, whenList} from 'jquery';
 import {
-    find, findLastIndex, object, flatten, compose, constant, unique,
-    map, last, without, memoize, reject, keys, isString, some
+    find, findIndex, findLastIndex, object, flatten, compose, constant,
+    unique, map, last, without, memoize, reject, keys, isString, some
 } from 'underscore';
 
 import {addBusListener} from 'targetprocess-mashup-helper/lib/events';
@@ -41,6 +41,7 @@ const createTemplateItemFromCustomField = (customField) => ({
     caption: customField.name,
     fieldType: customField.fieldType,
     processId: customField.process ? customField.process.id : null,
+    numericPriority: customField.numericPriority,
     required: true,
     options: {
         ...customField
@@ -70,7 +71,15 @@ const getCustomFieldTemplate = (customField, types) => {
 
 const events = ['afterInit:last', 'before_dataBind'];
 
-const findNewCustomFieldIndex = (items) => {
+const findNewCustomFieldIndex = (items, newNumericPriority) => {
+
+    const nextItemIndex = findIndex(items, (item) => item.numericPriority > newNumericPriority);
+
+    if (nextItemIndex >= 0) {
+
+        return nextItemIndex;
+
+    }
 
     const relationsItemIndex = findLastIndex(items, (item) =>
         item.id === 'SlaveRelations:RelationType' || item.id === 'MasterRelations:RelationType');
@@ -88,7 +97,7 @@ const removeAlreadyInjectedCustomField = (items, injectedItem) =>
 const injectCustomFieldTemplateItem = (items, injectedItem) => {
 
     const newItems = removeAlreadyInjectedCustomField(items, injectedItem);
-    const injectedIndex = findNewCustomFieldIndex(newItems);
+    const injectedIndex = findNewCustomFieldIndex(newItems, injectedItem.numericPriority);
 
     newItems.splice(injectedIndex, 0, injectedItem);
 
@@ -134,7 +143,7 @@ const getTargetValue = ({config}, axisName) =>
 
 const removeUnknownAxes = (axes) => reject(axes, (axis) => axis.targetValue === void 0);
 
-const isTeamEntityStateAxis = (axes) =>
+const hasTeamEntityStateAxis = (axes) =>
     some(axes, (a) => a.type === 'teamentitystate');
 
 const useNewEntityStateAxis = ({entityType}) =>
@@ -221,7 +230,7 @@ const getAxes = (busName, initData, entityType) => {
 
     const axes = shouldIgnoreAxes(busName) ? [] : removeUnknownAxes(getCustomAxes(initData));
 
-    if (useNewEntityStateAxis({entityType}) && !isTeamEntityStateAxis(axes)) {
+    if (useNewEntityStateAxis({entityType}) && !hasTeamEntityStateAxis(axes)) {
 
         return unique(axes.concat(newEntityStateAxes), (v) => v.type);
 

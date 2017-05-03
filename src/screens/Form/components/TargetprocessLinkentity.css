@@ -7,3 +7,7 @@
 :local(.block) > .tau-linkentity__icon {
     flex: 0 0 auto;
 }
+
+:local(.block) > .tau-linkentity__inner {
+    padding-left: 5px;
+}
