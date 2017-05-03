@@ -143,7 +143,7 @@ const getTargetValue = ({config}, axisName) =>
 
 const removeUnknownAxes = (axes) => reject(axes, (axis) => axis.targetValue === void 0);
 
-const isTeamEntityStateAxis = (axes) =>
+const hasTeamEntityStateAxis = (axes) =>
     some(axes, (a) => a.type === 'teamentitystate');
 
 const useNewEntityStateAxis = ({entityType}) =>
@@ -230,7 +230,7 @@ const getAxes = (busName, initData, entityType) => {
 
     const axes = shouldIgnoreAxes(busName) ? [] : removeUnknownAxes(getCustomAxes(initData));
 
-    if (useNewEntityStateAxis({entityType}) && !isTeamEntityStateAxis(axes)) {
+    if (useNewEntityStateAxis({entityType}) && !hasTeamEntityStateAxis(axes)) {
 
         return unique(axes.concat(newEntityStateAxes), (v) => v.type);
 

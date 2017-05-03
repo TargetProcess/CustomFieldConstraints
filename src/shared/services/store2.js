@@ -7,12 +7,13 @@ const types = configurator.getStore().getTypes().getDictionary();
 const appPath = configurator.getApplicationPath();
 
 const getResource = (typeName) => types[typeName.toLowerCase()].resource;
+const getResourceUrl = (path) => `${appPath}/api/v2/${path}`;
 
-const request = (type, path, params) => {
+const request = (type, url, params) => {
 
     return ajax({
         type: type,
-        url: path.absolute || `${appPath}/api/v2/${path}`,
+        url: url,
         contentType: 'application/json; charset=utf-8',
         dataType: 'json',
         data: params
@@ -30,7 +31,7 @@ const load = (resource, params) => {
                 const next = res.next;
 
                 if (next) {
-                    return loadPages({absolute: next}).then(items.concat.bind(items));
+                    return loadPages(next).then(items.concat.bind(items));
                 }
 
                 return items;
@@ -70,10 +71,11 @@ module.exports = {
         const args = Array.prototype.slice.call(arguments);
 
         if (args.length === 3) {
-            return request('GET', getResource(args[0]) + '/' + args[1], processOpts(args[2])).then(processResult);
+            return request('GET', getResourceUrl(getResource(args[0]) + '/' + args[1]), processOpts(args[2]))
+                .then(processResult);
         }
 
-        return load(args[0], processOpts(args[1])).then(processResult);
+        return load(getResourceUrl(args[0]), processOpts(args[1])).then(processResult);
     }
 
 };

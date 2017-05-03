@@ -27,12 +27,13 @@ const stringify = (obj) => {
 };
 
 const getResource = (typeName) => types[typeName.toLowerCase()].resource;
+const getResourceUrl = (path) => `${appPath}/api/v1/${path}`;
 
-const requestPost = (type, path, params) => {
+const requestPost = (type, url, params) => {
 
     return ajax({
         type: type,
-        url: `${appPath}/api/v1/${path}`,
+        url: url,
         contentType: 'application/json; charset=utf-8',
         dataType: 'json',
         data: JSON.stringify(params)
@@ -40,11 +41,11 @@ const requestPost = (type, path, params) => {
 
 };
 
-const request = (type, path, params) => {
+const request = (type, url, params) => {
 
     return ajax({
         type: type,
-        url: path.absolute || `${appPath}/api/v1/${path}`,
+        url: url,
         contentType: 'application/json; charset=utf-8',
         dataType: 'json',
         data: params
@@ -62,7 +63,7 @@ const load = (resource, params) => {
                 const next = res.Next;
 
                 if (next) {
-                    return loadPages({absolute: next}).then(items.concat.bind(items));
+                    return loadPages(next).then(items.concat.bind(items));
                 }
 
                 return items;
@@ -111,22 +112,23 @@ module.exports = {
         const args = Array.prototype.slice.call(arguments);
 
         if (args.length === 3) {
-            return request('GET', getResource(args[0]) + '/' + args[1], processOpts(args[2])).then(processResult);
+            return request('GET', getResourceUrl(getResource(args[0]) + '/' + args[1]), processOpts(args[2]))
+                .then(processResult);
         }
 
-        return load(args[0], processOpts(args[1])).then(processResult);
+        return load(getResourceUrl(args[0]), processOpts(args[1])).then(processResult);
     },
 
     remove(collection, id) {
-        return request('DELETE', getResource(collection) + '/' + id);
+        return request('DELETE', getResourceUrl(getResource(collection) + '/' + id));
     },
 
     create(collection, data) {
-        return requestPost('POST', getResource(collection), data);
+        return requestPost('POST', getResourceUrl(getResource(collection)), data);
     },
 
     save(collection, id, data) {
-        return requestPost('POST', getResource(collection) + '/' + id, data);
+        return requestPost('POST', getResourceUrl(getResource(collection) + '/' + id), data);
     }
 
 };
