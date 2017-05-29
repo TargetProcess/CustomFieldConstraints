@@ -550,6 +550,34 @@ describe('axes', () => {
 
             });
 
+            it('skips system custom fields', () => {
+
+                const axes = [{
+                    type: 'customfield',
+                    customFieldName: 'sys-field',
+                    targetValue: '42'
+                }];
+
+                $ajax.onCall(0).returns(when({
+                    items: [{
+                        name: 'cf1',
+                        entityType: {
+                            name: 'Bug'
+                        }
+                    }, {
+                        name: 'sys-field',
+                        entityType: {
+                            name: 'Bug'
+                        },
+                        isSystem: true
+                    }]
+                }));
+
+                return getCustomFieldsForAxes(config, axes, processes, entity).then((res) => expect(res)
+                    .to.be.eql([]));
+
+            });
+
         });
 
         describe('merges axes custom fields', () => {

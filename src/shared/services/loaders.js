@@ -7,7 +7,7 @@ import store2 from 'services/store2';
 export const getCustomFields = memoize((processId, entityType) =>
     store2.get('CustomField', {
         where: `process.id == ${processId || 'null'} and entityType.name == "${entityType.name}"`,
-        select: 'new(required, name, id, config, fieldType, value, numericPriority, entityType, process)'
+        select: 'new(required, name, id, config, fieldType, value, numericPriority, entityType, process, isSystem)'
     }), (processId, entityType) => processId + entityType.name);
 
 export const loadCustomFields = memoize((processId, entityType) => {
@@ -24,7 +24,9 @@ export const loadCustomFields = memoize((processId, entityType) => {
 
     }
 
-    return fields.then((items) => items.filter((v) => v.config ? !v.config.calculationModel : true));
+    const isCalculated = (cf) => cf.config && cf.config.calculationModel;
+
+    return fields.then((items) => items.filter((cf) => !cf.isSystem && !isCalculated(cf)));
 
 }, (processId, entityType) => processId + entityType.name);
 
