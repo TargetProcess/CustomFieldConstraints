@@ -25,6 +25,12 @@ describe('axes', () => {
         $ajax.restore();
         getCustomFieldsForAxes.resetCache();
 
+        if (window.tauFeatures) {
+
+            delete window.tauFeatures;
+
+        }
+
     });
 
     describe('getCustomFieldsForAxes()', () => {
@@ -481,20 +487,20 @@ describe('axes', () => {
                         customFields: [
                             {
                                 name: 'Cf1',
-                                requiredCustomFields: ['Cf2']
+                                requiredCustomFields: ['Cf-calculated', 'Cf-system', 'Cf-regular']
                             }
                         ]
                     }
                 }
             }];
 
-            it('returns custom fields for custom field name', () => {
+            const axes = [{
+                type: 'customfield',
+                customFieldName: 'cf1',
+                targetValue: '42'
+            }];
 
-                const axes = [{
-                    type: 'customfield',
-                    customFieldName: 'cf1',
-                    targetValue: '42'
-                }];
+            it('returns custom fields for custom field name', () => {
 
                 $ajax.onCall(0).returns(when({
                     items: [{
@@ -503,7 +509,7 @@ describe('axes', () => {
                             name: 'Bug'
                         }
                     }, {
-                        name: 'Cf2',
+                        name: 'Cf-regular',
                         entityType: {
                             name: 'Bug'
                         }
@@ -512,7 +518,7 @@ describe('axes', () => {
 
                 return getCustomFieldsForAxes(config, axes, processes, entity).then((res) => expect(res)
                     .to.be.eql([{
-                        name: 'Cf2',
+                        name: 'Cf-regular',
                         entityType: {
                             name: 'Bug'
                         }
@@ -522,12 +528,6 @@ describe('axes', () => {
 
             it('skips calculated custom fields', () => {
 
-                const axes = [{
-                    type: 'customfield',
-                    customFieldName: 'cf1',
-                    targetValue: '42'
-                }];
-
                 $ajax.onCall(0).returns(when({
                     items: [{
                         name: 'Cf1',
@@ -535,7 +535,7 @@ describe('axes', () => {
                             name: 'Bug'
                         }
                     }, {
-                        name: 'Cf2',
+                        name: 'Cf-calculated',
                         entityType: {
                             name: 'Bug'
                         },
@@ -550,31 +550,73 @@ describe('axes', () => {
 
             });
 
-            it('skips system custom fields', () => {
+            it('skips system custom fields if feature is enabled', () => {
 
-                const axes = [{
-                    type: 'customfield',
-                    customFieldName: 'sys-field',
-                    targetValue: '42'
-                }];
+                window.tauFeatures = {systemCustomFields: true};
 
                 $ajax.onCall(0).returns(when({
                     items: [{
-                        name: 'cf1',
+                        name: 'Cf1',
                         entityType: {
                             name: 'Bug'
                         }
                     }, {
-                        name: 'sys-field',
+                        name: 'Cf-system',
                         entityType: {
                             name: 'Bug'
                         },
                         isSystem: true
+                    }, {
+                        name: 'Cf-calculated',
+                        entityType: {
+                            name: 'Bug'
+                        },
+                        config: {
+                            calculationModel: 42
+                        }
                     }]
                 }));
 
                 return getCustomFieldsForAxes(config, axes, processes, entity).then((res) => expect(res)
                     .to.be.eql([]));
+
+            });
+
+            it('returns system custom fields if feature is disabled', () => {
+
+                window.tauFeatures = {systemCustomFields: false};
+
+                $ajax.onCall(0).returns(when({
+                    items: [{
+                        name: 'Cf1',
+                        entityType: {
+                            name: 'Bug'
+                        }
+                    }, {
+                        name: 'Cf-system',
+                        entityType: {
+                            name: 'Bug'
+                        },
+                        isSystem: true
+                    }, {
+                        name: 'Cf-calculated',
+                        entityType: {
+                            name: 'Bug'
+                        },
+                        config: {
+                            calculationModel: 42
+                        }
+                    }]
+                }));
+
+                return getCustomFieldsForAxes(config, axes, processes, entity).then((res) => expect(res)
+                    .to.be.eql([{
+                        name: 'Cf-system',
+                        entityType: {
+                            name: 'Bug'
+                        },
+                        isSystem: true
+                    }]));
 
             });
 

@@ -4,11 +4,26 @@ import {isGeneral} from 'utils';
 import store from 'services/store';
 import store2 from 'services/store2';
 
-export const getCustomFields = memoize((processId, entityType) =>
-    store2.get('CustomField', {
+const systemCustomFieldsEnabled = () => window.tauFeatures && window.tauFeatures.systemCustomFields;
+
+export const getCustomFields = memoize((processId, entityType) => {
+
+    const fieldsToSelect = [
+        'required', 'name', 'id', 'config', 'fieldType', 'value', 'numericPriority', 'entityType', 'process'
+    ];
+
+    if (systemCustomFieldsEnabled()) {
+
+        fieldsToSelect.push('isSystem');
+
+    }
+
+    return store2.get('CustomField', {
         where: `process.id == ${processId || 'null'} and entityType.name == "${entityType.name}"`,
-        select: 'new(required, name, id, config, fieldType, value, numericPriority, entityType, process, isSystem)'
-    }), (processId, entityType) => processId + entityType.name);
+        select: `new(${fieldsToSelect.join(', ')})`
+    });
+
+}, (processId, entityType) => processId + entityType.name);
 
 export const loadCustomFields = memoize((processId, entityType) => {
 
@@ -25,8 +40,11 @@ export const loadCustomFields = memoize((processId, entityType) => {
     }
 
     const isCalculated = (cf) => cf.config && cf.config.calculationModel;
+    const isSystem = systemCustomFieldsEnabled() ?
+        (cf) => cf.isSystem :
+        () => false;
 
-    return fields.then((items) => items.filter((cf) => !cf.isSystem && !isCalculated(cf)));
+    return fields.then((items) => items.filter((cf) => !isSystem(cf) && !isCalculated(cf)));
 
 }, (processId, entityType) => processId + entityType.name);
 
