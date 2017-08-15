@@ -21,6 +21,9 @@ describe('decodeSliceValue', () => {
         // Unicode.
         expect(decodeSliceValue('b64_0YLQtdGB0YLQuNGA0YPQtdGC0YHRjw_2_2_')).to.be.equal('тестируется');
 
+        expect(decodeSliceValue(24)).to.be.equal(24);
+        expect(decodeSliceValue('24')).to.be.equal(24);
+
     });
 
 });

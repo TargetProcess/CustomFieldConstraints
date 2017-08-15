@@ -11,8 +11,12 @@ const tryOrDefault = (func, defaultValue) => {
 };
 
 export default (value) => {
-
     if (!value) return value;
+
+    if (isFinite(value)) {
+        // Handles both numbers and strings encoded as numbers
+        return parseInt(value, 10);
+    }
 
     const match = value.match(/^b64_((?:\S|\s)*)_$/);
 
