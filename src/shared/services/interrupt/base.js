@@ -27,8 +27,7 @@ const interruptEntityType = (systemInterrupter, getEntitiesFromChanges, next, en
 
         const {resolve, reject} = def;
 
-        const entitiesFromChanges = changes
-        .filter((v) => v.id);
+        const entitiesFromChanges = changes.filter((v) => v.id);
 
         if (!entitiesFromChanges.length) {
 
