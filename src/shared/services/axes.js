@@ -53,7 +53,7 @@ const matchEntityStateFlat = (valueToMatch, entityType, entityState) => {
 
 };
 
-const matchEntityStateHeirarchy = (valueToMatch, entityType, entityState) => {
+const matchEntityStateHierarchy = (valueToMatch, entityType, entityState) => {
 
     const match = partial(matchEntityStateFlat, valueToMatch, entityType);
 
@@ -89,7 +89,7 @@ const getRealEntityStateByWorkflow = (targetValue, entityStates, entityType, wor
 
     const workflowIds = pluck(workflows, 'id');
     const entityState = find(entityStates, (v) =>
-        inValues(workflowIds, v.workflow.id) && matchEntityStateHeirarchy(targetValue, entityType, v));
+        inValues(workflowIds, v.workflow.id) && matchEntityStateHierarchy(targetValue, entityType, v));
 
     return getRootEntityState(entityState);
 

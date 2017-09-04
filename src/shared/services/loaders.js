@@ -106,6 +106,8 @@ const getEntityStatesIncludes = () => {
                 'id',
                 'name', {
                     workflow: ['id']
+                }, {
+                    entityType: ['name']
                 },
                 'isInitial',
                 'isFinal',
