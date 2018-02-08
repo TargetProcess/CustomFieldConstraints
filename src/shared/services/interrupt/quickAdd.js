@@ -1,7 +1,7 @@
 import $, {when, Deferred, whenList} from 'jquery';
 import {
-    find, findIndex, findLastIndex, object, flatten, compose, constant,
-    unique, map, last, without, memoize, reject, keys, isString, some
+    compose, constant, difference, filter, find, findIndex, findLastIndex, flatten, indexBy, isString, keys, last, map, memoize,
+    object, pick, reject, some, unique, union
 } from 'underscore';
 
 import {addBusListener} from 'targetprocess-mashup-helper/lib/events';
@@ -9,9 +9,7 @@ import {addBusListener} from 'targetprocess-mashup-helper/lib/events';
 import decodeSliceValue from 'utils/decodeSliceValue';
 import {inValues, equalIgnoreCase, isAssignable, SLICE_CUSTOMFIELD_PREFIX} from 'utils';
 
-import {
-    isSameEntityType, getAcid, getEntityTypes, getSliceDefinition, shouldIgnoreAxes
-} from 'services/apiCompatibility';
+import {getEntityTypes, getSliceDefinition, shouldIgnoreAxes, getProcesses} from 'services/apiThunk';
 import {busNames} from 'services/busNames';
 import store from 'services/store';
 import {getCustomFieldsForAxes} from 'services/axes';
@@ -239,61 +237,185 @@ const getAxes = (busName, initData, entityType) => {
 
 };
 
-const getApplicationContext = (configurator, params) => {
+const customCheckboxSelector = '.toggle-switch__input';  // Pesky new checkbox.
 
-    const contextService = configurator.getApplicationContextService();
-    const def = new Deferred();
+const findCustomFieldElByName = ($el, name, processId) => {
 
-    contextService.getApplicationContext(params, {success: def.resolve});
+    const selector = `[data-iscf=true][data-fieldname="${name}"]`;
+    const checkboxSelector = `${selector} ${customCheckboxSelector}`;
 
-    return def.promise();
+    if (processId) {
+
+        const $cf = $el.find(`.cf-process_${processId} ${selector}`);
+
+        return $cf.length
+            ? $cf
+            : $el.find(`.cf-process_${processId}${checkboxSelector}`);
+
+    }
+
+    const $cf = $el.find(selector);
+
+    return $cf.length ? $cf : $el.find(checkboxSelector);
 
 };
 
-const getProcesses = (configurator, busName, initData) => {
+const getCustomFieldValue = ($cf, {fieldtype, value: dataValue} = {fieldtype: null}) => {
 
-    const sliceDefinition = getSliceDefinition(initData);
+    if (equalIgnoreCase(fieldtype, 'entity')) {
 
-    return getAcid(configurator, busName, sliceDefinition)
-        .then(({acid}) => getApplicationContext(configurator, {acid}))
-        .then(({processes}) => processes);
+        return {fieldValue: $cf.val(), dataValue};
+
+    }
+
+    if ($cf.is(':checkbox')) {
+
+        return $cf.prop('checked');
+
+    }
+
+    return $cf.val();
 
 };
 
-const findCustomFieldElByName = ($el, name, processId) =>
-    processId
-    ? $el.find(`.cf-process_${processId} > [data-iscf=true][data-fieldname="${name}"]`)
-    : $el.find(`[data-iscf=true][data-fieldname="${name}"]`);
+const setCustomFieldValue = ($cf, {fieldtype, $source}, value) => {
+
+    if (equalIgnoreCase(fieldtype, 'entity')) {
+
+        const {fieldValue, dataValue} = value;
+
+        $cf.val(fieldValue !== void 0 ? fieldValue : value);
+        $source.data('value', dataValue !== void 0 ? dataValue : null);
+
+    } else if ($cf.is(':checkbox')) {
+
+        $cf.prop('checked', value || false);
+
+    } else {
+
+        $cf.val(value);
+
+    }
+
+};
+
+const getCustomFieldData = ($cf, $cfWrap) => {
+
+    let data = $cf.data();
+
+    if (data.validate !== void 0) {
+
+        return {$source: $cf, ...pick(data, 'fieldtype', 'value', 'validate')};
+
+    }
+
+    data = $cfWrap.data();
+
+    if (data.validate !== void 0) {
+
+        return {$source: $cfWrap, ...pick(data, 'fieldtype', 'value', 'validate')};
+
+    }
+
+    return {$source: null, fieldtype: null, value: null, validate: null};
+
+};
+
+const toggleCustomFieldValidation = (data, toggle) => {
+
+    const {fieldtype, validate} = data;
+
+    if (validate !== null) {
+
+        // fieldtype can be null for url-value & url-description.
+        const rules = equalIgnoreCase(fieldtype, 'entity') ? ['entityRequired'] : ['required'];
+
+        validate.rules = toggle ? union(validate.rules, rules) : difference(validate.rules, rules);
+
+    }
+
+};
+
+const getCustomFieldElHideClass = ($cfEl) => {
+
+    // Custom checkbox is not the same as other cfs, so quick add validators show errors incorrectly after save.
+    return $cfEl.is(customCheckboxSelector) ? 'hidden' : 'hide';
+
+};
 
 const hideCustomFieldEl = ($cfEl) => {
 
-    const $cfParent = $cfEl.parent();
+    const $cfWrap = $cfEl.closest('.tau-field.tau-custom.cf-process');
+    const hideClass = getCustomFieldElHideClass($cfEl);
 
-    $cfParent.removeClass('show').addClass('hide');
-    $cfParent.find('input, select').toArray().forEach((v) =>
-        $(v).data('validate').rules = without($(v).data('validate').rules, 'required'));
+    $cfWrap.removeClass('show').addClass(hideClass);
+    $cfWrap.find('input, select').toArray().forEach((el) => {
+
+        const $cf = $(el);
+        const data = getCustomFieldData($cf, $cfWrap);
+
+        $cf.data('oldValue', getCustomFieldValue($cf, data));
+        setCustomFieldValue($cf, data, '');
+
+        toggleCustomFieldValidation(data, false);
+
+    });
 
 };
 
 const showCustomFieldEl = ($cfEl) => {
 
-    const $cfParent = $cfEl.parent();
+    const $cfWrap = $cfEl.closest('.tau-field.tau-custom.cf-process');
+    const isShown = $cfWrap.hasClass('show');
+    const hideClass = getCustomFieldElHideClass($cfEl);
 
-    $cfParent.addClass('show').removeClass('hide');
-    $cfParent.find('input, select').toArray().forEach((v) =>
-        $(v).data('validate').rules = $(v).data('validate').rules.concat('required'));
+    $cfWrap.addClass('show').removeClass(hideClass);
+    $cfWrap.find('input, select').toArray().forEach((el) => {
+
+        const $cf = $(el);
+        const data = getCustomFieldData($cf, $cfWrap);
+        const oldValue = $cf.data('oldValue');
+
+        if (!isShown && oldValue !== void 0) {
+
+            setCustomFieldValue($cf, data, oldValue);
+
+        }
+
+        toggleCustomFieldValidation(data, true);
+
+    });
 
 };
 
 const applyActualCustomFields = ($el, allCustomFields, actualCustomFields) => {
 
-    allCustomFields.forEach((v) => hideCustomFieldEl(findCustomFieldElByName($el, v.name, v.process ? v.process.id : null)));
+    const actualCustomFieldsMap = indexBy(actualCustomFields, 'id');
+    const inactualCustomFields = filter(allCustomFields, (cf) => actualCustomFieldsMap[cf.id] === void 0);
+
+    inactualCustomFields.forEach((v) => hideCustomFieldEl(findCustomFieldElByName($el, v.name, v.process ? v.process.id : null)));
     actualCustomFields.forEach((v) => showCustomFieldEl(findCustomFieldElByName($el, v.name, v.process ? v.process.id : null)));
 
 };
 
 const collectValues = ($el, customFields) =>
-    object(customFields.map((v) => [v.name, findCustomFieldElByName($el, v.name, v.process ? v.process.id : null).val()]));
+    object(customFields.map((v) => {
+
+        const $cfEl = findCustomFieldElByName($el, v.name, v.process ? v.process.id : null);
+        const value = getCustomFieldValue($cfEl);
+
+        return [v.name, value];
+
+    }));
+
+const isSameEntityType = (v, entityType) => {
+
+    const $v = $(v);
+
+    return equalIgnoreCase($v.data('type-name'), entityType.name) &&
+        equalIgnoreCase($v.data('type-title'), entityType.title);
+
+};
 
 const findFormByEntityType = ($el, entityType) =>
     $($el.find('.tau-control-set').toArray().filter((v) => isSameEntityType(v, entityType)));
@@ -468,7 +590,7 @@ const applyToComponent = (config, {busName}) =>
 
         when(getProcesses(configurator, busName, initData))
         .then((processes) =>
-            when(processes, getCustomFieldsForAxes.preloadEntityStates(processes)))
+            when(processes, getCustomFieldsForAxes.preloadParentEntityStates(processes)))
         .then((processes) =>
             whenList(entityTypes.map((entityType) => {
 

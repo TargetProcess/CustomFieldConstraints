@@ -1,5 +1,5 @@
 import React, {PropTypes as T} from 'react';
-import {noop, pluck, underscored} from 'underscore';
+import {noop, pick, pluck, underscored} from 'underscore';
 import cx from 'classnames';
 
 import Input from './Input';
@@ -32,8 +32,6 @@ export default class FormRow extends React.Component {
         let label = name;
         let specificProps = {};
 
-        if (fieldType === 'checkbox') label = '';
-
         if (fieldType === 'money') {
 
             label = (
@@ -43,18 +41,24 @@ export default class FormRow extends React.Component {
                 </span>
             );
 
-        }
-
-        if (fieldType === 'entity' || fieldType === 'multipleentities') {
+        } else if (fieldType === 'entity' || fieldType === 'multipleentities') {
 
             specificProps = {
-                filterEntityTypeName: {
-                    $in: field.config.entityTypeIds
-                },
+                entity: pick(entity, 'id', 'entityType'),
                 filterFields: (entity && entity.project && entity.project.id) ? {
                     'project.id': entity.project.id
                 } : {}
             };
+
+            const {entityTypeIds} = field.config;
+
+            if (entityTypeIds && entityTypeIds.length) {
+
+                specificProps.filterEntityTypeName = {
+                    $in: entityTypeIds
+                };
+
+            }
 
         }
 
@@ -65,9 +69,12 @@ export default class FormRow extends React.Component {
         return (
             <div className={S.block} title={title}>
                 <div className={S.label}>
-                    <label className={cx(S.labeltext, {[S.labeltextrichtext]: fieldType === 'richtext'})} htmlFor={id}>
-                        <span>{label}</span>
-                    </label>
+                    {(fieldType !== 'checkbox')
+                        ? <label className={cx(S.labeltext, {[S.labeltextrichtext]: fieldType === 'richtext'})} htmlFor={id}>
+                              <span>{label}</span>
+                          </label>
+                        : null
+                    }
                     <Input
                         {...specificProps}
                         autoFocus={autoFocus}

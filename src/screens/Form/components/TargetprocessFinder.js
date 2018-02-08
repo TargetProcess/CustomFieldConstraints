@@ -6,6 +6,14 @@ import TargetprocessComponent from 'components/TargetprocessComponent';
 export default class TargetprocessFinder extends React.Component {
 
     static propTypes = {
+        editableModel: T.func,
+        entity: T.shape({
+            id: T.number.isRequired,
+            entityType: T.shape({
+                name: T.string.isRequired
+            }).isRequired,
+            options: T.array
+        }),
         filterDsl: T.string,
         filterEntityTypeName: T.oneOfType([
             T.string,
@@ -45,27 +53,35 @@ export default class TargetprocessFinder extends React.Component {
 
     render() {
 
-        const {filterEntityTypeName, filterDsl, filterFields} = this.props;
+        const {entity, customField, filterEntityTypeName, filterDsl, filterFields} = this.props;
 
-        const finderConfig = {};
-
-        finderConfig.entityType = null;
-
-        finderConfig.filter = {
-            entityType: filterEntityTypeName
+        const config = {
+            entityType: null,
+            filter: {
+                entityType: filterEntityTypeName,
+                ...filterFields
+            },
+            editableModel: this.props.editableModel
         };
-
-        finderConfig.filter = {...finderConfig.filter, ...filterFields};
 
         if (filterDsl) {
 
-            finderConfig.filter.init_dsl = filterDsl; // eslint-disable-line camelcase
+            config.filter.init_dsl = filterDsl; // eslint-disable-line camelcase
 
         }
 
+        if (customField) {
+
+            config.customField = customField;
+
+        }
+
+        const context = entity ? {entity} : null;
+
         return (
             <TargetprocessComponent
-                config={finderConfig}
+                config={config}
+                context={context}
                 onEvents={this.handleEvents}
                 type="finder.entity"
             />

@@ -4,9 +4,6 @@ module.exports = {
     getApplicationPath: function() {
         return '/testpath';
     },
-    getLoggedUser: function() {
-        return {};
-    },
     getStore: function() {
 
         return {
@@ -14,17 +11,13 @@ module.exports = {
                 return {
                     getDictionary: function() {
                         return {
+                            bug: {
+                                resource: 'Bugs'
+                            },
                             userstory: {
                                 resource: 'UserStories'
                             }
                         };
-                    }
-                };
-            },
-            typeMetaInfo: function() {
-                return {
-                    refs: {
-                        workflows: false
                     }
                 };
             }
@@ -34,28 +27,13 @@ module.exports = {
         return {};
     },
 
-    getViewsMenuService: function() {
-
-    },
-
-    getRouting: function() {
-
+    getSystemInfo() {
         return {
-            redirect: function() {}
-        };
-    },
-
-    getUrlBuilder: function() {
-        return {
-            getDefaultViewUrl: function() {}
-        };
-    },
-
-    getGlobalBus() {
-
-        return {
-            once() {},
-            on() {}
+            culture: {
+                decimalSeparator: '.',
+                currencyDecimalSeparator: '.',
+                currencyDecimalDigits: '2'
+            }
         };
     }
 };

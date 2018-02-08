@@ -1,12 +1,17 @@
 import React, {PropTypes as T} from 'react';
 
 import InputEntityBase from './InputEntityBase';
-
 import TargetprocessLinkentity from './TargetprocessLinkentity';
+import TargetprocessFinder from './TargetprocessFinder';
 
 export default class InputEntity extends React.Component {
 
     static propTypes = {
+        entity: T.object,
+        filterEntityTypeName: TargetprocessFinder.propTypes.filterEntityTypeName,
+        filterFields: T.object,
+        onBlur: T.func,
+        onChange: T.func,
         value: T.object
     };
 
@@ -16,7 +21,7 @@ export default class InputEntity extends React.Component {
 
     render() {
 
-        const {value} = this.props;
+        const {entity, value, filterEntityTypeName, filterFields, onBlur, onChange} = this.props;
 
         let innerOutput;
 
@@ -28,12 +33,22 @@ export default class InputEntity extends React.Component {
 
         }
 
+        const finderConfig = {
+            entity,
+            filterDsl: value ? `id != ${value.id}` : null,
+            filterEntityTypeName,
+            filterFields
+        };
+
         return (
             <InputEntityBase
-                {...this.props}
+                finderConfig={finderConfig}
                 multiple={false}
+                onBlur={onBlur}
+                onChange={onChange}
                 placeholder="Click to select entity"
                 ref="input"
+                value={value}
             >
                 {innerOutput}
             </InputEntityBase>

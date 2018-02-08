@@ -21,7 +21,7 @@
 :local(.labeltext) {
     flex: 0 0 100px;
     color: #999;
-    margin-right: 4px;
+    margin: auto 4px auto 0;
 }
 
 :local(.labeltextrichtext) {

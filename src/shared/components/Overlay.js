@@ -1,9 +1,24 @@
+import $ from 'jquery';
 import React from 'react';
 import cx from 'classnames';
 
 import S from './Overlay.css';
 
+import {CustomFieldsUpdateState} from 'utils';
+
+const ESC_KEY_CODE = 27;
+
 export default class Overlay extends React.Component {
+
+    componentDidMount() {
+
+        $(window).on('keydown', (evt) => {
+
+            if (evt.keyCode === ESC_KEY_CODE) this.props.onClose({updateState: CustomFieldsUpdateState.Skipped});
+
+        });
+
+    }
 
     render() {
 

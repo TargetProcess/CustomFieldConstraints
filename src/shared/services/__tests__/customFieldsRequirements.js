@@ -740,7 +740,7 @@ describe('customFieldsRequirements', () => {
 
         });
 
-        it('returns direct requirements when not dependent field', () => {
+        it('returns direct requirements when one not dependent field', () => {
 
             const config = [{
                 processId: 13,
@@ -748,9 +748,48 @@ describe('customFieldsRequirements', () => {
                     userstory: {
                         customFields: [{
                             name: 'xxx',
+                            valueIn: [1442],
                             requiredCustomFields: ['yyy']
                         }, {
                             name: 'yyy',
+                            valueIn: [123],
+                            requiredCustomFields: ['zzz']
+                        }]
+                    }
+                }
+            }];
+
+            const process = {id: 13};
+            const changedFieldsNames = ['yyy'];
+
+            const cfValues = {};
+
+            const existingValues = {
+                xxx: 1442
+            };
+
+            const entityState = {
+                name: 'Open'
+            };
+
+            expect(getCustomFieldsNamesForChangedCustomFieldsWithDependent(changedFieldsNames, entityState, config, process, 'userstory', cfValues, existingValues))
+                .to.be.eql(['yyy']);
+
+        });
+
+        it('returns both direct requirements when not dependent field', () => {
+
+            const config = [{
+                processId: 13,
+                constraints: {
+                    userstory: {
+                        customFields: [{
+                            name: 'xxx',
+                            valueIn: [1442],
+                            requiredCustomFields: ['yyy']
+                        }, {
+                            name: 'yyy',
+                            valueIn: [123],
                             requiredCustomFields: ['zzz']
                         }]
                     }
@@ -773,7 +812,7 @@ describe('customFieldsRequirements', () => {
             };
 
             expect(getCustomFieldsNamesForChangedCustomFieldsWithDependent(changedFieldsNames, entityState, config, process, 'userstory', cfValues, existingValues))
-                .to.be.eql(['zzz']);
+                .to.be.eql(['yyy', 'zzz']);
 
         });
 
@@ -811,11 +850,11 @@ describe('customFieldsRequirements', () => {
             };
 
             expect(getCustomFieldsNamesForChangedCustomFieldsWithDependent(changedFieldsNames, entityState, config, process, 'userstory', cfValues, existingValues))
-                .to.be.eql(['xxx', 'yyy', 'zzz']);
+                .to.be.eql(['yyy', 'zzz', 'xxx']);
 
         });
 
-        it('not returns requirements if parent requirement is not set', () => {
+        it('returns requirements if parent is value in & dependent requirement is reset', () => {
 
             const config = [{
                 processId: 13,
@@ -823,6 +862,7 @@ describe('customFieldsRequirements', () => {
                     userstory: {
                         customFields: [{
                             name: 'xxx',
+                            valueIn: ['aa'],
                             requiredCustomFields: ['yyy']
                         }]
                     }
@@ -834,7 +874,42 @@ describe('customFieldsRequirements', () => {
 
             const cfValues = {};
 
-            const existingValues = {};
+            const existingValues = {
+                xxx: 'aa'
+            };
+
+            const entityState = {
+                name: 'Open'
+            };
+
+            expect(getCustomFieldsNamesForChangedCustomFieldsWithDependent(changedFieldsNames, entityState, config, process, 'userstory', cfValues, existingValues))
+                .to.be.eql(['yyy']);
+
+        });
+
+        it('returns requirements if parent is not value in & dependent requirement is reset', () => {
+
+            const config = [{
+                processId: 13,
+                constraints: {
+                    userstory: {
+                        customFields: [{
+                            name: 'xxx',
+                            valueIn: ['aa'],
+                            requiredCustomFields: ['yyy']
+                        }]
+                    }
+                }
+            }];
+
+            const process = {id: 13};
+            const changedFieldsNames = ['yyy'];
+
+            const cfValues = {};
+
+            const existingValues = {
+                xxx: 'bb'
+            };
 
             const entityState = {
                 name: 'Open'

@@ -33,10 +33,12 @@ describe('Form', () => {
             .to.have.length(0);
 
         expect(dom.find('form').find('button'))
-            .to.have.prop('disabled', null)
-            .and
-            .to.have.prop('type', 'submit')
-            .and
+            .to.have.prop('disabled', null);
+
+        expect(dom.find('form').find('button'))
+            .to.have.prop('type', 'submit');
+
+        expect(dom.find('form').find('button'))
             .to.have.text('Save and Continue');
 
     });

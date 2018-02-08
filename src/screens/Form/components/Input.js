@@ -7,6 +7,7 @@ import InputDropdown from './InputDropdown';
 import InputEntity from './InputEntity';
 import InputMultidropdown from './InputMultidropdown';
 import InputNumber from './InputNumber';
+import InputMoney from './InputMoney';
 import InputRichtext from './InputRichtext';
 import InputTemplatedUrl from './InputTemplatedUrl';
 import InputText from './InputText';
@@ -44,6 +45,7 @@ export default class Input extends React.Component {
             entity: InputEntity,
             multipleselectionlist: InputMultidropdown,
             number: InputNumber,
+            money: InputMoney,
             richtext: InputRichtext,
             templatedurl: InputTemplatedUrl,
             text: InputText,
@@ -64,15 +66,30 @@ export default class Input extends React.Component {
 
     handleChange = () => {
 
-        this.props.onChange(this.props.field, this.value);
+        if (this.hasValue) {
+
+            this.props.onChange(this.props.field, this.value);
+
+        }
 
     };
 
     handleBlur = () => {
 
-        this.props.onChange(this.props.field, this.value);
+        if (this.hasValue) {
+
+            this.props.onChange(this.props.field, this.value);
+
+        }
 
     };
+
+    get hasValue() {
+
+        // Race in url component, onchange occurs before refs ready.
+        return Boolean(this.refs.widget);
+
+    }
 
     get value() {
 

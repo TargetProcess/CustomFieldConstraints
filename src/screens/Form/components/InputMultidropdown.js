@@ -1,4 +1,5 @@
-import React, {findDOMNode} from 'react';
+import React from 'react';
+import {findDOMNode} from 'react-dom';
 import $ from 'jquery';
 import cx from 'classnames';
 
@@ -20,7 +21,6 @@ export default class InputMultidropdown extends React.Component {
                 multiple={true}
                 onFocus={this.handleFocus}
                 ref="input"
-                type="text"
                 value={value}
             >
                 {options.map((v, k) => (

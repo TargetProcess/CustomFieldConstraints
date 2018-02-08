@@ -1,11 +1,12 @@
 import {when, whenList} from 'jquery';
-import {isObject, find, flatten, pluck, partial, omit, some, unique} from 'underscore';
+import {isArray, isNumber, isString, find, flatten, pluck, partial, unique} from 'underscore';
 
-import {inValues, equalByShortcut, equalIgnoreCase, isAssignable, isStateRelated} from 'utils';
+import {inValues, equalByShortcut, equalIgnoreCase, isAssignable, isShortcut, isStateRelated} from 'utils';
 import {
     loadCustomFields,
-    preloadEntityStates,
-    loadEntityStates,
+    preloadParentEntityStates,
+    loadSingleParentEntityState,
+    loadParentEntityStates,
     loadTeamsData,
     loadTeamProjects,
     resetLoadersCache
@@ -34,9 +35,6 @@ const getRealCustomFields = (customFieldsNames, processId, entityType) => {
 
 };
 
-const matchTeamWorkflowEntityStateFlat = (valueToMatch, entityState) =>
-    some(pluck(valueToMatch, 'entityState'), (v) => v && v.id === entityState.id);
-
 const matchEntityStateFlat = (valueToMatch, entityType, entityState) => {
 
     if (!equalIgnoreCase(entityState.entityType.name, entityType.name)) {
@@ -45,11 +43,9 @@ const matchEntityStateFlat = (valueToMatch, entityType, entityState) => {
 
     }
 
-    const isTeamWorkflowEntityState = isObject(valueToMatch);
-
-    return isTeamWorkflowEntityState ?
-        matchTeamWorkflowEntityStateFlat(valueToMatch, entityState) :
-        equalIgnoreCase(valueToMatch, entityState.name) || equalByShortcut(valueToMatch, entityState);
+    return isNumber(valueToMatch) ?
+        valueToMatch === entityState.id :
+        equalIgnoreCase(valueToMatch.name || valueToMatch, entityState.name) || equalByShortcut(valueToMatch, entityState);
 
 };
 
@@ -57,41 +53,28 @@ const matchEntityStateHierarchy = (valueToMatch, entityType, entityState) => {
 
     const match = partial(matchEntityStateFlat, valueToMatch, entityType);
 
-    return match(entityState) || entityState.subEntityStates.items.some(match);
-
-};
-
-// Mashup is configured for parent workflow entity state.
-const getRootEntityState = (entityState) => {
-
-    const parentEntityState = entityState ?
-        entityState.parentEntityState : null;
-
-    return !parentEntityState ?
-        entityState : parentEntityState;
+    return match(entityState) || entityState.subEntityStates.some(match);
 
 };
 
 const getRealEntityState = (targetValue, processId, entityType) =>
-    when(loadEntityStates(processId))
+    when(loadParentEntityStates(processId))
     .then((states) => {
 
         const entityStateFinder = targetValue.id ?
             (v) => v.id === targetValue.id :
-            (v) => matchEntityStateFlat(targetValue, entityType, getRootEntityState(v));
-        const entityState = find(states, entityStateFinder);
+            (v) => matchEntityStateFlat(targetValue, entityType, v);
 
-        return getRootEntityState(entityState);
+        return find(states, entityStateFinder);
 
     });
 
 const getRealEntityStateByWorkflow = (targetValue, entityStates, entityType, workflows) => {
 
     const workflowIds = pluck(workflows, 'id');
-    const entityState = find(entityStates, (v) =>
-        inValues(workflowIds, v.workflow.id) && matchEntityStateHierarchy(targetValue, entityType, v));
 
-    return getRootEntityState(entityState);
+    return find(entityStates, (v) =>
+        inValues(workflowIds, v.workflow.id) && matchEntityStateHierarchy(targetValue, entityType, v));
 
 };
 
@@ -109,7 +92,7 @@ const getRealEntityStateByTeam = (targetValue, processId, entity) => {
     const canLoadTeamsData = entity.id !== void 0;
 
     return canLoadTeamsData ?
-        when(loadEntityStates(processId), loadTeamsData(entity))
+        when(loadParentEntityStates(processId), loadTeamsData(entity))
         .then((entityStates, fullEntity) => {
 
             const teamProjects = fullEntity.project ? fullEntity.project.teamProjects.items : [];
@@ -121,7 +104,7 @@ const getRealEntityStateByTeam = (targetValue, processId, entity) => {
         })
         .then((entityStates, assignedTeams, project, teamProjects) => {
 
-            const workflows = assignedTeams.reduce((res, v) => {
+            const rootWorkflows = assignedTeams.reduce((res, v) => {
 
                 const team = v.team;
                 const teamProject = find(teamProjects, (vv) =>
@@ -132,13 +115,69 @@ const getRealEntityStateByTeam = (targetValue, processId, entity) => {
                 const workflow = find(teamProject.workflows.items, (vv) =>
                     equalIgnoreCase(vv.entityType.name, entity.entityType.name));
 
-                return workflow ? res.concat(workflow) : res;
+                return workflow ? res.concat(workflow.parentWorkflow || workflow) : res;
 
             }, []);
 
-            return getRealEntityStateByWorkflow(targetValue, entityStates, entityType, workflows);
+            return getRealEntityStateByWorkflow(targetValue, entityStates, entityType, rootWorkflows);
 
         }) : getRealEntityState(targetValue, processId, entityType);
+
+};
+
+const getRootTargetQuery = (targetValue, entityState) => {
+
+    if (isShortcut(targetValue)) {
+
+        return {filter: null, field: null};
+
+    }
+
+    const targetIsArray = isArray(targetValue);
+    // New entity state id from slice or new entity state object from store.
+    let filter = targetValue.id || targetIsArray && (pluck(targetValue, 'entityState')[0] || {}).id;
+    let field;
+
+    if (isNumber(filter)) {
+
+        field = 'id';
+
+    } else if (isString(targetValue)) {
+
+        // Slice send entity state name here.
+        filter = targetValue;
+        field = 'name';
+
+    } else if (targetIsArray && pluck(targetValue, 'team').length) {
+
+        // Add new team with custom workflow, select current entity state.
+        filter = entityState.id;
+        field = 'id';
+
+    } else {
+
+        filter = field = null;
+
+    }
+
+    return {filter, field};
+
+};
+
+// Mashup uses entity states from default workflow in rules, so find default entity state for target one.
+const getRootTargetValue = (targetValue, processId, {entityType, entityState}) => {
+
+    const query = getRootTargetQuery(targetValue, entityState);
+
+    // Raw entity state source, pass as is.
+    if (query.filter === null || query.field === null) {
+
+        return when(targetValue);
+
+    }
+
+    return loadSingleParentEntityState(query, processId, entityType)
+        .then((parentEntityState) => parentEntityState || {[query.field]: query.filter});
 
 };
 
@@ -146,7 +185,8 @@ const getRealTargetValue = (axis, targetValue, processId, entity) => {
 
     if (axis.type === 'entitystate') {
 
-        return getRealEntityState(targetValue, processId, entity.entityType);
+        return getRootTargetValue(targetValue, processId, entity)
+            .then((rootValue) => getRealEntityState(rootValue, processId, entity.entityType));
 
     }
 
@@ -158,7 +198,8 @@ const getRealTargetValue = (axis, targetValue, processId, entity) => {
 
     if (axis.type === 'assignedteams' || axis.type === 'teamentitystate') {
 
-        return getRealEntityStateByTeam(targetValue, processId, entity);
+        return getRootTargetValue(targetValue, processId, entity)
+            .then((rootValue) => getRealEntityStateByTeam(rootValue, processId, entity));
 
     }
 
@@ -187,9 +228,7 @@ const getCustomFieldsForAxis = (config, axis, processes, entity, values = {}, op
 
                         if (axis.checkDependent && targetValue === null) {
 
-                            const fullValues = omit(values, realTargetValue.name);
-
-                            return getCustomFieldsNamesForChangedCustomFieldsWithDependent([realTargetValue.name], entity.entityState ? entity.entityState : null, config, process, entity.entityType.name, fullValues, initialValues, options);
+                            return getCustomFieldsNamesForChangedCustomFieldsWithDependent([realTargetValue.name], entity.entityState ? entity.entityState : null, config, process, entity.entityType.name, values, initialValues, options);
 
                         } else {
 
@@ -239,4 +278,4 @@ export const getCustomFieldsForAxes = (config, axes, processes, entity, values =
 
 getCustomFieldsForAxes.resetCache = () => resetLoadersCache();
 
-getCustomFieldsForAxes.preloadEntityStates = (processes) => preloadEntityStates(processes);
+getCustomFieldsForAxes.preloadParentEntityStates = (processes) => preloadParentEntityStates(processes);

@@ -10,7 +10,7 @@ describe('axes', () => {
     const entity = {
         id: 123,
         entityType: {
-            name: 'bug'
+            name: 'Bug'
         }
     };
 
@@ -70,7 +70,7 @@ describe('axes', () => {
                 }
             }];
 
-            it('returns custom fields for entity state id', () => {
+            it('returns custom fields by entity state id when entity state has no parent', () => {
 
                 const axes = [{
                     type: 'entitystate',
@@ -80,7 +80,7 @@ describe('axes', () => {
                 }];
 
                 $ajax.onCall(0).returns(when({
-                    Items: [{
+                    items: [{
                         id: 42,
                         name: 'Open',
                         entityType: {
@@ -106,13 +106,17 @@ describe('axes', () => {
                 }));
 
                 $ajax.onCall(1).returns(when({
+                    items: []
+                }));
+
+                $ajax.onCall(2).returns(when({
                     items: [{
                         name: 'Cf1',
                         id: 1
                     }]
                 }));
 
-                return getCustomFieldsForAxes.preloadEntityStates(processes)
+                return getCustomFieldsForAxes.preloadParentEntityStates(processes)
                     .then(() => getCustomFieldsForAxes(config, axes, processes, entity))
                     .then((res) => expect(res)
                         .to.be.eql([{
@@ -122,33 +126,21 @@ describe('axes', () => {
 
             });
 
-            it('returns custom fields of parent entity state for entity state id', () => {
+            it('returns custom fields by entity state id when entity state has parent', () => {
 
                 const axes = [{
                     type: 'entitystate',
                     targetValue: {
-                        id: 42
+                        id: 95
                     }
                 }];
 
                 $ajax.onCall(0).returns(when({
-                    Items: [{
+                    items: [{
                         id: 42,
-                        name: 'Opened (Open)',
+                        name: 'Working On',
                         entityType: {
                             name: 'Bug'
-                        },
-                        parentEntityState: {
-                            id: 10,
-                            name: 'Open',
-                            entityType: {
-                                name: 'Bug'
-                            },
-                            workflow: {
-                                process: {
-                                    id: 777
-                                }
-                            }
                         },
                         workflow: {
                             process: {
@@ -157,7 +149,7 @@ describe('axes', () => {
                         }
                     }, {
                         id: 43,
-                        name: 'Ready',
+                        name: 'Open',
                         entityType: {
                             name: 'Bug'
                         },
@@ -170,13 +162,17 @@ describe('axes', () => {
                 }));
 
                 $ajax.onCall(1).returns(when({
+                    items: [{id: 43}]
+                }));
+
+                $ajax.onCall(2).returns(when({
                     items: [{
                         name: 'Cf1',
                         id: 1
                     }]
                 }));
 
-                return getCustomFieldsForAxes.preloadEntityStates(processes)
+                return getCustomFieldsForAxes.preloadParentEntityStates(processes)
                     .then(() => getCustomFieldsForAxes(config, axes, processes, entity))
                     .then((res) => expect(res)
                         .to.be.eql([{
@@ -186,7 +182,7 @@ describe('axes', () => {
 
             });
 
-            it('returns custom fields for entity state name', () => {
+            it('returns custom fields by entity state name when entity state has no parent', () => {
 
                 const axes = [{
                     type: 'entitystate',
@@ -194,7 +190,7 @@ describe('axes', () => {
                 }];
 
                 $ajax.onCall(0).returns(when({
-                    Items: [{
+                    items: [{
                         name: 'Open',
                         entityType: {
                             name: 'Bug'
@@ -218,13 +214,17 @@ describe('axes', () => {
                 }));
 
                 $ajax.onCall(1).returns(when({
+                    items: []
+                }));
+
+                $ajax.onCall(2).returns(when({
                     items: [{
                         name: 'Cf1',
                         id: 1
                     }]
                 }));
 
-                return getCustomFieldsForAxes.preloadEntityStates(processes)
+                return getCustomFieldsForAxes.preloadParentEntityStates(processes)
                     .then(() => getCustomFieldsForAxes(config, axes, processes, entity))
                     .then((res) => expect(res)
                         .to.be.eql([{
@@ -234,29 +234,18 @@ describe('axes', () => {
 
             });
 
-            it('returns custom fields of parent entity state for entity state name', () => {
+            it('returns custom fields by entity state name when entity state has parent', () => {
 
                 const axes = [{
                     type: 'entitystate',
-                    targetValue: 'open'
+                    targetValue: 'created'
                 }];
 
                 $ajax.onCall(0).returns(when({
-                    Items: [{
-                        name: 'Opened (Open)',
+                    items: [{
+                        name: 'Open',
                         entityType: {
                             name: 'Bug'
-                        },
-                        parentEntityState: {
-                            name: 'Open',
-                            entityType: {
-                                name: 'Bug'
-                            },
-                            workflow: {
-                                process: {
-                                    id: 777
-                                }
-                            }
                         },
                         workflow: {
                             process: {
@@ -277,13 +266,17 @@ describe('axes', () => {
                 }));
 
                 $ajax.onCall(1).returns(when({
+                    items: [{name: 'open'}]
+                }));
+
+                $ajax.onCall(2).returns(when({
                     items: [{
                         name: 'Cf1',
                         id: 1
                     }]
                 }));
 
-                return getCustomFieldsForAxes.preloadEntityStates(processes)
+                return getCustomFieldsForAxes.preloadParentEntityStates(processes)
                     .then(() => getCustomFieldsForAxes(config, axes, processes, entity))
                     .then((res) => expect(res)
                         .to.be.eql([{
@@ -301,7 +294,7 @@ describe('axes', () => {
                 }];
 
                 $ajax.onCall(0).returns(when({
-                    Items: [{
+                    items: [{
                         name: 'Open',
                         isFinal: true,
                         entityType: {
@@ -322,7 +315,7 @@ describe('axes', () => {
                     }]
                 }));
 
-                return getCustomFieldsForAxes.preloadEntityStates(processes)
+                return getCustomFieldsForAxes.preloadParentEntityStates(processes)
                     .then(() => getCustomFieldsForAxes(config, axes, processes, entity))
                     .then((res) => expect(res)
                         .to.be.eql([{
@@ -332,29 +325,36 @@ describe('axes', () => {
 
             });
 
-            it('returns custom fields of parent entity name for entity state shortcut', () => {
+            it('returns custom fields by selected entity state when team is assigning', () => {
 
                 const axes = [{
-                    type: 'entitystate',
-                    targetValue: '_final'
+                    type: 'assignedteams',
+                    targetValue: [{
+                        team: {
+                            id: 12
+                        }
+                    }]
                 }];
 
+                const entityState = {
+                    id: 43
+                };
+
                 $ajax.onCall(0).returns(when({
-                    Items: [{
-                        name: 'Ready to do (Open)',
-                        isFinal: false,
-                        parentEntityState: {
-                            name: 'Open',
-                            isFinal: true,
-                            entityType: {
-                                name: 'Bug'
-                            },
-                            workflow: {
-                                process: {
-                                    id: 777
-                                }
-                            }
+                    items: [{
+                        id: 42,
+                        name: 'Working On',
+                        entityType: {
+                            name: 'Bug'
                         },
+                        workflow: {
+                            process: {
+                                id: 777
+                            }
+                        }
+                    }, {
+                        id: 43,
+                        name: 'Open',
                         entityType: {
                             name: 'Bug'
                         },
@@ -367,13 +367,123 @@ describe('axes', () => {
                 }));
 
                 $ajax.onCall(1).returns(when({
+                    items: []
+                }));
+
+                $ajax.onCall(2).returns(when({
                     items: [{
                         name: 'Cf1',
                         id: 1
                     }]
                 }));
 
-                return getCustomFieldsForAxes.preloadEntityStates(processes)
+                return getCustomFieldsForAxes.preloadParentEntityStates(processes)
+                    .then(() => getCustomFieldsForAxes(config, axes, processes, {...entity, entityState}))
+                    .then((res) => expect(res)
+                        .to.be.eql([{
+                            name: 'Cf1',
+                            id: 1
+                        }]));
+
+            });
+
+            it('returns custom fields when change team entity state', () => {
+
+                const axes = [{
+                    type: 'teamentitystate',
+                    targetValue: [{
+                        entityState: {
+                            id: 95
+                        }
+                    }]
+                }];
+
+                const projectId = 5;
+                const teamId = 32;
+                const workflowId = 99;
+
+                $ajax.onCall(0).returns(when({
+                    items: [{
+                        id: 42,
+                        name: 'Working On',
+                        entityType: {
+                            name: 'Bug'
+                        },
+                        workflow: {
+                            id: workflowId + 1,
+                            process: {
+                                id: 777
+                            }
+                        }
+                    }, {
+                        id: 43,
+                        name: 'Open',
+                        entityType: {
+                            name: 'Bug'
+                        },
+                        workflow: {
+                            id: workflowId,
+                            process: {
+                                id: 777
+                            }
+                        }
+                    }]
+                }));
+
+                $ajax.onCall(1).returns(when({
+                    items: [{id: 43}]
+                }));
+
+                $ajax.onCall(2).returns(when({
+                    project: {
+                        id: projectId,
+                        process: processes[0],
+                        teamProjects: {
+                            items: [{id: 80}]
+                        }
+                    },
+                    assignedTeams: {
+                        items: [{
+                            id: 45,
+                            team: {
+                                id: teamId
+                            }
+                        }]
+                    }
+                }));
+
+                $ajax.onCall(3).returns(when({
+                    Items: [{
+                        project: {
+                            id: projectId
+                        },
+                        team: {
+                            id: teamId
+                        },
+                        workflows: {
+                            items: [{
+                                entityType: {
+                                    name: 'Bug'
+                                },
+                                parentWorkflow: {
+                                    id: workflowId,
+                                    entityType: {
+                                        name: 'Bug'
+                                    }
+                                }
+                            }]
+                        }
+                    }]
+                }));
+
+                $ajax.onCall(4).returns(when({
+                    items: [{
+                        name: 'Cf1',
+                        id: 1
+                    }]
+                }));
+
+                return getCustomFieldsForAxes.preloadParentEntityStates(processes)
                     .then(() => getCustomFieldsForAxes(config, axes, processes, entity))
                     .then((res) => expect(res)
                         .to.be.eql([{
@@ -391,7 +501,7 @@ describe('axes', () => {
                 }];
 
                 $ajax.onCall(0).returns(when({
-                    Items: [{
+                    items: [{
                         name: 'Open',
                         entityType: {
                             name: 'Bug'
@@ -411,59 +521,7 @@ describe('axes', () => {
                     }]
                 }));
 
-                return getCustomFieldsForAxes.preloadEntityStates(processes)
-                    .then(() => getCustomFieldsForAxes(config, axes, processes, entity))
-                    .then((res) => {
-
-                        expect(res).to.be.eql([]);
-                        expect($ajax).to.be.calledOnce;
-
-                    });
-
-            });
-
-            it('returns none if entity state is found but parent entity state is not', () => {
-
-                const axes = [{
-                    type: 'entitystate',
-                    targetValue: '_final'
-                }];
-
-                $ajax.onCall(0).returns(when({
-                    Items: [{
-                        name: 'Rejected (In Progress)',
-                        entityType: {
-                            name: 'Bug'
-                        },
-                        isFinal: true,
-                        parentEnityState: {
-                            name: 'In Progress',
-                            entityType: {
-                                name: 'Bug'
-                            },
-                            isFinal: false,
-                            workflow: {
-                                process: {
-                                    id: 777
-                                }
-                            }
-                        },
-                        workflow: {
-                            process: {
-                                id: 777
-                            }
-                        }
-                    }]
-                }));
-
-                $ajax.onCall(1).returns(when({
-                    items: [{
-                        name: 'Cf1',
-                        id: 1
-                    }]
-                }));
-
-                return getCustomFieldsForAxes.preloadEntityStates(processes)
+                return getCustomFieldsForAxes.preloadParentEntityStates(processes)
                     .then(() => getCustomFieldsForAxes(config, axes, processes, entity))
                     .then((res) => {
 
@@ -644,7 +702,7 @@ describe('axes', () => {
                 }
             }];
 
-            it('remove custom fields if already in axis', () => {
+            it('remove custom fields if already in axis and entity state has no parent', () => {
 
                 const axes = [{
                     type: 'entitystate',
@@ -658,7 +716,7 @@ describe('axes', () => {
                 }];
 
                 $ajax.onCall(0).returns(when({
-                    Items: [{
+                    items: [{
                         id: 43,
                         name: 'Open',
                         entityType: {
@@ -673,6 +731,10 @@ describe('axes', () => {
                 }));
 
                 $ajax.onCall(1).returns(when({
+                    items: []
+                }));
+
+                $ajax.onCall(2).returns(when({
                     items: [{
                         name: 'Cf1',
                         id: 1
@@ -688,7 +750,22 @@ describe('axes', () => {
                     }]
                 }));
 
-                return getCustomFieldsForAxes.preloadEntityStates(processes)
+                $ajax.onCall(3).returns(when({
+                    items: [{
+                        id: 43,
+                        name: 'Open',
+                        entityType: {
+                            name: 'Bug'
+                        },
+                        workflow: {
+                            process: {
+                                id: 777
+                            }
+                        }
+                    }]
+                }));
+
+                return getCustomFieldsForAxes.preloadParentEntityStates(processes)
                     .then(() => getCustomFieldsForAxes(config, axes, processes, entity))
                     .then((res) => expect(res)
                         .to.be.eql([{

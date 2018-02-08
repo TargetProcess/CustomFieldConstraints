@@ -5,21 +5,21 @@ import {findDOMNode} from 'react-dom';
 import InputText from './InputText';
 import {fields} from '../fields';
 
-export default class InputNumber extends React.Component {
+export default class InputMoney extends React.Component {
 
     componentDidMount() {
 
         const $input = $(findDOMNode(this.refs.input));
 
         $input.inputMaskEditor({
-            mask: fields.number.mask
+            mask: fields.money.mask
         });
 
     }
 
     render() {
 
-        const value = fields.number.format(this.props.value);
+        const value = fields.money.format(this.props.value);
 
         return (
             <InputText {...this.props} ref="input" value={value} />
@@ -31,7 +31,7 @@ export default class InputNumber extends React.Component {
 
         const value = findDOMNode(this.refs.input).value;
 
-        return fields.number.invariant(value);
+        return fields.money.invariant(value);
 
     }
 

@@ -1,4 +1,6 @@
-import React, {findDOMNode} from 'react';
+import {omit} from 'underscore';
+import React from 'react';
+import {findDOMNode} from 'react-dom';
 import cx from 'classnames';
 
 import S from './InputUrl.css';
@@ -14,7 +16,7 @@ export default class InputUrl extends React.Component {
 
     render() {
 
-        const {value} = this.props;
+        const {value, id} = this.props;
 
         return (
             <div className={S.block}>
@@ -22,8 +24,9 @@ export default class InputUrl extends React.Component {
                     <label className={S.label}>
                         <span className={S.labeltext}>{'Url'}</span>
                         <input
-                            {...this.props}
+                            {...omit(this.props, 'id', 'value')}
                             className={cx('tau-in-text', {'tau-error': this.props.isInvalid})}
+                            id={id}
                             ref="url"
                             type="text"
                             value={value.url}
@@ -35,8 +38,9 @@ export default class InputUrl extends React.Component {
                     <label className={S.label}>
                         <span className={S.labeltext}>{'Description'}</span>
                         <input
-                            {...this.props}
+                            {...omit(this.props, 'id', 'value')}
                             className={cx('tau-in-text', {'tau-error': this.props.isInvalid})}
+                            id={`${id}-label`}
                             ref="label"
                             type="text"
                             value={value.label}

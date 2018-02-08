@@ -1,10 +1,12 @@
-import React, {findDOMNode, PropTypes as T} from 'react';
+import React, {PropTypes as T} from 'react';
+import {findDOMNode} from 'react-dom';
 import cx from 'classnames';
 import $ from 'jquery';
-import {noop} from 'underscore';
+import {isArray, noop, union} from 'underscore';
+
+import EmptyEditableModel from 'tau/core/extension.base';
 
 import Bubble from 'components/Bubble';
-
 import TargetprocessFinder from './TargetprocessFinder';
 
 import S from './InputEntityBase.css';
@@ -12,32 +14,45 @@ import S from './InputEntityBase.css';
 export default class InputEntityBase extends React.Component {
 
     static propTypes = {
-        filterEntityTypeName: TargetprocessFinder.propTypes.filterEntityTypeName,
-        filterFields: T.object,
+        finderConfig: T.shape({
+            entity: T.object,
+            filterDsl: T.string,
+            filterEntityTypeName: TargetprocessFinder.propTypes.filterEntityTypeName,
+            filterFields: T.object.isRequired
+        }),
         multiple: T.bool,
         onBlur: T.func,
         onChange: T.func,
-        placeholder: T.string
+        placeholder: T.string,
+        value: T.oneOfType([T.object, T.array])
     };
 
     static defaultProps = {
-        filterFields: {},
         multiple: false,
+        finderConfig: {},
         onBlur: noop,
         onChange: noop,
-        placeholder: 'Click to select'
+        placeholder: 'Click to select',
+        value: void 0
     };
 
-    state = {
-        value: void 0,
-        showFinder: false,
-        showFinderBubble: false
-    };
+    constructor(props) {
+
+        super(props);
+
+        this.state = {
+            value: this.props.value || void 0,
+            showFinder: false,
+            showFinderBubble: false
+        };
+
+    }
 
     render() {
 
-        const {filterEntityTypeName, filterFields, children, id, isInvalid} = this.props;
+        const {children, id, isInvalid, finderConfig} = this.props;
         const {value, showFinder, showFinderBubble} = this.state;
+
         let finder;
         let finderBubble;
 
@@ -45,8 +60,11 @@ export default class InputEntityBase extends React.Component {
 
             finder = (
                 <TargetprocessFinder
-                    filterEntityTypeName={filterEntityTypeName}
-                    filterFields={filterFields}
+                    editableModel={EmptyEditableModel}
+                    entity={finderConfig.entity}
+                    filterDsl={finderConfig.filterDsl}
+                    filterEntityTypeName={finderConfig.filterEntityTypeName}
+                    filterFields={finderConfig.filterFields}
                     onAdjust={this.handleFinderAdjusted}
                     onRendered={this.handleFinderRendered}
                     onSelect={this.handleSelect}
@@ -91,6 +109,8 @@ export default class InputEntityBase extends React.Component {
 
         }
 
+        const canReset = isArray(value) ? value.length !== 0 : Boolean(value);
+
         return (
             <div
                 {...this.props}
@@ -100,7 +120,6 @@ export default class InputEntityBase extends React.Component {
             >
                 <div className={S.inputwrapper}>
                     <div
-
                         className={cx('tau-in-text', {
                             'tau-error': isInvalid
                         }, S.input)}
@@ -111,7 +130,7 @@ export default class InputEntityBase extends React.Component {
                     >
                         {innerOutput}
                     </div>
-                    {value ? (
+                    {canReset ? (
                         <button className={S.reset} onClick={this.handleClickReset} type="button">
                             <i className="tau-icon-general tau-icon-close-round" />
                         </button>
@@ -143,7 +162,7 @@ export default class InputEntityBase extends React.Component {
         const {multiple} = this.props;
 
         this.setState({
-            value: multiple ? (this.state.value || []).concat(entity) : entity,
+            value: multiple ? union(this.state.value || [], [entity]) : entity,
             showFinder: multiple,
             showFinderBubble: multiple
         }, () => this.props.onChange(entity));

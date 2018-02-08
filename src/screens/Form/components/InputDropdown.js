@@ -1,4 +1,5 @@
-import React, {findDOMNode} from 'react';
+import React from 'react';
+import {findDOMNode} from 'react-dom';
 import cx from 'classnames';
 
 export default class InputDropdown extends React.Component {
@@ -13,7 +14,6 @@ export default class InputDropdown extends React.Component {
                 {...this.props}
                 className={cx('tau-select', {'tau-error': this.props.isInvalid})}
                 ref="input"
-                type="text"
                 value={value}
             >
                 {options.map((v, k) => (

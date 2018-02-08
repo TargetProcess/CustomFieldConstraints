@@ -65,10 +65,12 @@ export default (customFields, formValues, existingCustomFieldsValues) => {
         } else {
 
             customFieldValue = find(existingCustomFieldsValues, (v) => v.name === customField.name);
-            customFieldValue = {
-                ...customFieldValue,
-                value: customFieldValue.customField.defaultValue
-            };
+
+            if (customFieldValue.value === null) {
+
+                customFieldValue.value = customFieldValue.customField.defaultValue;
+
+            }
 
         }
 
