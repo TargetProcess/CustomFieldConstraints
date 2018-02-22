@@ -2,7 +2,6 @@
     flex-grow: 1;
     display: flex;
     flex-direction: column;
-    margin: 0 2px;
 }
 
 :local(.textarea):local(.textarea) {

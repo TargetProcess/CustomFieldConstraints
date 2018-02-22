@@ -1,4 +1,9 @@
-import React, {findDOMNode, PropTypes as T} from 'react';
+import React, {PropTypes as T} from 'react';
+import {findDOMNode} from 'react-dom';
+
+import cx from 'classnames';
+
+import S from './InputCheckbox.css';
 
 export default class InputCheckbox extends React.Component {
 
@@ -15,10 +20,14 @@ export default class InputCheckbox extends React.Component {
         const {name: label} = field;
 
         return (
-            <label className="tau-checkbox">
-                <input {...this.props} checked={value} ref="input" type="checkbox" />
-                <i className="tau-checkbox__icon" />
-                <span style={{color: '#999'}}>{label}</span>
+            <label className={cx('customfield-checkbox', 'checkbox-hover-trigger', S.block)}>
+                <div className="customfield-checkbox__label">{label}</div>
+                <div className="customfield-checkbox__value">
+                    <div className="toggle-switch">
+                        <input className="toggle-switch__input" {...this.props} checked={value} ref="input" type="checkbox" />
+                        <span className="toggle-switch__slider"></span>
+                    </div>
+                </div>
             </label>
         );
 

@@ -5,38 +5,56 @@ import modifyQuickAdd from './shared/services/interrupt/quickAdd';
 import interruptSlice from './shared/services/interrupt/slice';
 import interruptStore from './shared/services/interrupt/store';
 
+import {CustomFieldsUpdateState} from 'utils';
+
 const {placeholderId} = mashup.variables;
 const mashupConfig = mashup.config;
 
 const showPopupNew = ({entity, axes, replaceCustomFieldValueInChanges}, next) => {
 
-    require.ensure(['react', './screens/Form'], () => {
+    require.ensure(['react', 'react-dom', './screens/Form'], () => {
 
         const React = require('react');
+        const ReactDOM = require('react-dom');
         const Form = require('./screens/Form').default;
 
         const holder = document.getElementById(placeholderId).appendChild(document.createElement('div'));
 
-        const handleCancel = () => {
+        const handleCancel = ({updateState = CustomFieldsUpdateState.Skipped}) => {
 
-            React.unmountComponentAtNode(holder);
-            next.reject({
-                response: {
-                    Message: 'The changes were not saved as you didn\'t fill out the required custom fields'
-                },
-                status: 400
-            });
+            ReactDOM.unmountComponentAtNode(holder);
+
+            switch (updateState) {
+                case CustomFieldsUpdateState.Skipped:
+                    next.reject({
+                        response: {
+                            Message: 'Note, required custom fields weren\'t changed, so nothing was saved.'
+                        },
+                        status: 400
+                    });
+                    break;
+                case CustomFieldsUpdateState.Partial:
+                    next.reject({
+                        response: {
+                            Message: 'Note, only changed required custom fields were saved.'
+                        },
+                        status: 422
+                    });
+                    break;
+                default:
+                    throw new Error(`Unknown custom field update state ${updateState}. Please, contact support.`);
+            }
 
         };
 
         const handleAfterSave = () => {
 
-            React.unmountComponentAtNode(holder);
+            ReactDOM.unmountComponentAtNode(holder);
             next.resolve();
 
         };
 
-        React.render((
+        ReactDOM.render((
             <Form
                 changes={axes}
                 entity={entity}

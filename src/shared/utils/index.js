@@ -22,6 +22,8 @@ export const inValues = (values, value = '') => {
 
 };
 
+export const isShortcut = (shortcut) => inValues(['_initial', '_final', '_planned'], String(shortcut));
+
 export const isGeneral = (entity) => inValues([
     'General',
     'Assignable',
@@ -76,3 +78,8 @@ export const getEntityTypesNamesFromConfig = (config) =>
 export const SLICE_CUSTOMFIELD_PREFIX = /^ddl(multipleselectionlist)?/;
 
 export const isStateRelated = (name) => inValues(['entitystate', 'assignedteams', 'teamentitystate'], name);
+
+export const CustomFieldsUpdateState = {
+    Skipped: 0,
+    Partial: 1
+};

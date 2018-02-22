@@ -1,4 +1,6 @@
-import {isString, isEmpty, isNumber} from 'underscore';
+import {isBoolean, isString, isEmpty, isNumber} from 'underscore';
+import dateUtils from 'tau/utils/utils.date';
+import {equalIgnoreCase} from 'utils';
 
 const transformFromServerValue = (field, value) => {
 
@@ -6,6 +8,13 @@ const transformFromServerValue = (field, value) => {
         case 'multipleselectionlist':
             return (isString(value) && value) ? value.split(',') : [];
         case 'url': return value || {};
+        case 'date': {
+
+            const serverDate = dateUtils.parseToServerDateTime(value);
+
+            return serverDate ? dateUtils.format.date.short(serverDate) : value;
+
+        }
         case 'entity':
             if (value) {
 
@@ -46,8 +55,12 @@ const transformFromServerValue = (field, value) => {
 
 };
 
-const isEmptyServerValue = (customField, serverValue) => !isNumber(serverValue) && isEmpty(serverValue);
-const isInitializedServerValue = (customField, serverValue) => serverValue !== null;
+const isAssumeEmptyServerValue = (customField, serverValue) => {
+
+    // Assume checkboxes are always empty, since we need to require them every time rule is match (in real they are true/false only).
+    return customField.type === 'checkbox' || (!isNumber(serverValue) && !isBoolean(serverValue) && isEmpty(serverValue));
+
+};
 
 const transformFromInputValue = (customField, value) => value;
 
@@ -85,8 +98,7 @@ export const fromServerValue = (customField, serverValue) => {
         name: customField.name,
         customField,
         value,
-        isEmpty: isEmptyServerValue(customField, serverValue),
-        isInitialized: isInitializedServerValue(customField, serverValue),
+        isAssumeEmpty: isAssumeEmptyServerValue(customField, serverValue),
         serverValue: transformToServerValue(customField, value)
     };
 
@@ -100,9 +112,12 @@ export const fromInputValue = (customField, inputValue) => {
         name: customField.name,
         customField,
         value,
-        isEmpty: isEmptyServerValue(customField, inputValue),
-        isInitialized: isInitializedServerValue(customField, inputValue),
+        isAssumeEmpty: isAssumeEmptyServerValue(customField, inputValue),
         serverValue: transformToServerValue(customField, value)
     };
 
 };
+
+// TP can send null when we uncheck checkbox custom field, override to correct value false.
+export const getCustomFieldValue = (customField) => equalIgnoreCase(customField.type, 'checkbox')
+    ? Boolean(customField.value) : customField.value;

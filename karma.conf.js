@@ -25,9 +25,8 @@ module.exports = (config) => {
         externals: {
             jsdom: 'window',
             cheerio: 'window',
-            'react-dom': 'window',
-            'react-dom/server': 'window',
-            'react-addons-test-utils': 'window'
+            'react/lib/ReactContext': true,
+            'react/lib/ExecutionEnvironment': true
         },
         plugins: [
             new webpack.DefinePlugin({
@@ -70,6 +69,7 @@ module.exports = (config) => {
         ],
 
         files: [
+            './node_modules/babel-polyfill/dist/polyfill.js',
             './node_modules/phantomjs-polyfill/bind-polyfill.js',
             'test/bundle.js'
         ],

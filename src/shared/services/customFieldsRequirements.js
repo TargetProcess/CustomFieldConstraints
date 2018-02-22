@@ -1,4 +1,4 @@
-import {find, pluck, isArray, uniq} from 'underscore';
+import {find, pluck, isArray, omit, uniq} from 'underscore';
 
 const equalIgnoreCase = (a, b) => String(a).toLowerCase() === String(b).toLowerCase();
 const getProp = (obj, key) => find(obj, (v, k) => equalIgnoreCase(k, key));
@@ -174,7 +174,7 @@ const getConnectedCustomFields = (fields, customFieldsConfig, currentCustomField
 };
 
 export const getCustomFieldsNamesForNewState = (entityState, config, process, entityTypeName,
-    currentCustomFieldsValues = {}, initialCustomFieldsValues = {}, {skipValuesCheck} = {skipValuesCheck: false}) => {
+                                                currentCustomFieldsValues = {}, initialCustomFieldsValues = {}, {skipValuesCheck} = {skipValuesCheck: false}) => {
 
     const stateConfig = getFlatStateConfig(config, process, entityTypeName, entityState);
     const customFieldsConfig = processCustomFieldsConfig(getFlatCustomFieldsConfig(config, process, entityTypeName));
@@ -188,7 +188,7 @@ export const getCustomFieldsNamesForNewState = (entityState, config, process, en
 };
 
 export const getCustomFieldsNamesForChangedCustomFields = (changedFieldsNames, config, process, entityTypeName,
-    currentCustomFieldsValues = {}, initialCustomFieldsValues = {}, {skipValuesCheck} = {skipValuesCheck: false}) => {
+                                                           currentCustomFieldsValues = {}, initialCustomFieldsValues = {}, {skipValuesCheck} = {skipValuesCheck: false}) => {
 
     const customFieldsConfig = processCustomFieldsConfig(getFlatCustomFieldsConfig(config, process, entityTypeName));
 
@@ -202,24 +202,29 @@ export const getCustomFieldsNamesForChangedCustomFields = (changedFieldsNames, c
 };
 
 export const getCustomFieldsNamesForChangedCustomFieldsWithDependent = (changedFieldsNames, entityState, config, process, entityTypeName,
-    currentCustomFieldsValues = {}, initialCustomFieldsValues = {}, options = {}) => {
+                                                                        currentCustomFieldsValues = {}, initialCustomFieldsValues = {}, options = {}) => {
 
     const ownFields = getCustomFieldsNamesForChangedCustomFields(changedFieldsNames, config, process, entityTypeName, currentCustomFieldsValues, initialCustomFieldsValues, options);
 
     const rootFields = processCustomFieldsConfig(getFlatCustomFieldsConfig(config, process, entityTypeName));
 
+    const fullInitialCustomFieldsValues = changedFieldsNames.reduce((initialValues, name) => omit(initialValues, name), initialCustomFieldsValues);
+
     const fieldsFromParentCustomFieldsConstraints = rootFields.reduce((res, field) => {
 
-        if (!initialCustomFieldsValues.hasOwnProperty(field.name)) return res;
+        const needChangedFieldValue = find(changedFieldsNames, (name) => name === field.name) === void 0;
+        const initialChangedFieldValue = needChangedFieldValue ? fullInitialCustomFieldsValues[field.name] : void 0;
+        const fullCurrentCustomFieldValues = initialChangedFieldValue !== void 0 ? {
+            ...currentCustomFieldsValues,
+            ...{[field.name]: initialChangedFieldValue}
+        } : currentCustomFieldsValues;
 
-        return res.concat(getCustomFieldsNamesForChangedCustomFields([field.name], config, process, entityTypeName, initialCustomFieldsValues, currentCustomFieldsValues, options));
+        return res.concat(getCustomFieldsNamesForChangedCustomFields([field.name], config, process, entityTypeName, fullCurrentCustomFieldValues, fullInitialCustomFieldsValues, options));
 
     }, []);
 
-    const fieldsFromEntityStateConstraints = entityState ? getCustomFieldsNamesForNewState(entityState, config, process, entityTypeName, currentCustomFieldsValues, initialCustomFieldsValues, options) : [];
+    const fieldsFromEntityStateConstraints = entityState ? getCustomFieldsNamesForNewState(entityState, config, process, entityTypeName, currentCustomFieldsValues, fullInitialCustomFieldsValues, options) : [];
 
-    const fieldsFromChanged = changedFieldsNames.filter((fieldName) => inValues(fieldsFromParentCustomFieldsConstraints, fieldName) || inValues(fieldsFromEntityStateConstraints, fieldName));
-
-    return uniq(fieldsFromChanged.concat(ownFields));
+    return uniq(fieldsFromParentCustomFieldsConstraints.concat(fieldsFromEntityStateConstraints).concat(ownFields));
 
 };

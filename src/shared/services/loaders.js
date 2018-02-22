@@ -1,4 +1,4 @@
-import {filter, memoize, pluck, reject} from 'underscore';
+import {filter, memoize, pluck, reject, isString} from 'underscore';
 
 import {isGeneral} from 'utils';
 import store from 'services/store';
@@ -27,17 +27,8 @@ export const getCustomFields = memoize((processId, entityType) => {
 
 export const loadCustomFields = memoize((processId, entityType) => {
 
-    let fields;
-
-    if (isGeneral({entityType})) {
-
-        fields = getCustomFields(processId, entityType);
-
-    } else {
-
-        fields = getCustomFields(null, entityType);
-
-    }
+    const fields = isGeneral({entityType}) ?
+        getCustomFields(processId, entityType) : getCustomFields(null, entityType);
 
     const isCalculated = (cf) => cf.config && cf.config.calculationModel;
     const isSystem = systemCustomFieldsEnabled() ?
@@ -85,54 +76,20 @@ export const loadTeamProjects = memoize((ids) => {
 
 });
 
-const getEntityStatesIncludes = () => {
-
-    const entityStateIncludes = [{
-        workflow: [
-            'id', {
-                process: ['id']
-            }
-        ]
-    }, {
-        process: ['id']
-    }, {
-        entityType: ['name']
-    },
-        'name',
-        'isInitial',
-        'isFinal',
-        'isPlanned', {
-            subEntityStates: [
-                'id',
-                'name', {
-                    workflow: ['id']
-                }, {
-                    entityType: ['name']
-                },
-                'isInitial',
-                'isFinal',
-                'isPlanned'
-            ]
-        }];
-
-    return entityStateIncludes.concat({
-        parentEntityState: entityStateIncludes
-    });
-
-};
-
-export const preloadEntityStates = (processes) => {
+export const preloadParentEntityStates = (processes) => {
 
     const mayBeProcessIds = pluck(processes, 'id');
     const processIds = reject(mayBeProcessIds, (mayBeId) => mayBeId === null);
 
-    return processIds.length !== 0 ?
-        store.get('EntityStates', {
-            include: getEntityStatesIncludes(),
-            where: `Workflow.Process.id in (${processIds.join()})`
+    return processIds.length ?
+        store2.get('EntityState', {
+            where: `parentEntityState == null and workflow.process.id in [${processIds.join()}]`,
+            select: '{id,name,isInitial,isFinal,isPlanned,workflow:{workflow.id,process:{workflow.process.id}},' +
+                'entityType:{entityType.name},subEntityStates:subEntityStates.Select(' +
+                    '{id,name,entityType:{entityType.name},isInitial,isFinal,isPlanned})}'
         }).then((entityStates) => {
 
-            const cache = preloadEntityStates.cache = preloadEntityStates.cache || [];
+            const cache = preloadParentEntityStates.cache = preloadParentEntityStates.cache || [];
 
             processIds.forEach((id) => {
 
@@ -146,14 +103,14 @@ export const preloadEntityStates = (processes) => {
 
 };
 
-preloadEntityStates.getStates = (processId) => {
+preloadParentEntityStates.getStates = (processId) => {
 
-    const entityStates = preloadEntityStates.cache[processId];
+    const entityStates = preloadParentEntityStates.cache[processId];
 
     if (entityStates === void 0) {
 
         // Rare case (process not in context), load & save missed entity state.
-        return preloadEntityStates([{id: processId}]).then((states) => states[processId]);
+        return preloadParentEntityStates([{id: processId}]).then((states) => states[processId]);
 
     }
 
@@ -161,11 +118,21 @@ preloadEntityStates.getStates = (processId) => {
 
 };
 
-export const loadEntityStates = (processId) => preloadEntityStates.getStates(processId);
+export const loadSingleParentEntityState = memoize(({filter: whereFilter, field}) => {
+
+    return store2.get('EntityState', {
+        where: `${field} == ${isString(whereFilter) ? `'${whereFilter}'` : whereFilter} and parentEntityState != null`,
+        select: `{parentEntityState.${field}}`
+    }).then(([parentEntityState]) => parentEntityState && parentEntityState[field] || null);
+
+}, ({whereFilter, field}, processId, entityType) => `${processId}${entityType.name}${whereFilter}:${field}`);
+
+export const loadParentEntityStates = (processId) => preloadParentEntityStates.getStates(processId);
 
 export const resetLoadersCache = () => {
 
-    preloadEntityStates.cache = [];
+    preloadParentEntityStates.cache = [];
+    loadSingleParentEntityState.cache = [];
     getCustomFields.cache = [];
     loadCustomFields.cache = [];
     loadTeamsData.cache = [];

@@ -7,6 +7,7 @@ import {equalIgnoreCase, isStateRelated, lc} from 'utils';
 
 import {createInterrupter} from './base';
 import {createRequirementsByTasks} from './requirementsByTasks';
+import {getCustomFieldValue} from 'services/CustomFieldValue';
 
 const getEntityFromChange = (sourceChange, changeValues) => {
 
@@ -24,7 +25,7 @@ const getEntityFromChange = (sourceChange, changeValues) => {
                 return res.concat(v.value.map((vv) => ({
                     type: 'customfield',
                     customFieldName: vv.name,
-                    targetValue: vv.value,
+                    targetValue: getCustomFieldValue(vv),
                     checkDependent: true
                 })));
 

@@ -14,8 +14,9 @@ describe('FormRow', () => {
             .to.have.prop('title', null);
 
         expect(dom.find('.FormRow-label').children('label'))
-            .to.have.prop('htmlFor', 'foo')
-            .and
+            .to.have.prop('htmlFor', 'foo');
+
+        expect(dom.find('.FormRow-label').children('label'))
             .to.have.text('foo');
 
         const input = dom.find('Input');
@@ -40,8 +41,8 @@ describe('FormRow', () => {
 
         const dom = shallow(<FormRow item={{name: 'foo', field: {type: 'checkbox'}}} />);
 
-        expect(dom.find('.FormRow-label').children('label'))
-            .to.have.text('');
+        expect(dom.find('.FormRow-label').children('label').exists())
+            .to.be.false;
 
     });
 

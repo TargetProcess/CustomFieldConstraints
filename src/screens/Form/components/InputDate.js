@@ -1,4 +1,5 @@
-import React, {findDOMNode} from 'react';
+import React from 'react';
+import {findDOMNode} from 'react-dom';
 import $ from 'jquery';
 import cx from 'classnames';
 

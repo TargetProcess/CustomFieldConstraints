@@ -1,4 +1,5 @@
-import React, {findDOMNode} from 'react';
+import React from 'react';
+import {findDOMNode} from 'react-dom';
 import cx from 'classnames';
 
 export default class InputText extends React.Component {

@@ -1,4 +1,5 @@
-import React, {PropTypes, findDOMNode} from 'react';
+import React, {PropTypes} from 'react';
+import ReactDOM, {findDOMNode} from 'react-dom';
 import $ from 'jquery';
 import {noop} from 'underscore';
 
@@ -69,7 +70,7 @@ export default class Bubble extends React.Component {
 
     renderBubble(target, overlay) {
 
-        this.bubble = findDOMNode(React.render(overlay, this.span));
+        this.bubble = findDOMNode(ReactDOM.render(overlay, this.span));
 
         $(target)
             .tauBubble({
@@ -92,7 +93,7 @@ export default class Bubble extends React.Component {
 
         const {target} = this.props;
 
-        if (e.target !== React.findDOMNode(target) && !React.findDOMNode(target).contains(e.target)
+        if (e.target !== findDOMNode(target) && !findDOMNode(target).contains(e.target)
             && e.target !== this.bubble && !this.bubble.contains(e.target)) {
 
             this.props.onClickOutside(e);
