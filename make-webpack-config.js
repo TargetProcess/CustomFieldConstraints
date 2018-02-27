@@ -144,10 +144,15 @@ const makeWebpackConfig = (opts_) => {
         config.plugins = config.plugins.concat(new webpack.optimize.UglifyJsPlugin({
             compress: {
                 properties: false,
+                screw_ie8: false,  // eslint-disable-line camelcase
                 warnings: false
             },
             output: {
-                keep_quoted_props: true  // eslint-disable-line camelcase
+                keep_quoted_props: true,  // eslint-disable-line camelcase
+                screw_ie8: false  // eslint-disable-line camelcase
+            },
+            mangleProperties: {
+                screw_ie8: false  // eslint-disable-line camelcase
             }
         }));
 
