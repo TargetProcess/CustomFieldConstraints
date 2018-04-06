@@ -118,14 +118,16 @@ preloadParentEntityStates.getStates = (processId) => {
 
 };
 
-export const loadSingleParentEntityState = memoize(({filter: whereFilter, field}) => {
+export const loadSingleParentEntityState = memoize(({filter: whereFilter, field}, processId, entityType) => {
 
     return store2.get('EntityState', {
-        where: `${field} == ${isString(whereFilter) ? `'${whereFilter}'` : whereFilter} and parentEntityState != null`,
+        where: `${field} == ${isString(whereFilter) ? `'${whereFilter}'` : whereFilter} ` +
+               `and workflow.process.id in [${processId}] and entityType.name == '${entityType.name}' and parentEntityState != null`,
         select: `{parentEntityState.${field}}`
     }).then(([parentEntityState]) => parentEntityState && parentEntityState[field] || null);
 
-}, ({whereFilter, field}, processId, entityType) => `${processId}${entityType.name}${whereFilter}:${field}`);
+}, ({filter: whereFilter, field}, processId, entityType) =>
+    `${isString(whereFilter) ? `'${whereFilter}'` : whereFilter}:${field}:${processId}:${entityType.name}`);
 
 export const loadParentEntityStates = (processId) => preloadParentEntityStates.getStates(processId);
 
