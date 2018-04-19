@@ -279,11 +279,14 @@ export default class FormContainer extends React.Component {
         const existingCustomFieldsValuesMap = object(existingCustomFieldsValues.map((v) => [v.name, v]));
         const changedFormValues = formValues.filter((v) => {
 
+            // Checkbox is special case, since has no default value. We can save same checkboxes.
+            if (v.field.type === 'checkbox') return true;
+
             const existingValue = existingCustomFieldsValuesMap[v.name];
 
-            // Checkboxes should be saved every time, since some other values may change and TP can save same checkboxes.
             return existingValue !== void 0 &&
-                !this.areFieldsSame({...existingValue, value: existingValue.serverValue}, {...existingValue, value: v.value});
+                !this.areFieldsSame({...existingValue, value: existingValue.serverValue},
+                    {...existingValue, value: v.value});
 
         });
         const changedFormValuesMap = object(changedFormValues.map((v) => [v.name, v.value]));
