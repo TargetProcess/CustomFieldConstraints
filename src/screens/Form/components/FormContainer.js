@@ -111,12 +111,16 @@ const getProcess = (entity) => {
 
 };
 
-const getOutputCustomFields = (mashupConfig, changes, process, entity, entityCustomFields = [], existingCustomFieldsValues = [], formValues = {}) => {
+const getOutputCustomFields = (mashupConfig, changes, process, entity,
+                               entityCustomFields = [], existingCustomFieldsValues = [], formValues = {}) => {
 
-    const existingValuesNormalized = object(existingCustomFieldsValues.filter((v) => !v.isAssumeEmpty).map((v) => [v.name, v.value]));
-    const defaultValuesNormalized = object(entityCustomFields.filter((v) => !v.isEmptyDefaultValue).map((v) => [v.name, v.defaultValue]));
+    const existingValuesNormalized = object(existingCustomFieldsValues.filter((v) => !v.isAssumeEmpty)
+        .map((v) => [v.name, v.value]));
+    const defaultValuesNormalized = object(entityCustomFields.filter((v) => !v.isEmptyDefaultValue)
+        .map((v) => [v.name, v.defaultValue]));
 
-    const formCustomFieldsValues = map(formValues, (value, name) => CustomFieldValue.fromInputValue(find(entityCustomFields, (cf) => cf.name === name), value));
+    const formCustomFieldsValues = map(formValues, (value, name) =>
+        CustomFieldValue.fromInputValue(find(entityCustomFields, (cf) => cf.name === name), value));
     const formCustomFieldsValuesNormalized = object(formCustomFieldsValues.map((v) => [v.name, v.value]));
 
     const currentValuesNormalized = {
@@ -126,7 +130,8 @@ const getOutputCustomFields = (mashupConfig, changes, process, entity, entityCus
 
     const processes = [process];
 
-    return when(getCustomFieldsForAxes(mashupConfig, changes, processes, entity, currentValuesNormalized, {}, existingValuesNormalized))
+    return when(getCustomFieldsForAxes(mashupConfig, changes, processes, entity,
+        currentValuesNormalized, {}, existingValuesNormalized))
         .then((serverCustomFields) => {
 
             return serverCustomFields.sort((l, r) => l.numericPriority - r.numericPriority)
@@ -148,7 +153,8 @@ export default class FormContainer extends React.Component {
         }).isRequired,
         mashupConfig: T.array,
         onAfterSave: T.func,
-        onCancel: T.func
+        onCancel: T.func,
+        replaceCustomFieldValueInChanges: T.func.isRequired
     };
 
     state = {
@@ -183,7 +189,8 @@ export default class FormContainer extends React.Component {
             const entityCustomFields = serverCustomFields.map((serverCustomField) => CustomField(serverCustomField));
 
             const existingCustomFieldsValues = entityCustomFields.map((customField) =>
-                CustomFieldValue.fromServerValue(customField, find(fullEntity.customFields, (v) => v.name === customField.name).value));
+                CustomFieldValue.fromServerValue(customField, find(fullEntity.customFields, (v) =>
+                    v.name === customField.name).value));
 
             this.setState({
                 process,
@@ -376,7 +383,8 @@ export default class FormContainer extends React.Component {
         const {mashupConfig, changes} = this.props;
         const {entity, process, entityCustomFields, existingCustomFieldsValues} = this.state;
 
-        when(getOutputCustomFields(mashupConfig, changes, process, entity, entityCustomFields, existingCustomFieldsValues, formValues))
+        when(getOutputCustomFields(mashupConfig, changes, process, entity, entityCustomFields,
+            existingCustomFieldsValues, formValues))
             .then((outputCustomFields) => {
 
                 this.setState({
