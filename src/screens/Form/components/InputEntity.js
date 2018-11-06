@@ -21,7 +21,7 @@ export default class InputEntity extends React.Component {
 
     render() {
 
-        const {entity, value, filterEntityTypeName, filterFields, onBlur, onChange} = this.props;
+        const {entity, value, filterEntityTypeName, isInvalid, filterFields, onBlur, onChange} = this.props;
 
         let innerOutput;
 
@@ -43,6 +43,7 @@ export default class InputEntity extends React.Component {
         return (
             <InputEntityBase
                 finderConfig={finderConfig}
+                isInvalid={isInvalid}
                 multiple={false}
                 onBlur={onBlur}
                 onChange={onChange}

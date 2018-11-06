@@ -205,8 +205,11 @@ export default class FormContainer extends React.Component {
         })
         .then((fullEntity, process, entityCustomFields, outputCustomFields, existingCustomFieldsValues) => {
 
-            if (!outputCustomFields.length) onAfterSave();
-            else {
+            if (!outputCustomFields.length) {
+
+                return when([], []);
+
+            } else {
 
                 const form = Form(outputCustomFields, formValues, existingCustomFieldsValues);
                 // formValues can be changed (ex. set to current for showing on the form to client).
@@ -220,6 +223,14 @@ export default class FormContainer extends React.Component {
 
         })
         .then((outputCustomFields, newFormValues) => {
+
+            if (!outputCustomFields.length) {
+
+                onAfterSave();
+
+                return;
+
+            }
 
             this.setState({
                 outputCustomFields,
@@ -281,6 +292,7 @@ export default class FormContainer extends React.Component {
 
         const {entity, replaceCustomFieldValueInChanges} = this.props;
         const {entityCustomFields, existingCustomFieldsValues} = this.state;
+
         const formValuesMap = object(formValues.map((v) => [v.name, v.value]));
         const customFields = entityCustomFields.filter((v) => formValuesMap.hasOwnProperty(v.name));
         const existingCustomFieldsValuesMap = object(existingCustomFieldsValues.map((v) => [v.name, v]));

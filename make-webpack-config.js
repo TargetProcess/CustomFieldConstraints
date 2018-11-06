@@ -38,6 +38,7 @@ const makeWebpackConfig = (opts_) => {
             'tau/configurator',
             'tau/utils/utils.date',
             'tau/components/component.container',
+            '@targetprocess/general-icon',
 
             'tau/components/component.creator',
             'tau/service.container',
@@ -82,7 +83,7 @@ const makeWebpackConfig = (opts_) => {
             exclude: /node_modules/
         }, {
             test: /\.css$/,
-            loader: 'style!css'
+            loader: 'style-loader!css-loader?importLoaders=1!postcss-loader'
         }]
     };
 
@@ -161,7 +162,7 @@ const makeWebpackConfig = (opts_) => {
     config.externals = [{
         jquery: 'jQuery',
         underscore: 'Underscore'
-    }, 'jQuery', 'Underscore', /^tp3\//, /^tau\//, /^tp\//];
+    }, 'jQuery', 'Underscore', /^tp3\//, /^tau\//, /^tp\//, /^@targetprocess\//];
 
     return config;
 

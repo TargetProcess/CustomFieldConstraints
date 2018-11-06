@@ -21,7 +21,7 @@ export default class InputMultipleEntities extends React.Component {
 
     render() {
 
-        const {entity: sourceEntity, value, filterEntityTypeName, filterFields, onBlur, onChange} = this.props;
+        const {entity: sourceEntity, value, filterEntityTypeName, isInvalid, filterFields, onBlur, onChange} = this.props;
 
         let innerOutput;
 
@@ -53,6 +53,7 @@ export default class InputMultipleEntities extends React.Component {
         return (
             <InputEntityBase
                 finderConfig={finderConfig}
+                isInvalid={isInvalid}
                 multiple={true}
                 onBlur={onBlur}
                 onChange={onChange}

@@ -16,6 +16,7 @@ import {
     getCustomFieldsNamesForChangedCustomFields,
     getCustomFieldsNamesForChangedCustomFieldsWithDependent
 } from 'services/customFieldsRequirements';
+import * as CustomFieldValue from 'services/CustomFieldValue';
 
 const findInRealCustomFields = (customFieldsNames, realCustomFields) =>
     customFieldsNames.reduce((res, v) => {
@@ -45,7 +46,8 @@ const matchEntityStateFlat = (valueToMatch, entityType, entityState) => {
 
     return isNumber(valueToMatch) ?
         valueToMatch === entityState.id :
-        equalIgnoreCase(valueToMatch.name || valueToMatch, entityState.name) || equalByShortcut(valueToMatch, entityState);
+        equalIgnoreCase(valueToMatch.name || valueToMatch, entityState.name) ||
+        equalByShortcut(valueToMatch, entityState);
 
 };
 
@@ -205,7 +207,8 @@ const getRealTargetValue = (axis, targetValue, processId, entity) => {
 
 };
 
-const getCustomFieldsForAxis = (config, axis, processes, entity, values = {}, options = {skipValuesCheck: false}, initialValues = {}) => {
+const getCustomFieldsForAxis = (config, axis, processes, entity, values = {}, options = {skipValuesCheck: false},
+                                initialValues = {}) => {
 
     let cfs = [];
     const targetValue = axis.targetValue;
@@ -220,15 +223,19 @@ const getCustomFieldsForAxis = (config, axis, processes, entity, values = {}, op
 
                     if (isStateRelated(axis.type)) {
 
-                        return getCustomFieldsNamesForNewState(realTargetValue, config, process, entity.entityType.name, values, initialValues, options);
+                        return getCustomFieldsNamesForNewState(realTargetValue, config, process, entity.entityType.name,
+                            values, initialValues, options);
 
                     }
 
                     if (axis.type === 'customfield') {
 
-                        if (axis.checkDependent && targetValue === null) {
+                        if (axis.checkDependent && (targetValue === null ||
+                            CustomFieldValue.isEmptyCheckboxValue(targetValue))) {
 
-                            return getCustomFieldsNamesForChangedCustomFieldsWithDependent([realTargetValue.name], entity.entityState ? entity.entityState : null, config, process, entity.entityType.name, values, initialValues, options);
+                            return getCustomFieldsNamesForChangedCustomFieldsWithDependent([realTargetValue.name],
+                                entity.entityState ? entity.entityState : null, config, process, entity.entityType.name,
+                                values, initialValues, options);
 
                         } else {
 
@@ -237,7 +244,8 @@ const getCustomFieldsForAxis = (config, axis, processes, entity, values = {}, op
                                 [realTargetValue.name]: targetValue
                             };
 
-                            return getCustomFieldsNamesForChangedCustomFields([realTargetValue.name], config, process, entity.entityType.name, fullValues, initialValues, options);
+                            return getCustomFieldsNamesForChangedCustomFields([realTargetValue.name], config, process,
+                                entity.entityType.name, fullValues, initialValues, options);
 
                         }
 
@@ -258,8 +266,10 @@ const getCustomFieldsForAxis = (config, axis, processes, entity, values = {}, op
 
 };
 
-export const getCustomFieldsForAxes = (config, axes, processes, entity, values = {}, options = {}, initialValues = {}) =>
-    whenList(axes.map((axis) => getCustomFieldsForAxis(config, axis, processes, entity, values, options, initialValues)))
+export const getCustomFieldsForAxes = (config, axes, processes, entity, values = {}, options = {},
+                                       initialValues = {}) =>
+    whenList(axes.map((axis) => getCustomFieldsForAxis(config, axis, processes, entity, values, options,
+        initialValues)))
         .then((...args) => flatten(args))
         .then((customFields) => {
 
@@ -268,7 +278,8 @@ export const getCustomFieldsForAxes = (config, axes, processes, entity, values =
             // e.g. if we have state and cf axes and state axes requires same cf
             if (axes.length > 1) {
 
-                const customFieldsAsAxes = axes.reduce((res, axis) => (axis.type === 'customfield') ? res.concat(axis.customFieldName) : res, []);
+                const customFieldsAsAxes = axes.reduce((res, axis) => (axis.type === 'customfield') ?
+                    res.concat(axis.customFieldName) : res, []);
 
                 return allCustomFields.filter((v) => !inValues(customFieldsAsAxes, v.name));
 

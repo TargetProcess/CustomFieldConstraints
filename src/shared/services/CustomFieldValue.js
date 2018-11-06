@@ -55,10 +55,12 @@ const transformFromServerValue = (field, value) => {
 
 };
 
+export const isEmptyCheckboxValue = (value) => value === false;
+
 const isAssumeEmptyServerValue = (customField, serverValue) => {
 
-    // Assume checkboxes are always empty, since we need to require them every time rule is match (in real they are true/false only).
-    return customField.type === 'checkbox' || (!isNumber(serverValue) && !isBoolean(serverValue) && isEmpty(serverValue));
+    return (!isNumber(serverValue) && !isBoolean(serverValue) && isEmpty(serverValue)) ||
+        isEmptyCheckboxValue(serverValue);
 
 };
 

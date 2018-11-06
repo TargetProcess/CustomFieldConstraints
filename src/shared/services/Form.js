@@ -21,12 +21,22 @@ const isEmptyValidator = (field, value) => {
     const validators = {
         text: (val) => !val,
         url: ({url, label} = {}) => !url || !label,
-        checkbox: (val) => val !== false && val !== true,
+        checkbox: (val) => CustomFieldValue.isEmptyCheckboxValue(val),
         multipleselectionlist: (val) => !val.length,
         multipleentities: (val) => !val.length
     };
 
-    if ((validators[field.type] || validators.text)(value)) return new Error('This is a required field');
+    if ((validators[field.type] || validators.text)(value)) {
+
+        if (field.type === 'checkbox') {
+
+            return new Error(`This field should be checked`);
+
+        }
+
+        return new Error('This is a required field');
+
+    }
 
 };
 
