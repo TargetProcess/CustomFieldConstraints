@@ -58,7 +58,7 @@
 }
 
 :local(.content) {
-    font-family: Arial, sans-serif;
-    font-size: 12px;
-    padding: 15px 10px;
+    font-family: $gFontFamily;
+    font-size: $gFontSizeDefault;
+    padding: 15px 1px;
 }

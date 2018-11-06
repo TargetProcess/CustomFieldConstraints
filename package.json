@@ -1,6 +1,6 @@
 {
   "name": "CustomFieldConstraints",
-  "version": "1.4.6",
+  "version": "1.4.7",
   "description": "This mashup allows a custom field to be required when an entity is moved to a specific state or a specific value is selected in another custom field.",
   "author": "Aliaksei Shytkin <shitkin@targetprocess.com>",
   "scripts": {
@@ -23,6 +23,7 @@
   },
   "license": "MIT",
   "devDependencies": {
+    "@targetprocess/global-constants": "^4.2.0",
     "babel-eslint": "^5.0.0-beta6",
     "babel-loader": "^6.2.1",
     "babel-polyfill": "^6.26.0",
@@ -62,6 +63,8 @@
     "null-loader": "^0.1.1",
     "phantomjs": "^1.9.18",
     "phantomjs-polyfill": "0.0.2",
+    "postcss-loader": "^3.0.0",
+    "postcss-simple-vars": "^5.0.1",
     "react": "^0.14.8",
     "react-addons-test-utils": "^0.14.8",
     "react-dom": "^0.14.8",

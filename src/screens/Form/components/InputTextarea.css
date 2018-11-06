@@ -2,12 +2,12 @@
     flex-grow: 1;
     display: flex;
     flex-direction: column;
+    margin-right: 8px;
 }
 
 :local(.textarea):local(.textarea) {
     flex: 1 1 auto;
     width: 100%;
     height: 6em;
-    margin: 0;
     resize: vertical;
 }

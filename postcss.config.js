@@ -7,7 +7,7 @@ module.exports = {
             variables() {
 
                 const constants = require('@targetprocess/global-constants').default;
-                // Conversion like FontFamilty => g$FontFamily.
+                // Prefix with `g` as it is global constant.
                 const constantsPairs = _.pairs(constants).map(([key, value]) => [`g${key}`, value]);
 
                 return _.object(constantsPairs);
