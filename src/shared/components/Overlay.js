@@ -1,5 +1,5 @@
 import $ from 'jquery';
-import React from 'react';
+import React, {PropTypes as T} from 'react';
 import cx from 'classnames';
 
 import S from './Overlay.css';
@@ -9,6 +9,11 @@ import {CustomFieldsUpdateState} from 'utils';
 const ESC_KEY_CODE = 27;
 
 export default class Overlay extends React.Component {
+
+    static propTypes = {
+        children: T.object.isRequired,
+        onClose: T.func.isRequired
+    };
 
     componentDidMount() {
 

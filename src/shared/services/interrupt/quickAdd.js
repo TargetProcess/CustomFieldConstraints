@@ -1,7 +1,7 @@
 import $, {when, Deferred, whenList} from 'jquery';
 import {
-    compose, constant, difference, filter, find, findIndex, findLastIndex, flatten, indexBy, isString, keys, last, map, memoize,
-    object, pick, reject, some, unique, union
+    compose, constant, difference, filter, find, findIndex, findLastIndex, flatten, indexBy, isString, keys, last, map,
+    memoize, object, pick, reject, some, unique, union
 } from 'underscore';
 
 import {addBusListener} from 'targetprocess-mashup-helper/lib/events';
@@ -9,7 +9,7 @@ import {addBusListener} from 'targetprocess-mashup-helper/lib/events';
 import decodeSliceValue from 'utils/decodeSliceValue';
 import {inValues, equalIgnoreCase, isAssignable, SLICE_CUSTOMFIELD_PREFIX} from 'utils';
 
-import {getEntityTypes, getSliceDefinition, shouldIgnoreAxes, getProcesses} from 'services/apiThunk';
+import {getEntityTypes, getSliceDefinition, shouldIgnoreAxes, getProcesses} from 'services/sliceApi';
 import {busNames} from 'services/busNames';
 import store from 'services/store';
 import {getCustomFieldsForAxes} from 'services/axes';
@@ -393,8 +393,10 @@ const applyActualCustomFields = ($el, allCustomFields, actualCustomFields) => {
     const actualCustomFieldsMap = indexBy(actualCustomFields, 'id');
     const inactualCustomFields = filter(allCustomFields, (cf) => actualCustomFieldsMap[cf.id] === void 0);
 
-    inactualCustomFields.forEach((v) => hideCustomFieldEl(findCustomFieldElByName($el, v.name, v.process ? v.process.id : null)));
-    actualCustomFields.forEach((v) => showCustomFieldEl(findCustomFieldElByName($el, v.name, v.process ? v.process.id : null)));
+    inactualCustomFields.forEach((v) => hideCustomFieldEl(findCustomFieldElByName($el, v.name,
+        v.process ? v.process.id : null)));
+    actualCustomFields.forEach((v) => showCustomFieldEl(findCustomFieldElByName($el, v.name,
+        v.process ? v.process.id : null)));
 
 };
 
@@ -516,7 +518,8 @@ const onProcessChange = ($el, axes, handler) =>
 
     });
 
-const listenQuickAddComponentBusForEntityType = (configurator, busName, config, axes, processes, entityType, onFieldsReady) => {
+const listenQuickAddComponentBusForEntityType = (configurator, busName, config, axes, processes, entityType,
+                                                 onFieldsReady) => {
 
     let allCustomFields = [];
     let activeCustomFields = [];
@@ -531,7 +534,8 @@ const listenQuickAddComponentBusForEntityType = (configurator, busName, config, 
 
             if (!actualProcess) return when(applyActualCustomFields($el, allCustomFields, [])).then(adjust);
 
-            return when(getCustomFieldsForAxes(config, axes, [actualProcess], {entityType}, values, {skipValuesCheck: false}))
+            return when(getCustomFieldsForAxes(config, axes, [actualProcess], {entityType}, values,
+                {skipValuesCheck: false}))
                 .then((customFieldsToShow) => {
 
                     activeCustomFields = customFieldsToShow;
@@ -570,7 +574,8 @@ const listenQuickAddComponentBusForEntityType = (configurator, busName, config, 
     });
 
     when(getProcessByProjectAxis(axes))
-    .then((process) => getCustomFieldsForAxes(config, axes, process ? [process] : processes, {entityType}, {}, {skipValuesCheck: true}))
+    .then((process) => getCustomFieldsForAxes(config, axes, process ? [process] : processes, {entityType}, {},
+        {skipValuesCheck: true}))
     .then((customFields) => {
 
         allCustomFields = customFields;
@@ -598,7 +603,12 @@ const applyToComponent = (config, {busName}) =>
 
                 const axes = getAxes(busName, initData, entityType);
 
-                if (axes.length) listenQuickAddComponentBusForEntityType(configurator, busName, config, axes, processes, entityType, def.resolve);
+                if (axes.length) {
+
+                    listenQuickAddComponentBusForEntityType(configurator, busName, config, axes, processes, entityType,
+                        def.resolve);
+
+                }
                 else def.resolve([]);
 
                 return def.promise();

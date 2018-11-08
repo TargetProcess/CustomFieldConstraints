@@ -122,7 +122,8 @@ export const loadSingleParentEntityState = memoize(({filter: whereFilter, field}
 
     return store2.get('EntityState', {
         where: `${field} == ${isString(whereFilter) ? `'${whereFilter}'` : whereFilter} ` +
-               `and workflow.process.id in [${processId}] and entityType.name == '${entityType.name}' and parentEntityState != null`,
+               `and workflow.process.id in [${processId}] and entityType.name == '${entityType.name}' ` +
+               `and parentEntityState != null`,
         select: `{parentEntityState.${field}}`
     }).then(([parentEntityState]) => parentEntityState && parentEntityState[field] || null);
 
