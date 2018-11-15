@@ -34,6 +34,7 @@ const loadFullEntity = (entity) => {
                         'Name',
                         'isInitial',
                         'isFinal',
+                        'isDefaultFinal',
                         'isPlanned'
                     ]
                 },
@@ -56,6 +57,7 @@ const loadFullEntity = (entity) => {
                         'Name',
                         'isInitial',
                         'isFinal',
+                        'isDefaultFinal',
                         'isPlanned'
                     ]
                 },
@@ -114,7 +116,7 @@ const getProcess = (entity) => {
 const getOutputCustomFields = (mashupConfig, changes, process, entity,
                                entityCustomFields = [], existingCustomFieldsValues = [], formValues = {}) => {
 
-    const existingValuesNormalized = object(existingCustomFieldsValues.filter((v) => !v.isAssumeEmpty)
+    const existingValuesNormalized = object(existingCustomFieldsValues.filter((v) => !v.isEmpty)
         .map((v) => [v.name, v.value]));
     const defaultValuesNormalized = object(entityCustomFields.filter((v) => !v.isEmptyDefaultValue)
         .map((v) => [v.name, v.defaultValue]));

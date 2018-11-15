@@ -455,9 +455,17 @@ describe('customFieldsRequirements', () => {
 
             expect(getCustomFieldsNamesForNewState({
                 name: 'duo',
-                isFinal: true
+                isFinal: true,
+                isDefaultFinal: true
             }, config, process, 'userstory', cfValues))
                 .to.be.eql(['final']);
+
+            expect(getCustomFieldsNamesForNewState({
+                name: 'duo',
+                isFinal: true,
+                isDefaultFinal: false
+            }, config, process, 'userstory', cfValues))
+                .to.be.eql([]);
 
             expect(getCustomFieldsNamesForNewState({
                 name: 'tre',

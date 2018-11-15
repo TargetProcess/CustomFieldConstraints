@@ -6,6 +6,7 @@ import {
 
     isGeneral,
     isAssignable,
+    isRequester,
     isUser,
 
     getEntityTypesNamesFromConfig,
@@ -33,11 +34,13 @@ describe('utils', () => {
 
     it('equalByShortcut()', () => {
 
-        expect(equalByShortcut('_Final', {isFinal: true})).to.be.true;
-        expect(equalByShortcut('_final', {isFinal: true})).to.be.true;
-        expect(equalByShortcut('_final', {isFinal: false})).to.be.false;
-        expect(equalByShortcut('_initial', {isInitial: true})).to.be.true;
-        expect(equalByShortcut('_planned', {isPlanned: true})).to.be.true;
+        expect(equalByShortcut('_Final', {isFinal: true, isDefaultFinal: true})).to.be.true;
+        expect(equalByShortcut('_final', {isFinal: true, isDefaultFinal: true})).to.be.true;
+        expect(equalByShortcut('_Final', {isFinal: true, isDefaultFinal: false})).to.be.false;
+        expect(equalByShortcut('_final', {isFinal: true, isDefaultFinal: false})).to.be.false;
+        expect(equalByShortcut('_final', {isFinal: false, isDefaultFinal: false})).to.be.false;
+        expect(equalByShortcut('_initial', {isInitial: true, isDefaultFinal: false})).to.be.true;
+        expect(equalByShortcut('_planned', {isPlanned: true, isDefaultFinal: false})).to.be.true;
 
     });
 
@@ -63,6 +66,15 @@ describe('utils', () => {
         expect(isAssignable({entityType: {name: 'general'}})).to.be.false;
         expect(isAssignable({entityType: {name: 'bug'}})).to.be.true;
         expect(isAssignable({entityType: {name: 'user'}})).to.be.false;
+
+    });
+
+    it('isRequester()', () => {
+
+        expect(isRequester({entityType: {name: 'requester'}})).to.be.true;
+        expect(isRequester({entityType: {name: 'user'}})).to.be.false;
+        expect(isRequester({entityType: {name: 'generaluser'}})).to.be.false;
+        expect(isRequester({entityType: {name: 'bug'}})).to.be.false;
 
     });
 

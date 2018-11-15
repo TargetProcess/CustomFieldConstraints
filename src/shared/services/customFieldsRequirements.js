@@ -1,28 +1,7 @@
-import {find, pluck, isArray, omit, uniq} from 'underscore';
+import {find, pluck, omit, uniq} from 'underscore';
+import {equalByShortcut, equalIgnoreCase, inValues} from '../utils';
 
-const equalIgnoreCase = (a, b) => String(a).toLowerCase() === String(b).toLowerCase();
 const getProp = (obj, key) => find(obj, (v, k) => equalIgnoreCase(k, key));
-const inValues = (values, value = '') => {
-
-    if (isArray(value)) {
-
-        return value.some((v) => values.some((vv) => equalIgnoreCase(v, vv)));
-
-    }
-
-    return values.some((v) => equalIgnoreCase(v, value));
-
-};
-
-const equalByShortcut = (shortcut, entityState) => {
-
-    return ({
-        _initial: entityState.isInitial,
-        _final: entityState.isFinal,
-        _planned: entityState.isPlanned
-    })[shortcut] || false;
-
-};
 
 const getProcessConfigs = (config, process) =>
     config.filter((v) =>

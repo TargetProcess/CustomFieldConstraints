@@ -40,7 +40,7 @@ const transformFromServerValue = (field, value) => {
                 const [id, kind] = v.split(' ');
 
                 return {
-                    id,
+                    id: Number(id),
                     entityType: {
                         name: kind
                     }
@@ -57,7 +57,7 @@ const transformFromServerValue = (field, value) => {
 
 export const isEmptyCheckboxValue = (value) => value === false;
 
-const isAssumeEmptyServerValue = (customField, serverValue) => {
+const isEmptyValue = (customField, serverValue) => {
 
     return (!isNumber(serverValue) && !isBoolean(serverValue) && isEmpty(serverValue)) ||
         isEmptyCheckboxValue(serverValue);
@@ -100,7 +100,7 @@ export const fromServerValue = (customField, serverValue) => {
         name: customField.name,
         customField,
         value,
-        isAssumeEmpty: isAssumeEmptyServerValue(customField, serverValue),
+        isEmpty: isEmptyValue(customField, serverValue),
         serverValue: transformToServerValue(customField, value)
     };
 
@@ -114,7 +114,7 @@ export const fromInputValue = (customField, inputValue) => {
         name: customField.name,
         customField,
         value,
-        isAssumeEmpty: isAssumeEmptyServerValue(customField, inputValue),
+        isEmpty: isEmptyValue(customField, inputValue),
         serverValue: transformToServerValue(customField, value)
     };
 

@@ -47,6 +47,7 @@ describe('FormContainer', () => {
                 changes={[]}
                 entity={entity}
                 mashupConfig={mashupConfig}
+                replaceCustomFieldValueInChanges={() => {}}
             />
         ));
 

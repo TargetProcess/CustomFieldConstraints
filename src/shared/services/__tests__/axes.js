@@ -290,13 +290,13 @@ describe('axes', () => {
 
                 const axes = [{
                     type: 'entitystate',
-                    targetValue: '_final'
+                    targetValue: '_initial'
                 }];
 
                 $ajax.onCall(0).returns(when({
                     items: [{
                         name: 'Open',
-                        isFinal: true,
+                        isInitial: true,
                         entityType: {
                             name: 'Bug'
                         },
@@ -317,6 +317,72 @@ describe('axes', () => {
 
                 return getCustomFieldsForAxes.preloadParentEntityStates(processes)
                     .then(() => getCustomFieldsForAxes(config, axes, processes, entity))
+                    .then((res) => expect(res)
+                        .to.be.eql([{
+                            name: 'Cf1',
+                            id: 1
+                        }]));
+
+            });
+
+            it('returns custom fields by default final entity state shortcut', () => {
+
+                const localConfig = [{
+                    processId: 777,
+                    constraints: {
+                        bug: {
+                            entityStates: [
+                                {
+                                    name: 'Done',
+                                    requiredCustomFields: ['Cf1']
+                                }
+                            ]
+                        }
+                    }
+                }];
+
+                const axes = [{
+                    type: 'entitystate',
+                    targetValue: '_final'
+                }];
+
+                $ajax.onCall(0).returns(when({
+                    items: [{
+                        name: 'Rejected',
+                        isFinal: true,
+                        isDefaultFinal: false,
+                        entityType: {
+                            name: 'Bug'
+                        },
+                        workflow: {
+                            process: {
+                                id: 777
+                            }
+                        }
+                    }, {
+                        name: 'Done',
+                        isFinal: true,
+                        isDefaultFinal: true,
+                        entityType: {
+                            name: 'Bug'
+                        },
+                        workflow: {
+                            process: {
+                                id: 777
+                            }
+                        }
+                    }]
+                }));
+
+                $ajax.onCall(1).returns(when({
+                    items: [{
+                        name: 'Cf1',
+                        id: 1
+                    }]
+                }));
+
+                return getCustomFieldsForAxes.preloadParentEntityStates(processes)
+                    .then(() => getCustomFieldsForAxes(localConfig, axes, processes, entity))
                     .then((res) => expect(res)
                         .to.be.eql([{
                             name: 'Cf1',
