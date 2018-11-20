@@ -34,6 +34,7 @@ const loadFullEntity = (entity) => {
                         'Name',
                         'isInitial',
                         'isFinal',
+                        'isDefaultFinal',
                         'isPlanned'
                     ]
                 },
@@ -56,6 +57,7 @@ const loadFullEntity = (entity) => {
                         'Name',
                         'isInitial',
                         'isFinal',
+                        'isDefaultFinal',
                         'isPlanned'
                     ]
                 },
@@ -111,12 +113,16 @@ const getProcess = (entity) => {
 
 };
 
-const getOutputCustomFields = (mashupConfig, changes, process, entity, entityCustomFields = [], existingCustomFieldsValues = [], formValues = {}) => {
+const getOutputCustomFields = (mashupConfig, changes, process, entity,
+                               entityCustomFields = [], existingCustomFieldsValues = [], formValues = {}) => {
 
-    const existingValuesNormalized = object(existingCustomFieldsValues.filter((v) => !v.isAssumeEmpty).map((v) => [v.name, v.value]));
-    const defaultValuesNormalized = object(entityCustomFields.filter((v) => !v.isEmptyDefaultValue).map((v) => [v.name, v.defaultValue]));
+    const existingValuesNormalized = object(existingCustomFieldsValues.filter((v) => !v.isEmpty)
+        .map((v) => [v.name, v.value]));
+    const defaultValuesNormalized = object(entityCustomFields.filter((v) => !v.isEmptyDefaultValue)
+        .map((v) => [v.name, v.defaultValue]));
 
-    const formCustomFieldsValues = map(formValues, (value, name) => CustomFieldValue.fromInputValue(find(entityCustomFields, (cf) => cf.name === name), value));
+    const formCustomFieldsValues = map(formValues, (value, name) =>
+        CustomFieldValue.fromInputValue(find(entityCustomFields, (cf) => cf.name === name), value));
     const formCustomFieldsValuesNormalized = object(formCustomFieldsValues.map((v) => [v.name, v.value]));
 
     const currentValuesNormalized = {
@@ -126,7 +132,8 @@ const getOutputCustomFields = (mashupConfig, changes, process, entity, entityCus
 
     const processes = [process];
 
-    return when(getCustomFieldsForAxes(mashupConfig, changes, processes, entity, currentValuesNormalized, {}, existingValuesNormalized))
+    return when(getCustomFieldsForAxes(mashupConfig, changes, processes, entity,
+        currentValuesNormalized, {}, existingValuesNormalized))
         .then((serverCustomFields) => {
 
             return serverCustomFields.sort((l, r) => l.numericPriority - r.numericPriority)
@@ -148,7 +155,8 @@ export default class FormContainer extends React.Component {
         }).isRequired,
         mashupConfig: T.array,
         onAfterSave: T.func,
-        onCancel: T.func
+        onCancel: T.func,
+        replaceCustomFieldValueInChanges: T.func.isRequired
     };
 
     state = {
@@ -183,7 +191,8 @@ export default class FormContainer extends React.Component {
             const entityCustomFields = serverCustomFields.map((serverCustomField) => CustomField(serverCustomField));
 
             const existingCustomFieldsValues = entityCustomFields.map((customField) =>
-                CustomFieldValue.fromServerValue(customField, find(fullEntity.customFields, (v) => v.name === customField.name).value));
+                CustomFieldValue.fromServerValue(customField, find(fullEntity.customFields, (v) =>
+                    v.name === customField.name).value));
 
             this.setState({
                 process,
@@ -198,8 +207,11 @@ export default class FormContainer extends React.Component {
         })
         .then((fullEntity, process, entityCustomFields, outputCustomFields, existingCustomFieldsValues) => {
 
-            if (!outputCustomFields.length) onAfterSave();
-            else {
+            if (!outputCustomFields.length) {
+
+                return when([], []);
+
+            } else {
 
                 const form = Form(outputCustomFields, formValues, existingCustomFieldsValues);
                 // formValues can be changed (ex. set to current for showing on the form to client).
@@ -213,6 +225,14 @@ export default class FormContainer extends React.Component {
 
         })
         .then((outputCustomFields, newFormValues) => {
+
+            if (!outputCustomFields.length) {
+
+                onAfterSave();
+
+                return;
+
+            }
 
             this.setState({
                 outputCustomFields,
@@ -274,16 +294,20 @@ export default class FormContainer extends React.Component {
 
         const {entity, replaceCustomFieldValueInChanges} = this.props;
         const {entityCustomFields, existingCustomFieldsValues} = this.state;
+
         const formValuesMap = object(formValues.map((v) => [v.name, v.value]));
         const customFields = entityCustomFields.filter((v) => formValuesMap.hasOwnProperty(v.name));
         const existingCustomFieldsValuesMap = object(existingCustomFieldsValues.map((v) => [v.name, v]));
         const changedFormValues = formValues.filter((v) => {
 
+            // Checkbox is special case, since has no default value. We can save same checkboxes.
+            if (v.field.type === 'checkbox') return true;
+
             const existingValue = existingCustomFieldsValuesMap[v.name];
 
-            // Checkboxes should be saved every time, since some other values may change and TP can save same checkboxes.
             return existingValue !== void 0 &&
-                !this.areFieldsSame({...existingValue, value: existingValue.serverValue}, {...existingValue, value: v.value});
+                !this.areFieldsSame({...existingValue, value: existingValue.serverValue},
+                    {...existingValue, value: v.value});
 
         });
         const changedFormValuesMap = object(changedFormValues.map((v) => [v.name, v.value]));
@@ -373,7 +397,8 @@ export default class FormContainer extends React.Component {
         const {mashupConfig, changes} = this.props;
         const {entity, process, entityCustomFields, existingCustomFieldsValues} = this.state;
 
-        when(getOutputCustomFields(mashupConfig, changes, process, entity, entityCustomFields, existingCustomFieldsValues, formValues))
+        when(getOutputCustomFields(mashupConfig, changes, process, entity, entityCustomFields,
+            existingCustomFieldsValues, formValues))
             .then((outputCustomFields) => {
 
                 this.setState({

@@ -40,7 +40,7 @@ const transformFromServerValue = (field, value) => {
                 const [id, kind] = v.split(' ');
 
                 return {
-                    id,
+                    id: Number(id),
                     entityType: {
                         name: kind
                     }
@@ -55,10 +55,12 @@ const transformFromServerValue = (field, value) => {
 
 };
 
-const isAssumeEmptyServerValue = (customField, serverValue) => {
+export const isEmptyCheckboxValue = (value) => value === false;
 
-    // Assume checkboxes are always empty, since we need to require them every time rule is match (in real they are true/false only).
-    return customField.type === 'checkbox' || (!isNumber(serverValue) && !isBoolean(serverValue) && isEmpty(serverValue));
+const isEmptyValue = (customField, serverValue) => {
+
+    return (!isNumber(serverValue) && !isBoolean(serverValue) && isEmpty(serverValue)) ||
+        isEmptyCheckboxValue(serverValue);
 
 };
 
@@ -98,7 +100,7 @@ export const fromServerValue = (customField, serverValue) => {
         name: customField.name,
         customField,
         value,
-        isAssumeEmpty: isAssumeEmptyServerValue(customField, serverValue),
+        isEmpty: isEmptyValue(customField, serverValue),
         serverValue: transformToServerValue(customField, value)
     };
 
@@ -112,7 +114,7 @@ export const fromInputValue = (customField, inputValue) => {
         name: customField.name,
         customField,
         value,
-        isAssumeEmpty: isAssumeEmptyServerValue(customField, inputValue),
+        isEmpty: isEmptyValue(customField, inputValue),
         serverValue: transformToServerValue(customField, value)
     };
 

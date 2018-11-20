@@ -1,28 +1,7 @@
-import {find, pluck, isArray, omit, uniq} from 'underscore';
+import {find, pluck, omit, uniq} from 'underscore';
+import {equalByShortcut, equalIgnoreCase, inValues} from '../utils';
 
-const equalIgnoreCase = (a, b) => String(a).toLowerCase() === String(b).toLowerCase();
 const getProp = (obj, key) => find(obj, (v, k) => equalIgnoreCase(k, key));
-const inValues = (values, value = '') => {
-
-    if (isArray(value)) {
-
-        return value.some((v) => values.some((vv) => equalIgnoreCase(v, vv)));
-
-    }
-
-    return values.some((v) => equalIgnoreCase(v, value));
-
-};
-
-const equalByShortcut = (shortcut, entityState) => {
-
-    return ({
-        _initial: entityState.isInitial,
-        _final: entityState.isFinal,
-        _planned: entityState.isPlanned
-    })[shortcut] || false;
-
-};
 
 const getProcessConfigs = (config, process) =>
     config.filter((v) =>
@@ -123,14 +102,16 @@ const getConnectedCustomFieldByValue = (fieldByConfig, customFieldValue, skipVal
 
 };
 
-const getConnectedCustomFieldsByValue = (fieldsByStateFromCustomFieldsConfig, customFieldValue, customFieldsConfig, skipValuesCheck) => {
+const getConnectedCustomFieldsByValue = (fieldsByStateFromCustomFieldsConfig, customFieldValue, customFieldsConfig,
+                                         skipValuesCheck) => {
 
     return fieldsByStateFromCustomFieldsConfig.reduce((res, v) =>
         res.concat(getConnectedCustomFieldByValue(v, customFieldValue, skipValuesCheck)), []);
 
 };
 
-const getConnectedCustomFieldsByField = (field, customFieldsConfig, customFieldsValues, initialCustomFieldsValues, skipValuesCheck) => {
+const getConnectedCustomFieldsByField = (field, customFieldsConfig, customFieldsValues, initialCustomFieldsValues,
+                                         skipValuesCheck) => {
 
     const fieldsByStateFromCustomFieldsConfig =
         customFieldsConfig.filter((v) => equalIgnoreCase(v.name, field.name));
@@ -146,7 +127,8 @@ const getConnectedCustomFieldsByField = (field, customFieldsConfig, customFields
     if (connected.length) {
 
         /* eslint-disable no-use-before-define */
-        return getConnectedCustomFields(connected, customFieldsConfigWithoutSource, customFieldsValues, initialCustomFieldsValues, true, skipValuesCheck);
+        return getConnectedCustomFields(connected, customFieldsConfigWithoutSource, customFieldsValues,
+            initialCustomFieldsValues, true, skipValuesCheck);
         /* eslint-enable no-use-before-define */
 
     }
@@ -155,7 +137,8 @@ const getConnectedCustomFieldsByField = (field, customFieldsConfig, customFields
 
 };
 
-const getConnectedCustomFields = (fields, customFieldsConfig, currentCustomFieldsValues, initialCustomFieldsValues, includeTop = true, skipValuesCheck = false) => {
+const getConnectedCustomFields = (fields, customFieldsConfig, currentCustomFieldsValues, initialCustomFieldsValues,
+                                  includeTop = true, skipValuesCheck = false) => {
 
     return fields.reduce((res, field) => {
 
@@ -165,7 +148,8 @@ const getConnectedCustomFields = (fields, customFieldsConfig, currentCustomField
 
         if (includeTop) ret = ret.concat(field);
 
-        ret = ret.concat(getConnectedCustomFieldsByField(field, customFieldsConfig, currentCustomFieldsValues, initialCustomFieldsValues, skipValuesCheck));
+        ret = ret.concat(getConnectedCustomFieldsByField(field, customFieldsConfig, currentCustomFieldsValues,
+            initialCustomFieldsValues, skipValuesCheck));
 
         return ret;
 
@@ -174,41 +158,51 @@ const getConnectedCustomFields = (fields, customFieldsConfig, currentCustomField
 };
 
 export const getCustomFieldsNamesForNewState = (entityState, config, process, entityTypeName,
-                                                currentCustomFieldsValues = {}, initialCustomFieldsValues = {}, {skipValuesCheck} = {skipValuesCheck: false}) => {
+                                                currentCustomFieldsValues = {}, initialCustomFieldsValues = {},
+                                                {skipValuesCheck} = {skipValuesCheck: false}) => {
 
     const stateConfig = getFlatStateConfig(config, process, entityTypeName, entityState);
     const customFieldsConfig = processCustomFieldsConfig(getFlatCustomFieldsConfig(config, process, entityTypeName));
 
     const rootFields = stateConfig.requiredCustomFields.map((v) => ({name: v}));
 
-    const allFields = getConnectedCustomFields(rootFields, customFieldsConfig, currentCustomFieldsValues, initialCustomFieldsValues, true, skipValuesCheck);
+    const allFields = getConnectedCustomFields(rootFields, customFieldsConfig, currentCustomFieldsValues,
+        initialCustomFieldsValues, true, skipValuesCheck);
 
     return uniq(pluck(allFields, 'name'));
 
 };
 
 export const getCustomFieldsNamesForChangedCustomFields = (changedFieldsNames, config, process, entityTypeName,
-                                                           currentCustomFieldsValues = {}, initialCustomFieldsValues = {}, {skipValuesCheck} = {skipValuesCheck: false}) => {
+                                                           currentCustomFieldsValues = {},
+                                                           initialCustomFieldsValues = {},
+                                                           {skipValuesCheck} = {skipValuesCheck: false}) => {
 
     const customFieldsConfig = processCustomFieldsConfig(getFlatCustomFieldsConfig(config, process, entityTypeName));
 
     const rootFields = customFieldsConfig.filter((v) =>
         inValues(changedFieldsNames, v.name) && checkCustomFieldByValue(v, getValue(v, currentCustomFieldsValues)));
 
-    const allFields = getConnectedCustomFields(rootFields, customFieldsConfig, currentCustomFieldsValues, initialCustomFieldsValues, false, skipValuesCheck);
+    const allFields = getConnectedCustomFields(rootFields, customFieldsConfig, currentCustomFieldsValues,
+        initialCustomFieldsValues, false, skipValuesCheck);
 
     return uniq(pluck(allFields, 'name'));
 
 };
 
-export const getCustomFieldsNamesForChangedCustomFieldsWithDependent = (changedFieldsNames, entityState, config, process, entityTypeName,
-                                                                        currentCustomFieldsValues = {}, initialCustomFieldsValues = {}, options = {}) => {
+export const getCustomFieldsNamesForChangedCustomFieldsWithDependent = (changedFieldsNames, entityState, config,
+                                                                        process, entityTypeName,
+                                                                        currentCustomFieldsValues = {},
+                                                                        initialCustomFieldsValues = {},
+                                                                        options = {}) => {
 
-    const ownFields = getCustomFieldsNamesForChangedCustomFields(changedFieldsNames, config, process, entityTypeName, currentCustomFieldsValues, initialCustomFieldsValues, options);
+    const ownFields = getCustomFieldsNamesForChangedCustomFields(changedFieldsNames, config, process, entityTypeName,
+        currentCustomFieldsValues, initialCustomFieldsValues, options);
 
     const rootFields = processCustomFieldsConfig(getFlatCustomFieldsConfig(config, process, entityTypeName));
 
-    const fullInitialCustomFieldsValues = changedFieldsNames.reduce((initialValues, name) => omit(initialValues, name), initialCustomFieldsValues);
+    const fullInitialCustomFieldsValues = changedFieldsNames.reduce((initialValues, name) => omit(initialValues, name),
+        initialCustomFieldsValues);
 
     const fieldsFromParentCustomFieldsConstraints = rootFields.reduce((res, field) => {
 
@@ -219,11 +213,13 @@ export const getCustomFieldsNamesForChangedCustomFieldsWithDependent = (changedF
             ...{[field.name]: initialChangedFieldValue}
         } : currentCustomFieldsValues;
 
-        return res.concat(getCustomFieldsNamesForChangedCustomFields([field.name], config, process, entityTypeName, fullCurrentCustomFieldValues, fullInitialCustomFieldsValues, options));
+        return res.concat(getCustomFieldsNamesForChangedCustomFields([field.name], config, process, entityTypeName,
+            fullCurrentCustomFieldValues, fullInitialCustomFieldsValues, options));
 
     }, []);
 
-    const fieldsFromEntityStateConstraints = entityState ? getCustomFieldsNamesForNewState(entityState, config, process, entityTypeName, currentCustomFieldsValues, fullInitialCustomFieldsValues, options) : [];
+    const fieldsFromEntityStateConstraints = entityState ? getCustomFieldsNamesForNewState(entityState, config, process,
+        entityTypeName, currentCustomFieldsValues, fullInitialCustomFieldsValues, options) : [];
 
     return uniq(fieldsFromParentCustomFieldsConstraints.concat(fieldsFromEntityStateConstraints).concat(ownFields));
 

@@ -1,5 +1,6 @@
 :local(.block) {
     flex: 1 1 0;
+    margin-right: 8px;
 }
 
 :local(.row) + :local(.row) {
@@ -20,4 +21,4 @@
 :local(.labeltext) {
     flex: 0 0 100px;
     color: #999;
-};
+}

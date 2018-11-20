@@ -54,10 +54,3 @@ export const createInterrupter = ({systemInterrupter, getEntitiesFromChanges}) =
             interruptEntityType(systemInterrupter, getEntitiesFromChanges, next, entityTypeName));
 
     };
-
-export const createFullChanges = (entitiesFromChanges) =>
-    entitiesFromChanges.map((smallEntity) => ({
-        entity: {},
-        to: smallEntity,
-        processId: null
-    }));

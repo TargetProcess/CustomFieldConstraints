@@ -8,7 +8,7 @@ export const equalByShortcut = (shortcut, entityState) => {
 
     return ({
         _initial: entityState.isInitial,
-        _final: entityState.isFinal,
+        _final: entityState.isFinal && entityState.isDefaultFinal,
         _planned: entityState.isPlanned
     })[lc(String(shortcut))] || false;
 

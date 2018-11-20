@@ -1,14 +1,28 @@
 :local(.block) {
     flex: 1;
     background-image: none !important;
+    margin: -10px 0 -10px 0;
 }
 
 :local(.block) .customfield-checkbox__label {
     flex: 0 0 100px;
     color: #999;
-    padding: 0 !important;
+    padding: 0 10px 0 10px !important;
+    margin-right: 4px;
+}
+
+:local(.block) .customfield-checkbox__value .toggle-switch {
+    border: 1px solid rgba(0, 0, 0, 0);
+    border-radius: 2px;
+    padding: 2px;
+}
+
+:local(.block) .customfield-checkbox__value .toggle-switch.tau-error {
+    border-color: $gControlBorderColorFocusError;
+    color: $gControlBorderColorFocusError;
 }
 
 :local(.block) .customfield-checkbox:hover {
     background-color: inherit;
 }
+

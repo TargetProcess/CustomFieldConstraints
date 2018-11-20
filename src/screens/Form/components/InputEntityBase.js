@@ -8,6 +8,7 @@ import EmptyEditableModel from 'tau/core/extension.base';
 
 import Bubble from 'components/Bubble';
 import TargetprocessFinder from './TargetprocessFinder';
+import GeneralIcon from '@targetprocess/general-icon';
 
 import S from './InputEntityBase.css';
 
@@ -20,6 +21,7 @@ export default class InputEntityBase extends React.Component {
             filterEntityTypeName: TargetprocessFinder.propTypes.filterEntityTypeName,
             filterFields: T.object.isRequired
         }),
+        isInvalid: T.bool,
         multiple: T.bool,
         onBlur: T.func,
         onChange: T.func,
@@ -131,9 +133,9 @@ export default class InputEntityBase extends React.Component {
                         {innerOutput}
                     </div>
                     {canReset ? (
-                        <button className={S.reset} onClick={this.handleClickReset} type="button">
-                            <i className="tau-icon-general tau-icon-close-round" />
-                        </button>
+                        <span className={S.reset}>
+                            <GeneralIcon name="close-red" onClick={this.handleClickReset}/>
+                        </span>
                     ) : null}
                 </div>
                 {finderBubble}

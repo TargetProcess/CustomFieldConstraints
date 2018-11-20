@@ -84,9 +84,10 @@ export const preloadParentEntityStates = (processes) => {
     return processIds.length ?
         store2.get('EntityState', {
             where: `parentEntityState == null and workflow.process.id in [${processIds.join()}]`,
-            select: '{id,name,isInitial,isFinal,isPlanned,workflow:{workflow.id,process:{workflow.process.id}},' +
+            select: '{id,name,isInitial,isFinal,isDefaultFinal,isPlanned,' +
+                'workflow:{workflow.id,process:{workflow.process.id}},' +
                 'entityType:{entityType.name},subEntityStates:subEntityStates.Select(' +
-                    '{id,name,entityType:{entityType.name},isInitial,isFinal,isPlanned})}'
+                '{id,name,entityType:{entityType.name},isInitial,isFinal,isDefaultFinal,isPlanned})}'
         }).then((entityStates) => {
 
             const cache = preloadParentEntityStates.cache = preloadParentEntityStates.cache || [];
@@ -122,7 +123,8 @@ export const loadSingleParentEntityState = memoize(({filter: whereFilter, field}
 
     return store2.get('EntityState', {
         where: `${field} == ${isString(whereFilter) ? `'${whereFilter}'` : whereFilter} ` +
-               `and workflow.process.id in [${processId}] and entityType.name == '${entityType.name}' and parentEntityState != null`,
+               `and workflow.process.id in [${processId}] and entityType.name == '${entityType.name}' ` +
+               `and parentEntityState != null`,
         select: `{parentEntityState.${field}}`
     }).then(([parentEntityState]) => parentEntityState && parentEntityState[field] || null);
 

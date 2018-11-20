@@ -69,11 +69,11 @@ export default class FormRow extends React.Component {
         return (
             <div className={S.block} title={title}>
                 <div className={S.label}>
-                    {(fieldType !== 'checkbox')
-                        ? <label className={cx(S.labeltext, {[S.labeltextrichtext]: fieldType === 'richtext'})} htmlFor={id}>
-                              <span>{label}</span>
-                          </label>
-                        : null
+                    {(fieldType !== 'checkbox') ?
+                        <label className={cx(S.labeltext, {[S.labeltextrichtext]: fieldType === 'richtext'})} htmlFor={id}>
+                            <span>{label}</span>
+                        </label> :
+                        null
                     }
                     <Input
                         {...specificProps}

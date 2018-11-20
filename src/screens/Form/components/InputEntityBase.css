@@ -1,6 +1,7 @@
 :local(.block) {
     display: flex;
     flex-grow: 1;
+    margin-right: 8px;
 }
 
 :local(.inputwrapper) {
@@ -22,7 +23,7 @@
 }
 
 :local(.placeholder) {
-    font-size: 11px;
+    font-size: 12px;
     color: #acb6bf;
 }
 

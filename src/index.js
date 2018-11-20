@@ -28,7 +28,7 @@ const showPopupNew = ({entity, axes, replaceCustomFieldValueInChanges}, next) =>
                 case CustomFieldsUpdateState.Skipped:
                     next.reject({
                         response: {
-                            Message: 'Note, required custom fields weren\'t changed, so nothing was saved.'
+                            Message: `Note, required custom fields weren't set or changed, so nothing was saved.`
                         },
                         status: 400
                     });

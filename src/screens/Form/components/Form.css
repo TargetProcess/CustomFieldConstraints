@@ -1,19 +1,19 @@
 :local(.header) {
     margin-bottom: 10px;
-    font-size: 14px;
+    font-size: 13px;
 }
 
 :local(.note) {
-    color: #606B73;
+    color: $gFontColorAttention;
     padding: 10px 10px;
-    background-color: #FFFFE1;
+    background-color: $gActionBackgroundWarning;
     margin-bottom: 5px;
 }
 
 :local(.error) {
-    color: #f66;
+    color: $gMessageColorError;
     padding: 10px 10px;
-    background-color: #FFFFE1;
+    background-color: $gBackgroundDefault;
     margin-bottom: 5px;
 }
 

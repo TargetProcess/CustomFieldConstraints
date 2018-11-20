@@ -10,7 +10,7 @@ module.exports = (config) => {
                 loader: 'json'
             }, {
                 test: /\.css$/,
-                loader: 'style!css?localIdentName=[name]-[local]'
+                loader: 'style-loader!css-loader?localIdentName=[name]-[local]&importLoaders=1!postcss-loader'
             }],
             noParse: [
                 /node_modules\/sinon\//

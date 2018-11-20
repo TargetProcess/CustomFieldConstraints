@@ -2,6 +2,7 @@
     flex: 1 1 auto;
     display: flex;
     align-items: baseline;
+    margin-right: 8px;
 }
 
 :local(.block) > input {
