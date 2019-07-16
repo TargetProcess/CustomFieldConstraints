@@ -1,4 +1,4 @@
-import {find, pluck, omit, uniq} from 'underscore';
+import {find, first, pluck, omit, uniq} from 'underscore';
 import {equalByShortcut, equalIgnoreCase, inValues} from '../utils';
 
 const getProp = (obj, key) => find(obj, (v, k) => equalIgnoreCase(k, key));
@@ -222,5 +222,14 @@ export const getCustomFieldsNamesForChangedCustomFieldsWithDependent = (changedF
         entityTypeName, currentCustomFieldsValues, fullInitialCustomFieldsValues, options) : [];
 
     return uniq(fieldsFromParentCustomFieldsConstraints.concat(fieldsFromEntityStateConstraints).concat(ownFields));
+
+};
+
+export const getNoteForNewStateOrChangedCustomFields = (config, process, entityTypeName) => {
+
+    const configs = getProcessConfigs(config, process);
+    const mayBeConfig = first(configs.map((cfg) => getProp(cfg.constraints, entityTypeName)));
+
+    return (mayBeConfig ? mayBeConfig.note : void 0) || 'Please specify the following custom fields';
 
 };

@@ -1,7 +1,8 @@
 import {
     getCustomFieldsNamesForNewState,
     getCustomFieldsNamesForChangedCustomFields,
-    getCustomFieldsNamesForChangedCustomFieldsWithDependent
+    getCustomFieldsNamesForChangedCustomFieldsWithDependent,
+    getNoteForNewStateOrChangedCustomFields
 } from '../customFieldsRequirements';
 
 describe('customFieldsRequirements', () => {
@@ -925,6 +926,131 @@ describe('customFieldsRequirements', () => {
 
             expect(getCustomFieldsNamesForChangedCustomFieldsWithDependent(changedFieldsNames, entityState, config, process, 'userstory', cfValues, existingValues))
                 .to.be.eql([]);
+
+        });
+
+    });
+
+    describe('getNoteForNewStateOrChangedCustomFields()', () => {
+
+        it('returns note when set for process-dependent entity', () => {
+
+            const config = [{
+                process: 'Scrum',
+                constraints: {
+                    userstory: {
+                        note: 'Some us note'
+                    }
+                }
+            }];
+
+            const process = {name: 'Scrum'};
+
+            expect(getNoteForNewStateOrChangedCustomFields(config, process, 'userstory'))
+                .to.be.eql('Some us note');
+
+        });
+
+        it('returns default note when not set for process-dependent entity', () => {
+
+            const config = [{
+                process: 'Scrum',
+                constraints: {
+                    userstory: {
+                    }
+                }
+            }];
+
+            const process = {name: 'Scrum'};
+
+            expect(getNoteForNewStateOrChangedCustomFields(config, process, 'userstory'))
+                .to.be.eql('Please specify the following custom fields');
+
+        });
+
+        it('returns default note when empty for process-dependent entity', () => {
+
+            const config = [{
+                process: 'Scrum',
+                constraints: {
+                    userstory: {
+                        note: ''
+                    }
+                }
+            }];
+
+            const process = {name: 'Scrum'};
+
+            expect(getNoteForNewStateOrChangedCustomFields(config, process, 'userstory'))
+                .to.be.eql('Please specify the following custom fields');
+
+        });
+
+        it('returns default note when no process found for process-dependent entity', () => {
+
+            const config = [{
+                process: 'Scrum',
+                constraints: {
+                    userstory: {
+                    }
+                }
+            }];
+
+            const process = {name: 'Kanban'};
+
+            expect(getNoteForNewStateOrChangedCustomFields(config, process, 'userstory'))
+                .to.be.eql('Please specify the following custom fields');
+
+        });
+
+        it('returns default note when no entity found for process-dependent entity', () => {
+
+            const config = [{
+                process: 'Scrum',
+                constraints: {
+                    bug: {
+                        note: 'Some bug note'
+                    }
+                }
+            }];
+
+            const process = {name: 'Scrum'};
+
+            expect(getNoteForNewStateOrChangedCustomFields(config, process, 'userstory'))
+                .to.be.eql('Please specify the following custom fields');
+
+        });
+
+        it('returns note when set for process-independent entity', () => {
+
+            const config = [{
+                constraints: {
+                    user: {
+                        note: 'Some user note'
+                    }
+                }
+            }];
+
+            const process = null;
+
+            expect(getNoteForNewStateOrChangedCustomFields(config, process, 'user'))
+                .to.be.eql('Some user note');
+
+        });
+
+        it('returns default note when not set for process-independent entity', () => {
+
+            const config = [{
+                constraints: {
+                    user: {
+                    }
+                }
+            }];
+
+            const process = null;
+
+            expect(getNoteForNewStateOrChangedCustomFields(config, process, 'user'))
+                .to.be.eql('Please specify the following custom fields');
 
         });
 

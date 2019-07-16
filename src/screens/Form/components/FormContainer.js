@@ -19,6 +19,7 @@ import * as CustomFieldValue from 'services/CustomFieldValue';
 import Form from 'services/Form';
 
 import {CustomFieldsUpdateState} from 'utils';
+import {getNoteForNewStateOrChangedCustomFields} from 'services/customFieldsRequirements';
 
 const loadFullEntity = (entity) => {
 
@@ -143,6 +144,12 @@ const getOutputCustomFields = (mashupConfig, changes, process, entity,
 
 };
 
+const getFormNote = function(config, process, entity) {
+
+    return getNoteForNewStateOrChangedCustomFields(config, process, entity.entityType.name);
+
+};
+
 export default class FormContainer extends React.Component {
 
     static propTypes = {
@@ -165,7 +172,8 @@ export default class FormContainer extends React.Component {
         onCancel: noop,
         entityCustomFields: [],
         outputCustomFields: [],
-        formValues: {}
+        formValues: {},
+        note: void 0
     };
 
     componentDidMount() {
@@ -198,6 +206,7 @@ export default class FormContainer extends React.Component {
                 process,
                 entityCustomFields,
                 entity: fullEntity,
+                note: getFormNote(mashupConfig, process, entity),
                 existingCustomFieldsValues
             });
 
@@ -254,7 +263,8 @@ export default class FormContainer extends React.Component {
             globalError,
 
             outputCustomFields,
-            entity
+            entity,
+            note
         } = this.state;
 
         if (!changes.length) return null;
@@ -272,6 +282,7 @@ export default class FormContainer extends React.Component {
                     entity={entity}
                     fields={fields}
                     globalError={globalError}
+                    note={note}
                     onChange={this.handleChange}
                     onSubmit={this.handleSubmit}
                     showProgress={isSaving}
