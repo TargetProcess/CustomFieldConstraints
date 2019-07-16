@@ -14,6 +14,19 @@ import {busNames} from 'services/busNames';
 import store from 'services/store';
 import {getCustomFieldsForAxes} from 'services/axes';
 
+const createTemplateItemFromCustomField = (customField) => ({
+    type: 'CustomField',
+    config: customField.config,
+    caption: customField.name,
+    fieldType: customField.fieldType,
+    processId: customField.process ? customField.process.id : null,
+    numericPriority: customField.numericPriority,
+    required: true,
+    options: {
+        ...customField
+    }
+});
+
 const onRender = (configurator, componentBusName, cb) => {
 
     const afterRenderHandler = function(e) {
@@ -32,19 +45,6 @@ const onRender = (configurator, componentBusName, cb) => {
     });
 
 };
-
-const createTemplateItemFromCustomField = (customField) => ({
-    type: 'CustomField',
-    config: customField.config,
-    caption: customField.name,
-    fieldType: customField.fieldType,
-    processId: customField.process ? customField.process.id : null,
-    numericPriority: customField.numericPriority,
-    required: true,
-    options: {
-        ...customField
-    }
-});
 
 const getCustomFieldProcessId = (customField) => customField.process ? customField.process.id : null;
 
@@ -66,8 +66,6 @@ const getCustomFieldTemplate = (customField, types) => {
         find(map(typeOrTypes, (type) => type.template), (template) => isTemplateForCustomField(customField, template));
 
 };
-
-const events = ['afterInit:last', 'before_dataBind'];
 
 const findNewCustomFieldIndex = (items, newNumericPriority) => {
 
@@ -103,12 +101,12 @@ const injectCustomFieldTemplateItem = (items, injectedItem) => {
 
 };
 
+const events = ['afterInit:last', 'before_dataBind'];
 const onDataBind = (componentBusName, cb) =>
     addBusListener(componentBusName, events.join(' + '), (e) => {
 
         const initData = e.afterInit.data;
         const bindData = e.before_dataBind.data;
-        const settingsData = e['settings.ready'] ? e['settings.ready'].data : void 0;
 
         const types = keys(bindData.types);
 
@@ -132,7 +130,7 @@ const onDataBind = (componentBusName, cb) =>
         };
         const configurator = initData.config.context.configurator;
 
-        cb(next, configurator, initData, bindData, settingsData);
+        cb(next, configurator, initData, bindData);
 
     });
 

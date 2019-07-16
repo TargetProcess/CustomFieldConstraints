@@ -20,6 +20,7 @@ describe('Form', () => {
         const dom = shallow((
             <Form
                 entity={entity}
+                note={'Note'}
             />
         ));
 
@@ -49,6 +50,7 @@ describe('Form', () => {
             <Form
                 entity={entity}
                 fields={[{name: 'foo'}, {name: 'bar'}]}
+                note={'Note'}
             />
         ));
 
@@ -76,6 +78,7 @@ describe('Form', () => {
             <Form
                 entity={entity}
                 globalError={'You suck'}
+                note={'Note'}
             />
         ));
 
@@ -93,6 +96,7 @@ describe('Form', () => {
             <Form
                 entity={entity}
                 fields={[{name: 'foo', validationErrors: ['required']}]}
+                note={'Note'}
             />
         ));
 
@@ -106,12 +110,27 @@ describe('Form', () => {
         const dom = shallow((
             <Form
                 entity={entity}
+                note={'Note'}
                 showProgress={true}
             />
         ));
 
         expect(dom.find('form').find('button'))
             .to.have.prop('disabled', true);
+
+    });
+
+    it('should output provided note', () => {
+
+        const dom = shallow((
+            <Form
+                entity={entity}
+                note={"Some note"}
+            />
+        ));
+
+        expect(dom.find('div').at(1))
+            .to.have.text('Some note');
 
     });
 

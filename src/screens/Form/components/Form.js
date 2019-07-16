@@ -11,6 +11,7 @@ export default class Form extends React.Component {
         entity: T.object.isRequired,
         fields: T.arrayOf(FormRow.propTypes.item),
         globalError: T.string,
+        note: T.string.isRequired,
         onChange: T.func,
         onSubmit: T.func,
         showProgress: T.bool,
@@ -24,14 +25,14 @@ export default class Form extends React.Component {
 
     render() {
 
-        const {entity, fields, showProgress, globalError} = this.props;
+        const {entity, fields, showProgress, globalError, note} = this.props;
         const hasInvalid = fields.some(({validationErrors = []}) => validationErrors.length);
 
         return (
             <div>
                 <TargetprocessLinkentity className={S.header} entity={entity} />
 
-                <div className={S.note}>{'Please specify the following custom fields'}</div>
+                <div className={S.note}>{note}</div>
                 {globalError ? (
                     <div className={S.error}>{globalError}</div>
                 ) : null}
