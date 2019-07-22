@@ -2,7 +2,7 @@ import {
     getCustomFieldsNamesForNewState,
     getCustomFieldsNamesForChangedCustomFields,
     getCustomFieldsNamesForChangedCustomFieldsWithDependent,
-    getNoteForNewStateOrChangedCustomFields
+    getValidationMessageForNewStateOrChangedCustomFields
 } from '../customFieldsRequirements';
 
 describe('customFieldsRequirements', () => {
@@ -931,9 +931,27 @@ describe('customFieldsRequirements', () => {
 
     });
 
-    describe('getNoteForNewStateOrChangedCustomFields()', () => {
+    describe('getValidationMessageForNewStateOrChangedCustomFields()', () => {
 
-        it('returns note when set for process-dependent entity', () => {
+        it('returns validation message when set for process-dependent entity', () => {
+
+            const config = [{
+                process: 'Scrum',
+                constraints: {
+                    userstory: {
+                        validationMessage: 'Some us note'
+                    }
+                }
+            }];
+
+            const process = {name: 'Scrum'};
+
+            expect(getValidationMessageForNewStateOrChangedCustomFields(config, process, 'userstory'))
+                .to.be.eql('Some us note');
+
+        });
+
+        it('returns backward compatible validation message when set for process-dependent entity', () => {
 
             const config = [{
                 process: 'Scrum',
@@ -946,12 +964,12 @@ describe('customFieldsRequirements', () => {
 
             const process = {name: 'Scrum'};
 
-            expect(getNoteForNewStateOrChangedCustomFields(config, process, 'userstory'))
+            expect(getValidationMessageForNewStateOrChangedCustomFields(config, process, 'userstory'))
                 .to.be.eql('Some us note');
 
         });
 
-        it('returns default note when not set for process-dependent entity', () => {
+        it('returns default validation message when not set for process-dependent entity', () => {
 
             const config = [{
                 process: 'Scrum',
@@ -963,30 +981,30 @@ describe('customFieldsRequirements', () => {
 
             const process = {name: 'Scrum'};
 
-            expect(getNoteForNewStateOrChangedCustomFields(config, process, 'userstory'))
+            expect(getValidationMessageForNewStateOrChangedCustomFields(config, process, 'userstory'))
                 .to.be.eql('Please specify the following custom fields');
 
         });
 
-        it('returns default note when empty for process-dependent entity', () => {
+        it('returns default validation message when empty for process-dependent entity', () => {
 
             const config = [{
                 process: 'Scrum',
                 constraints: {
                     userstory: {
-                        note: ''
+                        validationMessage: ''
                     }
                 }
             }];
 
             const process = {name: 'Scrum'};
 
-            expect(getNoteForNewStateOrChangedCustomFields(config, process, 'userstory'))
+            expect(getValidationMessageForNewStateOrChangedCustomFields(config, process, 'userstory'))
                 .to.be.eql('Please specify the following custom fields');
 
         });
 
-        it('returns default note when no process found for process-dependent entity', () => {
+        it('returns default validation message when no process found for process-dependent entity', () => {
 
             const config = [{
                 process: 'Scrum',
@@ -998,30 +1016,47 @@ describe('customFieldsRequirements', () => {
 
             const process = {name: 'Kanban'};
 
-            expect(getNoteForNewStateOrChangedCustomFields(config, process, 'userstory'))
+            expect(getValidationMessageForNewStateOrChangedCustomFields(config, process, 'userstory'))
                 .to.be.eql('Please specify the following custom fields');
 
         });
 
-        it('returns default note when no entity found for process-dependent entity', () => {
+        it('returns default validation message when no entity found for process-dependent entity', () => {
 
             const config = [{
                 process: 'Scrum',
                 constraints: {
                     bug: {
-                        note: 'Some bug note'
+                        validationMessage: 'Some bug note'
                     }
                 }
             }];
 
             const process = {name: 'Scrum'};
 
-            expect(getNoteForNewStateOrChangedCustomFields(config, process, 'userstory'))
+            expect(getValidationMessageForNewStateOrChangedCustomFields(config, process, 'userstory'))
                 .to.be.eql('Please specify the following custom fields');
 
         });
 
-        it('returns note when set for process-independent entity', () => {
+        it('returns validation message when set for process-independent entity', () => {
+
+            const config = [{
+                constraints: {
+                    user: {
+                        validationMessage: 'Some user note'
+                    }
+                }
+            }];
+
+            const process = null;
+
+            expect(getValidationMessageForNewStateOrChangedCustomFields(config, process, 'user'))
+                .to.be.eql('Some user note');
+
+        });
+
+        it('returns backward compatible validation message when set for process-independent entity', () => {
 
             const config = [{
                 constraints: {
@@ -1033,12 +1068,12 @@ describe('customFieldsRequirements', () => {
 
             const process = null;
 
-            expect(getNoteForNewStateOrChangedCustomFields(config, process, 'user'))
+            expect(getValidationMessageForNewStateOrChangedCustomFields(config, process, 'user'))
                 .to.be.eql('Some user note');
 
         });
 
-        it('returns default note when not set for process-independent entity', () => {
+        it('returns default validation message when not set for process-independent entity', () => {
 
             const config = [{
                 constraints: {
@@ -1049,7 +1084,7 @@ describe('customFieldsRequirements', () => {
 
             const process = null;
 
-            expect(getNoteForNewStateOrChangedCustomFields(config, process, 'user'))
+            expect(getValidationMessageForNewStateOrChangedCustomFields(config, process, 'user'))
                 .to.be.eql('Please specify the following custom fields');
 
         });
