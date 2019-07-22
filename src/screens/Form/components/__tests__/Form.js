@@ -20,7 +20,7 @@ describe('Form', () => {
         const dom = shallow((
             <Form
                 entity={entity}
-                note={'Note'}
+                validationMessage={'Note'}
             />
         ));
 
@@ -50,7 +50,7 @@ describe('Form', () => {
             <Form
                 entity={entity}
                 fields={[{name: 'foo'}, {name: 'bar'}]}
-                note={'Note'}
+                validationMessage={'Note'}
             />
         ));
 
@@ -78,7 +78,7 @@ describe('Form', () => {
             <Form
                 entity={entity}
                 globalError={'You suck'}
-                note={'Note'}
+                validationMessage={'Note'}
             />
         ));
 
@@ -96,7 +96,7 @@ describe('Form', () => {
             <Form
                 entity={entity}
                 fields={[{name: 'foo', validationErrors: ['required']}]}
-                note={'Note'}
+                validationMessage={'Note'}
             />
         ));
 
@@ -110,8 +110,8 @@ describe('Form', () => {
         const dom = shallow((
             <Form
                 entity={entity}
-                note={'Note'}
                 showProgress={true}
+                validationMessage={'Note'}
             />
         ));
 
@@ -120,12 +120,12 @@ describe('Form', () => {
 
     });
 
-    it('should output provided note', () => {
+    it('should output provided validation message', () => {
 
         const dom = shallow((
             <Form
                 entity={entity}
-                note={"Some note"}
+                validationMessage={"Some note"}
             />
         ));
 

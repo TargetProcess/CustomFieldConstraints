@@ -225,11 +225,13 @@ export const getCustomFieldsNamesForChangedCustomFieldsWithDependent = (changedF
 
 };
 
-export const getNoteForNewStateOrChangedCustomFields = (config, process, entityTypeName) => {
+export const getValidationMessageForNewStateOrChangedCustomFields = (config, process, entityTypeName) => {
 
     const configs = getProcessConfigs(config, process);
     const mayBeConfig = first(configs.map((cfg) => getProp(cfg.constraints, entityTypeName)));
 
-    return (mayBeConfig ? mayBeConfig.note : void 0) || 'Please specify the following custom fields';
+    // note for backward compatibility.
+    return (mayBeConfig ? (mayBeConfig.validationMessage || mayBeConfig.note) : void 0)
+        || 'Please specify the following custom fields';
 
 };
