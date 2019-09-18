@@ -57,6 +57,7 @@ describe('utils', () => {
 
         expect(isGeneral({entityType: {name: 'general'}})).to.be.true;
         expect(isGeneral({entityType: {name: 'bug'}})).to.be.true;
+        expect(isGeneral({entityType: {name: 'portfolioepic'}})).to.be.true;
         expect(isGeneral({entityType: {name: 'user'}})).to.be.false;
 
     });
@@ -65,6 +66,8 @@ describe('utils', () => {
 
         expect(isAssignable({entityType: {name: 'general'}})).to.be.false;
         expect(isAssignable({entityType: {name: 'bug'}})).to.be.true;
+        expect(isAssignable({entityType: {name: 'portfolioepic'}})).to.be.true;
+        expect(isAssignable({entityType: {name: 'user'}})).to.be.false;
         expect(isAssignable({entityType: {name: 'user'}})).to.be.false;
 
     });
@@ -94,7 +97,8 @@ describe('utils', () => {
                 processId: 123,
                 constraints: {
                     bug: {},
-                    task: {}
+                    task: {},
+                    portfolioepic: {}
                 }
             },
             {
@@ -102,7 +106,7 @@ describe('utils', () => {
                     user: {}
                 }
             }
-        ])).to.be.eql(['bug', 'task', 'user']);
+        ])).to.be.eql(['bug', 'task', 'portfolioepic', 'user']);
 
     });
 

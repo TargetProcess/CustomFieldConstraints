@@ -22,13 +22,16 @@ export const inValues = (values, value = '') => {
 
 };
 
-export const isShortcut = (shortcut) => inValues(['_initial', '_final', '_planned'], String(shortcut));
+const shortcutValues = ['_initial', '_final', '_planned'];
 
-export const isGeneral = (entity) => inValues([
+export const isShortcut = (shortcut) => inValues(shortcutValues, String(shortcut));
+
+const generalValues = [
     'General',
     'Assignable',
     'InboundAssignable',
     'OutboundAssignable',
+    'PortfolioEpic',
     'Epic',
     'Feature',
     'UserStory',
@@ -46,12 +49,15 @@ export const isGeneral = (entity) => inValues([
     'TestCase',
     'Build',
     'Impediment'
-], entity.entityType.name);
+];
 
-export const isAssignable = (entity) => inValues([
+export const isGeneral = (entity) => inValues(generalValues, entity.entityType.name);
+
+const assignableValues = [
     'Assignable',
     'InboundAssignable',
     'OutboundAssignable',
+    'PortfolioEpic',
     'Epic',
     'Feature',
     'UserStory',
@@ -60,24 +66,32 @@ export const isAssignable = (entity) => inValues([
     'TestPlan',
     'TestPlanRun',
     'Request'
-], entity.entityType.name);
+];
 
-export const isRequester = (entity) => inValues([
+export const isAssignable = (entity) => inValues(assignableValues, entity.entityType.name);
+
+const requesterValues = [
     'Requester'
-], entity.entityType.name);
+];
 
-export const isUser = (entity) => inValues([
+export const isRequester = (entity) => inValues(requesterValues, entity.entityType.name);
+
+const userValues = [
     'GeneralUser',
     'User',
     'Requester'
-], entity.entityType.name);
+];
+
+export const isUser = (entity) => inValues(userValues, entity.entityType.name);
 
 export const getEntityTypesNamesFromConfig = (config) =>
     unique(config.reduce((res, processEntry) => res.concat(Object.keys(processEntry.constraints)), []));
 
 export const SLICE_CUSTOMFIELD_PREFIX = /^ddl(multipleselectionlist)?/;
 
-export const isStateRelated = (name) => inValues(['entitystate', 'assignedteams', 'teamentitystate'], name);
+const relatedStateValues = ['entitystate', 'assignedteams', 'teamentitystate'];
+
+export const isStateRelated = (name) => inValues(relatedStateValues, name);
 
 export const CustomFieldsUpdateState = {
     Skipped: 0,

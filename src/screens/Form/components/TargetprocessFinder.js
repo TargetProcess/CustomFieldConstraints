@@ -38,6 +38,7 @@ export default class TargetprocessFinder extends React.Component {
             'build',
             'impediment',
 
+            'portfolioepic',
             'epic',
             'feature',
             'userstory',
