@@ -61,29 +61,55 @@ describe('FormRow', () => {
 
     it('passes specific props for entity', () => {
 
-        let dom = shallow(<FormRow item={{name: 'foo', field: {type: 'entity', config: {entityTypeIds: ['bug', 'task']}}}} />);
+        let dom = shallow(
+            <FormRow
+                item={
+                    {
+                        name: 'foo',
+                        field: {
+                            type: 'entity',
+                            config: {entityTypeIds: ['bug', 'task', 'portfolioepic']}
+                        }
+                    }}
+            />);
         let input = dom.find('Input');
 
         expect(input.prop('filterEntityTypeName'))
             .to.be.eql({
-                $in: ['bug', 'task']
+                $in: ['bug', 'task', 'portfolioepic']
             });
 
         expect(input.prop('filterFields'))
             .to.be.eql({});
 
-        dom = shallow(<FormRow item={{name: 'foo', field: {type: 'multipleentities', config: {entityTypeIds: ['bug', 'task']}}}} />);
+        dom = shallow(
+            <FormRow item={{name: 'foo',
+                field: {
+                    type: 'multipleentities',
+                    config: {
+                        entityTypeIds: ['bug', 'task', 'portfolioepic']
+                    }
+                }}}
+            />);
         input = dom.find('Input');
 
         expect(input.prop('filterEntityTypeName'))
             .to.be.eql({
-                $in: ['bug', 'task']
+                $in: ['bug', 'task', 'portfolioepic']
             });
 
         expect(input.prop('filterFields'))
             .to.be.eql({});
 
-        dom = shallow(<FormRow entity={{project: {id: 777}}} item={{name: 'foo', field: {type: 'multipleentities', config: {entityTypeIds: ['bug', 'task']}}}} />);
+        dom = shallow(
+            <FormRow
+                entity={{project: {id: 777}}}
+                item={{name: 'foo',
+                    field: {
+                        type: 'multipleentities',
+                        config: {entityTypeIds: ['bug', 'task', 'portfolioepic']}
+                    }}}
+            />);
         input = dom.find('Input');
 
         expect(input.prop('filterFields'))
@@ -95,7 +121,18 @@ describe('FormRow', () => {
 
     it('outputs errors', () => {
 
-        const dom = shallow(<FormRow item={{name: 'foo', hasErrors: true, hasDirtyValue: true, validationErrors: [{message: 'wrong'}, {message: 'bad'}]}} />);
+        const dom = shallow(
+            <FormRow
+                item={
+                    {
+                        name: 'foo',
+                        hasErrors: true,
+                        hasDirtyValue: true,
+                        validationErrors: [
+                            {message: 'wrong'}, {message: 'bad'}
+                        ]
+                    }}
+            />);
 
         expect(dom.prop('title'))
             .to.be.eql('wrong\nbad');
