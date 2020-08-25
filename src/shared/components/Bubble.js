@@ -81,7 +81,7 @@ export default class Bubble extends React.Component {
                 hideEvent: 'none',
                 documentMouseEvent: 'none',
                 stackName: String(Number(new Date())),
-                zIndex: 999,
+                zIndex: 100000, // Overlay.css specifies z-index of 99999, this needs to be higher
                 ...this.props.config
             });
 
