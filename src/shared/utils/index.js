@@ -1,4 +1,5 @@
 import {isArray, unique} from 'underscore';
+import tauTypes from 'tau/api/internal/store/types';
 
 export const lc = (s) => s.toLowerCase();
 
@@ -26,49 +27,16 @@ const shortcutValues = ['_initial', '_final', '_planned'];
 
 export const isShortcut = (shortcut) => inValues(shortcutValues, String(shortcut));
 
-const generalValues = [
-    'General',
-    'Assignable',
-    'InboundAssignable',
-    'OutboundAssignable',
-    'PortfolioEpic',
-    'Epic',
-    'Feature',
-    'UserStory',
-    'Task',
-    'Bug',
-    'TestPlan',
-    'TestPlanRun',
-    'Request',
-    'Project',
-    'Program',
-    'Release',
-    'Iteration',
-    'TeamIteration',
-    'Team',
-    'TestCase',
-    'Build',
-    'Impediment'
-];
+const generalValues = tauTypes.getAllGenerals().map((type) => type.name.toLowerCase());
 
-export const isGeneral = (entity) => inValues(generalValues, entity.entityType.name);
+export const isGeneral = (entity) => inValues(generalValues, entity.entityType.name.toLowerCase());
 
-const assignableValues = [
-    'Assignable',
-    'InboundAssignable',
-    'OutboundAssignable',
-    'PortfolioEpic',
-    'Epic',
-    'Feature',
-    'UserStory',
-    'Task',
-    'Bug',
-    'TestPlan',
-    'TestPlanRun',
-    'Request'
-];
+const assignableValues = tauTypes.getAll()
+    .filter((t) => t.isAssignable === true)
+    .map((t) => t.name.toLowerCase())
+    .concat(['assignable']);
 
-export const isAssignable = (entity) => inValues(assignableValues, entity.entityType.name);
+export const isAssignable = (entity) => inValues(assignableValues, entity.entityType.name.toLowerCase());
 
 const requesterValues = [
     'Requester'

@@ -7,7 +7,7 @@ import {equalIgnoreCase, isStateRelated, lc} from 'utils';
 
 import {createInterrupter} from './base';
 import {createRequirementsByTasks} from './requirementsByTasks';
-import {getCustomFieldValue} from 'services/CustomFieldValue';
+import {getCustomFieldValue, checkDependentCustomFields} from 'services/CustomFieldValue';
 
 const getEntityFromChange = (sourceChange, changeValues) => {
 
@@ -22,12 +22,18 @@ const getEntityFromChange = (sourceChange, changeValues) => {
 
             if (equalIgnoreCase(v.name, 'customfields')) {
 
-                return res.concat(v.value.map((vv) => ({
-                    type: 'customfield',
-                    customFieldName: vv.name,
-                    targetValue: getCustomFieldValue(vv),
-                    checkDependent: true
-                })));
+                return res.concat(v.value.map((vv) => {
+
+                    const targetValue = getCustomFieldValue(vv);
+
+                    return {
+                        type: 'customfield',
+                        customFieldName: vv.name,
+                        targetValue,
+                        checkDependent: checkDependentCustomFields(targetValue)
+                    };
+
+                }));
 
             }
 

@@ -1,10 +1,11 @@
 import {filter, memoize, pluck, reject, isString} from 'underscore';
+import {isEnabled} from 'tp3/api/featureToggling/v1';
 
 import {isGeneral} from 'utils';
 import store from 'services/store';
 import store2 from 'services/store2';
 
-const systemCustomFieldsEnabled = () => window.tauFeatures && window.tauFeatures.systemCustomFields;
+const systemCustomFieldsEnabled = () => isEnabled('systemCustomFields');
 
 export const getCustomFields = memoize((processId, entityType) => {
 
@@ -100,7 +101,21 @@ export const preloadParentEntityStates = (processes) => {
 
             return cache;
 
-        }) : [];
+        }) : store2.get('EntityState', {
+            where: 'parentEntityState == null and process.id == null',
+            select: '{id,name,isInitial,isFinal,isDefaultFinal,isPlanned,' +
+                'workflow:{workflow.id,process:{id:null}},' +
+                'entityType:{entityType.name},subEntityStates:subEntityStates.Select(' +
+                '{id,name,entityType:{entityType.name},isInitial,isFinal,isDefaultFinal,isPlanned})}'
+        }).then((entityStates) => {
+
+            const cache = preloadParentEntityStates.cache = preloadParentEntityStates.cache || [];
+
+            cache.null = entityStates;
+
+            return cache;
+
+        });
 
 };
 
@@ -121,12 +136,19 @@ preloadParentEntityStates.getStates = (processId) => {
 
 export const loadSingleParentEntityState = memoize(({filter: whereFilter, field}, processId, entityType) => {
 
-    return store2.get('EntityState', {
-        where: `${field} == ${isString(whereFilter) ? `'${whereFilter}'` : whereFilter} ` +
-               `and workflow.process.id in [${processId}] and entityType.name == '${entityType.name}' ` +
-               `and parentEntityState != null`,
-        select: `{parentEntityState.${field}}`
-    }).then(([parentEntityState]) => parentEntityState && parentEntityState[field] || null);
+    return (processId !== null ?
+        store2.get('EntityState', {
+            where: `${field} == ${isString(whereFilter) ? `'${whereFilter}'` : whereFilter} ` +
+                `and workflow.process.id in [${processId}] and entityType.name == '${entityType.name}' ` +
+                `and parentEntityState != null`,
+            select: `{parentEntityState.${field}}`
+        }) : store2.get('EntityState', {
+            where: `${field} == ${isString(whereFilter) ? `'${whereFilter}'` : whereFilter} ` +
+                `and entityType.name=='${entityType.name}' ` +
+                `and parentEntityState != null`,
+            select: `{parentEntityState.${field}}`
+        }))
+        .then(([parentEntityState]) => parentEntityState && parentEntityState[field] || null);
 
 }, ({filter: whereFilter, field}, processId, entityType) =>
     `${isString(whereFilter) ? `'${whereFilter}'` : whereFilter}:${field}:${processId}:${entityType.name}`);
