@@ -36,5 +36,5 @@ dist
 # IDE
 .idea
 
-# Build artefacts.
+# Build artifacts.
 build/*

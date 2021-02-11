@@ -16,7 +16,6 @@ import {
     getCustomFieldsNamesForChangedCustomFields,
     getCustomFieldsNamesForChangedCustomFieldsWithDependent
 } from 'services/customFieldsRequirements';
-import * as CustomFieldValue from 'services/CustomFieldValue';
 
 const findInRealCustomFields = (customFieldsNames, realCustomFields) =>
     customFieldsNames.reduce((res, v) => {
@@ -230,8 +229,7 @@ const getCustomFieldsForAxis = (config, axis, processes, entity, values = {}, op
 
                     if (axis.type === 'customfield') {
 
-                        if (axis.checkDependent && (targetValue === null ||
-                            CustomFieldValue.isEmptyCheckboxValue(targetValue))) {
+                        if (axis.checkDependent) {
 
                             return getCustomFieldsNamesForChangedCustomFieldsWithDependent([realTargetValue.name],
                                 entity.entityState ? entity.entityState : null, config, process, entity.entityType.name,

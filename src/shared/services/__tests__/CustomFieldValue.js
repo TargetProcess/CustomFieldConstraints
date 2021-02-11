@@ -1,4 +1,5 @@
-import {isEmptyCheckboxValue, fromServerValue, getCustomFieldValue} from 'services/CustomFieldValue';
+import {isEmptyCheckboxValue, fromServerValue, getCustomFieldValue,
+    checkDependentCustomFields} from 'services/CustomFieldValue';
 import dateUtils from 'tau/utils/utils.date';
 
 describe('CustomFieldValue', () => {
@@ -310,6 +311,34 @@ describe('CustomFieldValue', () => {
             expect(getCustomFieldValue({type: 'number', value: 12})).to.be.equal(12);
             expect(getCustomFieldValue({type: 'url', value: {url: 'abc', label: 'def'}})).to
                 .be.eql({url: 'abc', label: 'def'});
+
+        });
+
+    });
+
+    describe('checkDependentCustomFields()', () => {
+
+        it('checks dependent custom fields rules are needed', () => {
+
+            expect(checkDependentCustomFields(null),
+                'should need dependents when custom field reset').to.be.true;
+            expect(checkDependentCustomFields(false),
+                'should need dependents when checkbox custom field reset').to.be.true;
+            expect(checkDependentCustomFields(''),
+                'should need dependents when multipleentities custom field reset').to.be.true;
+
+            expect(checkDependentCustomFields(0),
+                'should not need dependents when number custom field set to 0').to.be.false;
+            expect(checkDependentCustomFields(12),
+                'should not need dependents when number custom field set to non-0').to.be.false;
+            expect(checkDependentCustomFields('some text'),
+                'should not need dependents when text custom field set').to.be.false;
+            expect(checkDependentCustomFields(true),
+                'should not need dependents when checkbox custom field checked').to.be.false;
+            expect(checkDependentCustomFields({id: 1234, kind: 'Epic', name: 'Epic #1'}),
+                'should not need dependents when entity custom field set').to.be.false;
+            expect(checkDependentCustomFields('9811 epic, 5341 userstory'),
+                'should not need dependents when multipleentities custom field set').to.be.false;
 
         });
 

@@ -3,9 +3,63 @@ import $, {when} from 'jquery';
 
 $.whenList = (arr) => $.when(...arr);
 
+const createSandbox = () => {
+
+    return {
+        obj: null,
+        propName: null,
+        propValue: null,
+        hasOwnProp: false,
+
+        stub(obj, prop) {
+
+            if (obj !== null && obj !== void 0) {
+
+                this.obj = obj;
+                this.propName = prop;
+                this.propValue = obj[prop];
+                this.hasOwnProp = Object.getOwnPropertyNames(obj).includes(prop);
+
+                const me = this; // eslint-disable-line consistent-this
+
+                return {
+
+                    value(v) {
+
+                        me.obj[prop] = v;
+
+                    }
+
+                };
+
+            }
+
+            throw new Error('object is null or undefined');
+
+        },
+
+        restore() {
+
+            if (this.hasOwnProp) {
+
+                this.obj[this.propName] = this.propValue;
+
+            } else {
+
+                delete this.obj[this.propName];
+
+            }
+
+        }
+
+    };
+
+};
+
 describe('axes', () => {
 
     let $ajax;
+    let windowSandbox;
 
     const entity = {
         id: 123,
@@ -18,18 +72,19 @@ describe('axes', () => {
 
         $ajax = sinon.stub($, 'ajax');
 
+        windowSandbox = createSandbox();
+        windowSandbox.stub(window, 'tauFeatures').value({
+            systemCustomFields: false,
+            hideProjectIterations: false
+        });
+
     });
 
     afterEach(() => {
 
         $ajax.restore();
         getCustomFieldsForAxes.resetCache();
-
-        if (window.tauFeatures) {
-
-            delete window.tauFeatures;
-
-        }
+        windowSandbox.restore();
 
     });
 
@@ -676,7 +731,7 @@ describe('axes', () => {
 
             it('skips system custom fields if feature is enabled', () => {
 
-                window.tauFeatures = {systemCustomFields: true};
+                window.tauFeatures.systemCustomFields = true;
 
                 $ajax.onCall(0).returns(when({
                     items: [{
@@ -708,7 +763,7 @@ describe('axes', () => {
 
             it('returns system custom fields if feature is disabled', () => {
 
-                window.tauFeatures = {systemCustomFields: false};
+                window.tauFeatures.systemCustomFields = false;
 
                 $ajax.onCall(0).returns(when({
                     items: [{

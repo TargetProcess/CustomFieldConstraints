@@ -1,7 +1,40 @@
 import React, {PropTypes as T} from 'react';
 import {noop} from 'underscore';
+import {isEnabled} from 'tp3/api/featureToggling/v1';
+import tauTypes from 'tau/api/internal/store/types';
 
 import TargetprocessComponent from 'components/TargetprocessComponent';
+
+const getDefaultEntityTypeNamesToFilterBy = () => {
+
+    // Same as in mode.finder.entity.data processOptions.
+    const extendableGeneralNamesSorted = tauTypes.getAll()
+        .filter((t) => t.isExtendableDomainType && t.isGeneral)
+        .map((t) => t.name.toLowerCase())
+        .sort();
+
+    return [
+        'project',
+        'program',
+        'release',
+        ...(isEnabled('hideProjectIterations') ? [] : ['iteration']),
+        'teamiteration',
+        'testcase',
+        'testplan',
+        'build',
+        'impediment',
+        'portfolioepic',
+        'epic',
+        'feature',
+        'userstory',
+        'task',
+        'bug',
+        'testplanrun',
+        'request',
+        ...extendableGeneralNamesSorted
+    ];
+
+};
 
 export default class TargetprocessFinder extends React.Component {
 
@@ -27,26 +60,7 @@ export default class TargetprocessFinder extends React.Component {
 
     static defaultProps = {
         filterDsl: void 0,
-        filterEntityTypeName: [
-            'project',
-            'program',
-            'release',
-            'iteration',
-            'teamiteration',
-            'testcase',
-            'testplan',
-            'build',
-            'impediment',
-
-            'portfolioepic',
-            'epic',
-            'feature',
-            'userstory',
-            'task',
-            'bug',
-            'testplanrun',
-            'request'
-        ],
+        filterEntityTypeName: getDefaultEntityTypeNamesToFilterBy(),
         filterFields: {},
         onAdjust: noop,
         onSelect: noop
@@ -54,7 +68,7 @@ export default class TargetprocessFinder extends React.Component {
 
     render() {
 
-        const {entity, customField, filterEntityTypeName, filterDsl, filterFields} = this.props;
+        const {entity, filterEntityTypeName, filterDsl, filterFields} = this.props;
 
         const config = {
             entityType: null,
@@ -68,12 +82,6 @@ export default class TargetprocessFinder extends React.Component {
         if (filterDsl) {
 
             config.filter.init_dsl = filterDsl; // eslint-disable-line camelcase
-
-        }
-
-        if (customField) {
-
-            config.customField = customField;
 
         }
 

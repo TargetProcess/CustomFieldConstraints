@@ -120,6 +120,12 @@ export const fromInputValue = (customField, inputValue) => {
 
 };
 
-// TP can send null when we uncheck checkbox custom field, override to correct value false.
+// TP can send null or false when we uncheck checkbox custom field, override to correct value false.
+// Can't normalize multipleentities here as type for it is not send.
 export const getCustomFieldValue = (customField) => equalIgnoreCase(customField.type, 'checkbox')
     ? Boolean(customField.value) : customField.value;
+
+// When custom field is removed (false for checkbox, null for all except multipleentities - empty string)
+// then should run rules both for it and its dependent custom fields.
+export const checkDependentCustomFields = (targetValue) => targetValue === null ||
+    isEmptyCheckboxValue(targetValue) || targetValue === '';

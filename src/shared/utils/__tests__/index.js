@@ -57,7 +57,8 @@ describe('utils', () => {
 
         expect(isGeneral({entityType: {name: 'general'}})).to.be.true;
         expect(isGeneral({entityType: {name: 'bug'}})).to.be.true;
-        expect(isGeneral({entityType: {name: 'portfolioepic'}})).to.be.true;
+        expect(isGeneral({entityType: {name: 'portfolioEpic'}})).to.be.true;
+        expect(isGeneral({entityType: {name: 'keyResult'}})).to.be.true;
         expect(isGeneral({entityType: {name: 'user'}})).to.be.false;
 
     });
@@ -65,10 +66,13 @@ describe('utils', () => {
     it('isAssignable()', () => {
 
         expect(isAssignable({entityType: {name: 'general'}})).to.be.false;
+        expect(isAssignable({entityType: {name: 'assignable'}})).to.be.true;
         expect(isAssignable({entityType: {name: 'bug'}})).to.be.true;
-        expect(isAssignable({entityType: {name: 'portfolioepic'}})).to.be.true;
+        expect(isAssignable({entityType: {name: 'portfolioEpic'}})).to.be.true;
+        expect(isAssignable({entityType: {name: 'keyResult'}})).to.be.true;
         expect(isAssignable({entityType: {name: 'user'}})).to.be.false;
-        expect(isAssignable({entityType: {name: 'user'}})).to.be.false;
+        expect(isAssignable({entityType: {name: 'project'}})).to.be.false;
+        expect(isAssignable({entityType: {name: 'objective'}})).to.be.false;
 
     });
 
