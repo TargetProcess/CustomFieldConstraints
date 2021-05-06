@@ -76,7 +76,7 @@
     "targetprocess-mashup-helper": "^0.3.0",
     "targetprocess-mashup-manifest-loader": "targetprocess/targetprocess-mashup-manifest-loader",
     "targetprocess-mashup-webpack-plugin": "targetprocess/targetprocess-mashup-webpack-plugin",
-    "underscore": "^1.8.3",
+    "underscore": "^1.12.1",
     "utf8": "^2.1.2",
     "webpack": "^1.14.0"
   },
