@@ -68,7 +68,7 @@
     "react": "^0.14.8",
     "react-addons-test-utils": "^0.14.8",
     "react-dom": "^0.14.8",
-    "shelljs": "^0.7.5",
+    "shelljs": "^0.8.5",
     "sinon": "^1.17.2",
     "sinon-chai": "^2.8.0",
     "style-loader": "^0.12.3",
