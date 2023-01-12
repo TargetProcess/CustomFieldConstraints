@@ -25,12 +25,13 @@ export const getCustomFields = memoize((processId, entityType) => {
 
 }, (processId, entityType) => processId + entityType.name);
 
+export const isCalculated = (cf) => cf.config && cf.config.calculationModel;
+
 export const loadCustomFields = memoize((processId, entityType) => {
 
     const fields = isGeneral({entityType}) ?
         getCustomFields(processId, entityType) : getCustomFields(null, entityType);
 
-    const isCalculated = (cf) => cf.config && cf.config.calculationModel;
     const isSystem = systemCustomFieldsEnabled() ?
         (cf) => cf.isSystem :
         () => false;

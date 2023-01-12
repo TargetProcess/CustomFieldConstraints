@@ -7,7 +7,7 @@ import Overlay from 'components/Overlay';
 import store from 'services/store';
 
 import {getCustomFieldsForAxes} from 'services/axes';
-import {getCustomFields} from 'services/loaders';
+import {getCustomFields, isCalculated} from 'services/loaders';
 
 import {isUser, isGeneral, isAssignable, isRequester, equalIgnoreCase} from 'utils';
 
@@ -20,6 +20,7 @@ import Form from 'services/Form';
 
 import {CustomFieldsUpdateState} from 'utils';
 import {getValidationMessageForNewStateOrChangedCustomFields} from 'services/customFieldsRequirements';
+
 
 const loadFullEntity = (entity) => {
 
@@ -196,11 +197,12 @@ export default class FormContainer extends React.Component {
         })
         .then((serverCustomFields, fullEntity, process) => {
 
-            const entityCustomFields = serverCustomFields.map((serverCustomField) => CustomField(serverCustomField));
+            const entityCustomFields = serverCustomFields.filter(cf => !isCalculated(cf)).map((serverCustomField) => CustomField(serverCustomField));
 
-            const existingCustomFieldsValues = entityCustomFields.map((customField) =>
-                CustomFieldValue.fromServerValue(customField, find(fullEntity.customFields, (v) =>
-                    v.name === customField.name).value));
+            const existingCustomFieldsValues = entityCustomFields.map((customField) => {
+                    const mappedResult = find(fullEntity.customFields, (v) => v.name === customField.name);
+                    return CustomFieldValue.fromServerValue(customField, mappedResult && mappedResult.value);
+                });
 
             this.setState({
                 process,
